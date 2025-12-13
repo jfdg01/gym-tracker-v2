@@ -141,7 +141,7 @@ interface WorkoutSession {
 interface ExerciseSnapshotItem {
   programDayExerciseId: number; // Reference to original ProgramDayExercise (for traceability)
   exerciseId: number;           // Denormalized for history queries when original is deleted
-  exerciseName: string;         // Denormalized for display in history
+  exerciseName: string;         // Snapshot is source of truth for history display. Preserves original name even if user renames/deletes global entity.
   trackingType: TrackingType;
   resistanceType: ResistanceType;
   sets: number;
@@ -267,13 +267,13 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 |------|-----------|
 | `useWorkout` | Start/complete sessions, log sets, manage rest timer state |
 | `useProgression` | Per-exercise: check last set → update weight OR advance difficultyIndex |
-| `useProgramService` | CRUD, get next day (last completed day index + 1) |
+| `useProgramService` | CRUD, get next day (looping logic: `(last + 1) % total`) |
 | `useExerciseService` | CRUD exercise library |
 | `useImportExport` | JSON export/import. Refuse import if IN_PROGRESS session exists. |
 
 ### Progression Logic
 - **Invoked per-exercise** on session complete (or when user exits).
-- **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged (skipped sets do not count as logged). Target sets are determined by the `exercises_snapshot` captured at workout start. This ensures progression logic respects any mid-workout swaps or modifications—the snapshot is the single source of truth.
+- **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged. **Constraint**: If any target set was marked "Skipped", progression is blocked for that exercise.
 - **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left.
 - Weight: `currentWeight += weightIncreaseFactor` (only if target reps met on **all sets**).
 - Difficulty: `currentDifficultyIndex++`. If at end, flag alert.
@@ -291,7 +291,9 @@ This modernizes the stack and removes the complexity of manually managing `useEf
 
 ### Error Handling
 
-**Policy**: Errors from Repository/database operations are logged to the console for development purposes only. No user-facing error toasts or retry mechanisms are implemented in v1. Critical operations (e.g., `logSet`) are expected to succeed; if they fail, the error is logged and the app continues.
+**Policy**:
+1. **Development**: Complete error logging to console.
+2. **User-Facing**: If a critical operation fails (e.g., `logSet` fails to write to DB), the app must show a native **Alert** (`Alert.alert`) informing the user that the action could not be saved. Silent failure is unacceptable for data integrity.
 
 ### Code Convention: Query Keys
 

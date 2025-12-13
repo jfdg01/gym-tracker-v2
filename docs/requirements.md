@@ -9,7 +9,7 @@
 | SQLite (expo-sqlite) | Free-form workouts (no program) |
 | JSON import/export (full replacement) | Cloud sync |
 | Linear workout execution | Supersets / Complex Set Grouping |
-| | Deloading / Failure Logic |
+| Basic Error Alerts | Deloading / Failure Logic |
 
 ## 2. Domain Models
 
@@ -19,7 +19,7 @@
 
 ### Programs
 - **Program**: Days collection. **Workouts require a program.**
-- **Day**: Ordered exercises with targets. Suggested day is always `last_completed_day_order_index + 1`.
+- **Day**: Ordered exercises with targets. Suggested day is `(last_completed_day_order_index + 1) % total_days` (References loop back to start).
 - **Progress**: `last_completed_day` per program. NULL = never started.
 
 ### Workout Logging
@@ -30,6 +30,7 @@
 
 ### Weight-Based
 **All sets** reps ≥ target → `currentWeight += weightIncreaseFactor`.
+- **Constraint**: Skipped sets are considered incomplete. Use of a skip in any targeted set prevents progression for that exercise.
 
 > **Note**: Exercise settings are global—the same exercise shares settings across all programs. Per-program settings are out of scope.
 
@@ -74,6 +75,7 @@ User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). 
 | 13 | View history | View list of past workouts with date, program name, and status. Tap an item to view details (exercises, sets, weights, reps). Filter by program or date range. |
 | 14 | Manage archived exercises | User can view archived exercises and restore them to the active library. |
 | 15 | Set weight unit preference | User can set a preferred weight unit label (e.g., "kg", "lbs") in Settings for display purposes. Value is cosmetic only. |
+| 16 | Correct logged set | User can tap a completed set during an active workout to re-open it for editing (e.g., fix rep count). |
 
 ## 7. Edge Cases
 
@@ -88,3 +90,4 @@ User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). 
 | App backgrounded during rest timer | Local notification sent when timer ends. |
 | Exercise in multiple programs (Strength vs Hypertrophy) | App suggests the last *globally* used weight. User must manually adjust. Accepted trade-off. |
 | IN_PROGRESS workout exceeds 20 hours | Automatically marked as `ABANDONED`. 20 hours chosen to accommodate longest reasonable workout + overnight pause. |
+| Critical Operation Fails (e.g., Save) | Display native alert to user (not generic toast, actual alert). |
