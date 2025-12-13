@@ -36,6 +36,7 @@ Tab Navigator
 | `SettingsScreen` | Export/Import data as JSON |
 
 **Workout Flow**: Start → Log Set → Rest Timer (countdown with notification) → Next Set → ... → Complete.
+**Swap Exercise Flow**: In an active workout, when user is presented with a list of the exercises in the day, they can swap them around by sliding them
 
 ## 3. Types
 
@@ -92,7 +93,8 @@ interface ProgramDayExercise {
   id: number;
   programDayId: number;
   exerciseId: number;
-  trackingType: TrackingType;
+  trackingType: TrackingType;       // Set at creation, not overridable
+  resistanceType: ResistanceType;   // Set at creation, not overridable
   sets: number;
   targetReps: number | null;        // null if TIME
   targetTimeSeconds: number | null; // null if REPS
@@ -101,6 +103,8 @@ interface ProgramDayExercise {
 ```
 
 ### State Layer
+
+> **Note**: Exercise settings are global—the same exercise shares settings across all programs.
 
 ```typescript
 interface ExerciseSettings {
@@ -127,7 +131,6 @@ interface WorkoutSession {
 interface WorkoutSet {
   id: number;
   workoutSessionId: number;
-  programDayExerciseId: number | null;
   exerciseId: number;
   setNumber: number;
   weight: number | null;
@@ -147,6 +150,7 @@ CREATE TABLE exercises (
     description TEXT,
     default_tracking_type TEXT NOT NULL,
     default_resistance_type TEXT NOT NULL,
+    is_archived INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -155,7 +159,7 @@ CREATE TABLE programs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    last_completed_day_id INTEGER REFERENCES program_days(id),
+    last_completed_day_id INTEGER REFERENCES program_days(id) ON DELETE SET NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -170,8 +174,9 @@ CREATE TABLE program_days (
 CREATE TABLE program_day_exercises (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     program_day_id INTEGER NOT NULL REFERENCES program_days(id) ON DELETE CASCADE,
-    exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+    exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
     tracking_type TEXT NOT NULL,
+    resistance_type TEXT NOT NULL,
     sets INTEGER NOT NULL,
     target_reps INTEGER,
     target_time_seconds INTEGER,
@@ -200,24 +205,34 @@ CREATE TABLE workout_sessions (
 CREATE TABLE workout_sets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     workout_session_id INTEGER NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
-    program_day_exercise_id INTEGER REFERENCES program_day_exercises(id),
     exercise_id INTEGER NOT NULL REFERENCES exercises(id),
     set_number INTEGER NOT NULL,
     weight REAL,
     difficulty TEXT,
     reps INTEGER,
     time_seconds INTEGER,
-    skipped INTEGER NOT NULL DEFAULT 0
+    skipped INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_workout_sets_session ON workout_sets(workout_session_id);
 CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 ```
 
-## 6. Services / Hooks
+### Cascade Behavior Summary
 
-| Service/Hook | Key Logic |
-|--------------|-----------|
+| Parent Table | Child Table | Relationship | Behavior | Note |
+|--------------|-------------|--------------|----------|------|
+| programs | program_days | One-to-Many | CASCADE | Deleting program deletes all days |
+| program_days | program_day_exercises | One-to-Many | CASCADE | Deleting day deletes planned exercises |
+| exercises | program_day_exercises | Many-to-Many link | RESTRICT | Cannot delete exercise used in program (Archive instead) |
+| program_days | workout_sessions | One-to-Many | RESTRICT | Cannot delete day with history (soft-consistency) |
+| workout_sessions | workout_sets | One-to-Many | CASCADE | Deleting session deletes its sets |
+
+## 6. Custom Hooks
+
+| Hook | Responsibility |
+|------|-----------|
 | `useWorkout` | Start/complete sessions, log sets, manage rest timer state |
 | `useProgression` | Per-exercise: check last set → update weight OR advance difficultyIndex |
 | `useProgramService` | CRUD, get next day (first incomplete or first if new) |
@@ -225,12 +240,41 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 | `useImportExport` | JSON export/import. Refuse import if IN_PROGRESS session exists. |
 
 ### Progression Logic
-- Invoked per-exercise on session complete.
-- Skipped last set → no progression.
-- Weight: `currentWeight += weightIncreaseFactor`.
+- **Invoked per-exercise** on session complete (or when user exits).
+- **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged (skipped sets do not count as logged).
+- **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left.
+- Weight: `currentWeight += weightIncreaseFactor` (only if target reps met on last set).
 - Difficulty: `currentDifficultyIndex++`. If at end, flag alert.
 
-## 7. Diagrams
+## 7. State Management
+
+**Approach**: React Context + custom hooks.
+
+- **WorkoutContext**: Active workout session state (current exercise, set, rest timer).
+- **DataContext**: Cached entities (exercises, programs) for fast UI rendering.
+- **Persistence**: Hooks read/write to SQLite via repository functions.
+
+This keeps the architecture simple for a single-user offline app, avoiding external state libraries.
+
+## 8. Data Interchange (JSON Schema)
+
+```json
+{
+  "version": 1,
+  "exportedAt": "2023-10-27T10:00:00Z",
+  "exercises": [
+    { "id": 1, "name": "Squat", "defaultTrackingType": "REPS", "isArchived": 0, ... }
+  ],
+  "programs": [
+    { "id": 1, "name": "Starting Strength", "days": [ ... ] }
+  ],
+  "workoutSessions": [
+    { "id": 101, "startedAt": "...", "sets": [ ... ] }
+  ]
+}
+```
+
+## 9. Diagrams
 
 ### Sequence: Complete Workout
 
