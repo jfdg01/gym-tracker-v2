@@ -5,8 +5,8 @@
 | In-Scope | Out-of-Scope |
 |----------|--------------|
 | Single-user, local-only | Multi-user / Cloud |
-| Terminal (CLI) | GUI / Web |
-| SQLite | Free-form workouts (no program) |
+| Mobile (React Native + TypeScript) | Web / Desktop |
+| SQLite (expo-sqlite) | Free-form workouts (no program) |
 | JSON import/export (full replacement) | Edit/delete completed sessions |
 
 ## 2. Domain Models

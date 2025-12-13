@@ -1,101 +1,140 @@
-# Gym Tracker Java Port - Design Document
+# Gym Tracker - Design Document
 
 ## 1. Technology
 
 | Aspect | Decision |
 |--------|----------|
 | Users | Single-user |
-| Platform | Terminal (CLI) |
-| Persistence | SQLite via JDBC |
-| Architecture | CLI → Service → Repository → SQLite |
+| Platform | Mobile (React Native + Expo) |
+| Language | TypeScript |
+| Persistence | SQLite via expo-sqlite |
+| Architecture | Screens → Hooks/Services → Repository → SQLite |
 
-## 2. CLI Design
+## 2. UI Design
+
+### Navigation Structure
 
 ```
-=== Gym Tracker ===
-1. Start Workout
-2. Programs
-3. Exercises
-4. History
-5. Export Data
-6. Import Data
-7. Exit
+Tab Navigator
+├── Home (Start Workout)
+├── Programs
+├── Exercises
+├── History
+└── Settings (Export/Import)
 ```
 
-**Workout Flow**: Start → Rest Timer (active countdown with alert) → Next Set → ... → Complete.
+### Key Screens
 
-## 3. Enums
+| Screen | Purpose |
+|--------|---------|
+| `HomeScreen` | Quick-start workout, show active session if exists |
+| `WorkoutScreen` | Active workout: current exercise, set logging, rest timer |
+| `ProgramsScreen` | List programs, CRUD operations |
+| `ProgramDetailScreen` | View/edit days and exercises |
+| `ExercisesScreen` | Exercise library, CRUD operations |
+| `HistoryScreen` | Past workout sessions list |
+| `SettingsScreen` | Export/Import data as JSON |
 
-```java
-enum TrackingType { REPS, TIME }
-enum ResistanceType { WEIGHT, DIFFICULTY }
-enum WorkoutStatus { IN_PROGRESS, COMPLETED, ABANDONED }
+**Workout Flow**: Start → Log Set → Rest Timer (countdown with notification) → Next Set → ... → Complete.
+
+## 3. Types
+
+```typescript
+enum TrackingType {
+  REPS = 'REPS',
+  TIME = 'TIME',
+}
+
+enum ResistanceType {
+  WEIGHT = 'WEIGHT',
+  DIFFICULTY = 'DIFFICULTY',
+}
+
+enum WorkoutStatus {
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  ABANDONED = 'ABANDONED',
+}
 ```
 
 ## 4. Entities
 
 ### Definition Layer
 
-```java
-class Exercise {
-    Long id;
-    String name, description;
-    TrackingType defaultTrackingType;
-    ResistanceType defaultResistanceType;
-    LocalDateTime createdAt, updatedAt;
+```typescript
+interface Exercise {
+  id: number;
+  name: string;
+  description: string | null;
+  defaultTrackingType: TrackingType;
+  defaultResistanceType: ResistanceType;
+  createdAt: string;
+  updatedAt: string;
 }
 
-class Program {
-    Long id;
-    String name, description;
-    Long lastCompletedDayId; // NULL = never started
-    LocalDateTime createdAt, updatedAt;
+interface Program {
+  id: number;
+  name: string;
+  description: string | null;
+  lastCompletedDayId: number | null; // null = never started
+  createdAt: string;
+  updatedAt: string;
 }
 
-class ProgramDay {
-    Long id, programId;
-    String name;
-    int orderIndex;
+interface ProgramDay {
+  id: number;
+  programId: number;
+  name: string;
+  orderIndex: number;
 }
 
-class ProgramDayExercise {
-    Long id, programDayId, exerciseId;
-    TrackingType trackingType;
-    int sets;
-    Integer targetReps;      // NULL if TIME
-    Integer targetTimeSeconds; // NULL if REPS
-    int orderIndex;
+interface ProgramDayExercise {
+  id: number;
+  programDayId: number;
+  exerciseId: number;
+  trackingType: TrackingType;
+  sets: number;
+  targetReps: number | null;        // null if TIME
+  targetTimeSeconds: number | null; // null if REPS
+  orderIndex: number;
 }
 ```
 
 ### State Layer
 
-```java
-class ExerciseSettings {
-    Long id, exerciseId;
-    // Weight-based
-    Double currentWeight, weightIncreaseFactor;
-    // Difficulty-based (user-managed ordered list)
-    List<String> difficultyLevels; // e.g., ["Red", "Blue", "Green"]
-    int currentDifficultyIndex;
-    Integer restTimeSeconds;
-    LocalDateTime updatedAt;
+```typescript
+interface ExerciseSettings {
+  id: number;
+  exerciseId: number;
+  // Weight-based
+  currentWeight: number | null;
+  weightIncreaseFactor: number | null;
+  // Difficulty-based (user-managed ordered list)
+  difficultyLevels: string[]; // e.g., ["Red", "Blue", "Green"]
+  currentDifficultyIndex: number;
+  restTimeSeconds: number | null;
+  updatedAt: string;
 }
 
-class WorkoutSession {
-    Long id;
-    Long programDayId; // NOT NULL - workouts require a program
-    LocalDateTime startedAt, completedAt;
-    WorkoutStatus status;
+interface WorkoutSession {
+  id: number;
+  programDayId: number; // NOT NULL - workouts require a program
+  startedAt: string;
+  completedAt: string | null;
+  status: WorkoutStatus;
 }
 
-class WorkoutSet {
-    Long id, workoutSessionId, programDayExerciseId, exerciseId;
-    int setNumber;
-    Double weight;
-    String difficulty; // Captured value at time of logging
-    Integer reps, timeSeconds;
-    boolean skipped;
+interface WorkoutSet {
+  id: number;
+  workoutSessionId: number;
+  programDayExerciseId: number | null;
+  exerciseId: number;
+  setNumber: number;
+  weight: number | null;
+  difficulty: string | null; // Captured value at time of logging
+  reps: number | null;
+  timeSeconds: number | null;
+  skipped: boolean;
 }
 ```
 
@@ -175,17 +214,17 @@ CREATE INDEX idx_workout_sets_session ON workout_sets(workout_session_id);
 CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 ```
 
-## 6. Services
+## 6. Services / Hooks
 
-| Service | Key Logic |
-|---------|-----------|
-| [WorkoutService](file:///home/gara/Documents/Proyects/ReactNative/gym-tracker-v2/old-src/services/WorkoutService.ts#6-184) | Start/complete sessions, log sets, trigger rest timer |
-| `ProgressionService` | Per-exercise: check last set → update weight OR advance difficultyIndex |
-| `ProgramService` | CRUD, get next day (first incomplete or first if new) |
-| `ExerciseService` | CRUD exercise library |
-| `ImportExportService` | JSON export/import. Refuse import if IN_PROGRESS session exists. |
+| Service/Hook | Key Logic |
+|--------------|-----------|
+| `useWorkout` | Start/complete sessions, log sets, manage rest timer state |
+| `useProgression` | Per-exercise: check last set → update weight OR advance difficultyIndex |
+| `useProgramService` | CRUD, get next day (first incomplete or first if new) |
+| `useExerciseService` | CRUD exercise library |
+| `useImportExport` | JSON export/import. Refuse import if IN_PROGRESS session exists. |
 
-### ProgressionService Logic
+### Progression Logic
 - Invoked per-exercise on session complete.
 - Skipped last set → no progression.
 - Weight: `currentWeight += weightIncreaseFactor`.
@@ -198,24 +237,24 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 ```plantuml
 @startuml
 actor User
-participant CLI
-participant WorkoutService
-participant ProgressionService
+participant UI as "React Native UI"
+participant WorkoutHook as "useWorkout"
+participant ProgressionHook as "useProgression"
 
-User -> CLI: Start Workout
-CLI -> WorkoutService: startWorkout(programId)
-WorkoutService --> CLI: session (suggested day)
+User -> UI: Tap "Start Workout"
+UI -> WorkoutHook: startWorkout(programId)
+WorkoutHook --> UI: session (suggested day)
 
 loop Each Set
-    User -> CLI: Log (reps/weight)
-    CLI -> WorkoutService: logSet()
-    CLI -> CLI: Start Rest Timer
-    CLI --> User: Alert when done
+    User -> UI: Log (reps/weight)
+    UI -> WorkoutHook: logSet()
+    UI -> UI: Start Rest Timer
+    UI --> User: Notification/Vibration when done
 end
 
-User -> CLI: Complete
-CLI -> WorkoutService: complete()
-WorkoutService -> ProgressionService: check(perExercise)
-ProgressionService --> CLI: alerts if difficulty exhausted
+User -> UI: Tap "Complete"
+UI -> WorkoutHook: complete()
+WorkoutHook -> ProgressionHook: check(perExercise)
+ProgressionHook --> UI: alerts if difficulty exhausted
 @enduml
 ```
