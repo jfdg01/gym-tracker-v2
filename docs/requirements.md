@@ -8,6 +8,7 @@
 | Mobile (React Native + TypeScript) | Web / Desktop |
 | SQLite (expo-sqlite) | Free-form workouts (no program) |
 | JSON import/export (full replacement) | Cloud sync |
+| Linear workout execution | Supersets / Complex Set Grouping |
 
 ## 2. Domain Models
 
@@ -17,7 +18,7 @@
 
 ### Programs
 - **Program**: Days collection. **Workouts require a program.**
-- **Day**: Ordered exercises with targets. First incomplete day or first day if new.
+- **Day**: Ordered exercises with targets. Suggested day is always `last_completed_day_order_index + 1`.
 - **Progress**: `last_completed_day` per program. NULL = never started.
 
 ### Workout Logging
@@ -29,7 +30,7 @@
 ### Weight-Based
 Last set reps ≥ target → `currentWeight += weightIncreaseFactor`.
 
-> **Note**: Exercise settings are global—the same exercise shares settings across all programs.
+> **Note**: Exercise settings are global—the same exercise shares settings across all programs. Per-program settings are out of scope.
 
 ### Difficulty-Based
 User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). On success:
@@ -45,18 +46,18 @@ User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). 
 ## 5. Data Validation
 | Field | Rule |
 |-------|------|
-| Name (Program/Exercise) | Required, max 50 chars. |
+| Name (Program/Exercise) | Required, max 100 chars. |
 | Description | Optional, max 200 chars. |
 | Sets | 1-20 |
 | Reps | 1-999 |
-| Weight | 0-999 (kg/lbs agnostic) |
+| Weight | 0-999 (Unit agnostic. Label is cosmetic only; no conversion logic.) |
 | Time | 1-3600 seconds |
 
 ## 6. User Stories
 
 | # | Story | Acceptance |
 |---|-------|------------|
-| 1 | Start/complete workout | Select program → suggested day → log sets → complete. Updates `last_completed_day`. |
+| 1 | Start/complete workout | Select program → suggested day (last completed + 1) → log sets → complete. Updates `last_completed_day`. |
 | 2 | Auto-progression | Weight: increment on target. Difficulty: advance in list. |
 | 3 | Abandon workout | Exit mid-session → status = `ABANDONED`. Sets preserved. |
 | 4 | Rest timer | Countdown after set. Visual/audio alert on end (including when backgrounded). Skip available. |

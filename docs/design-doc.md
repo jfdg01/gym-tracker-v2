@@ -7,8 +7,8 @@
 | Users | Single-user |
 | Platform | Mobile (React Native + Expo) |
 | Language | TypeScript |
-| Persistence | SQLite via expo-sqlite |
-| Architecture | Screens → Hooks/Services → Repository → SQLite |
+| Persistence | SQLite via expo-sqlite (with Drizzle ORM optional, or raw Repository layer) |
+| Architecture | Screens → Hooks (TanStack Query) → Repository → SQLite |
 
 ## 2. UI Design
 
@@ -35,8 +35,12 @@ Tab Navigator
 | `HistoryScreen` | Past workout sessions list |
 | `SettingsScreen` | Export/Import data as JSON |
 
-**Workout Flow**: Start → Log Set → Rest Timer (countdown with notification) → Next Set → ... → Complete.
-**Swap Exercise Flow**: In an active workout, when user is presented with a list of the exercises in the day, they can swap them around by sliding them
+### UI Constraints
+**Read-Only Fields**: Fields that modify the underlying definition of an entity (e.g., an Exercise's `Default Tracking Type`) must be **greyed out/disabled** when viewed in a descendant context (e.g., within a Program Day list). This clarifies that the user is viewing an instance, not editing the global definition.
+
+**Workout Flow**: Linear execution (Set 1 of Exercise A -> Set 2 of Exercise A -> ... -> Exercise B). Supersets are out of scope.
+**Swap Exercise Flow**: In an active workout, the user can swap exercises (reorder or replace).
+> **Note on Persistence**: Swaps are **persisted** to the active session via an `exercises_snapshot`. Resuming will restore the exact state of the workout, including any reordered or replaced exercises.
 
 ## 3. Types
 
@@ -123,6 +127,7 @@ interface ExerciseSettings {
 interface WorkoutSession {
   id: number;
   programDayId: number; // NOT NULL - workouts require a program
+  exercisesSnapshot: string | null; // JSON array preserving order/swaps for this specific session
   startedAt: string;
   completedAt: string | null;
   status: WorkoutStatus;
@@ -139,6 +144,11 @@ interface WorkoutSet {
   timeSeconds: number | null;
   skipped: boolean;
 }
+
+### Data Integry & Logic Rules
+1.  **JSON Fields**: The Repository layer is responsible for `JSON.stringify` when writing and `JSON.parse` when reading fields like `exercise_settings.difficulty_levels`.
+2.  **Timestamps**: The Repository layer must manually set `updatedAt = new Date().toISOString()` on every UPDATE operation. We will not use SQL triggers to keep the DB layer simple and portable.
+
 ```
 
 ## 5. SQL Schema
@@ -196,7 +206,10 @@ CREATE TABLE exercise_settings (
 
 CREATE TABLE workout_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    program_day_id INTEGER NOT NULL REFERENCES program_days(id),
+    program_day_id INTEGER REFERENCES program_days(id) ON DELETE SET NULL, -- Nullable to allow program deletion while keeping history
+    program_name_snapshot TEXT, -- Captured at start time to preserve history if program deleted
+    day_name_snapshot TEXT,     -- Captured at start time
+    exercises_snapshot TEXT,    -- JSON array of ordered exercise IDs/metadata. Handles swaps/reorder persistence.
     started_at TEXT NOT NULL,
     completed_at TEXT,
     status TEXT NOT NULL DEFAULT 'IN_PROGRESS'
@@ -226,7 +239,7 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 | programs | program_days | One-to-Many | CASCADE | Deleting program deletes all days |
 | program_days | program_day_exercises | One-to-Many | CASCADE | Deleting day deletes planned exercises |
 | exercises | program_day_exercises | Many-to-Many link | RESTRICT | Cannot delete exercise used in program (Archive instead) |
-| program_days | workout_sessions | One-to-Many | RESTRICT | Cannot delete day with history (soft-consistency) |
+| program_days | workout_sessions | One-to-Many | SET NULL | Deleting program/day preserves session history (orphaned sessions rely on snapshots) |
 | workout_sessions | workout_sets | One-to-Many | CASCADE | Deleting session deletes its sets |
 
 ## 6. Custom Hooks
@@ -235,7 +248,7 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 |------|-----------|
 | `useWorkout` | Start/complete sessions, log sets, manage rest timer state |
 | `useProgression` | Per-exercise: check last set → update weight OR advance difficultyIndex |
-| `useProgramService` | CRUD, get next day (first incomplete or first if new) |
+| `useProgramService` | CRUD, get next day (last completed day index + 1) |
 | `useExerciseService` | CRUD exercise library |
 | `useImportExport` | JSON export/import. Refuse import if IN_PROGRESS session exists. |
 
@@ -248,13 +261,27 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 
 ## 7. State Management
 
-**Approach**: React Context + custom hooks.
+**Approach**: **TanStack Query (React Query)** + Custom Hooks.
 
-- **WorkoutContext**: Active workout session state (current exercise, set, rest timer).
-- **DataContext**: Cached entities (exercises, programs) for fast UI rendering.
-- **Persistence**: Hooks read/write to SQLite via repository functions.
+- **TanStack Query**: Handles all async data fetching, caching, loading states, and side-effect management (mutations).
+  - Invalidates generic keys (e.g., `['programs']`) on mutations to ensure UI stays fresh.
+- **Context**: Used strictly for *local* UI state that doesn't need persistence (e.g., "Active Rest Timer" state if it needs to persist across screens, though Zustand is also a viable option).
+- **Persistence**: Repositories act as the "Query Function" for TanStack Query (e.g., `useQuery({ queryKey: ['exercises'], queryFn: ExerciseRepository.getAll })`).
 
-This keeps the architecture simple for a single-user offline app, avoiding external state libraries.
+This modernizes the stack and removes the complexity of manually managing `useEffect` loading waterfalls and cache invalidation.
+
+### Code Convention: Query Keys
+
+To avoid string-matching bugs and ensure consistency, use a `QueryKeyFactory`:
+
+```typescript
+export const exerciseKeys = {
+  all: ['exercises'] as const,
+  lists: () => [...exerciseKeys.all, 'list'] as const,
+  detail: (id: number) => [...exerciseKeys.all, 'detail', id] as const,
+};
+// Usage: useQuery({ queryKey: exerciseKeys.detail(1), ... })
+```
 
 ## 8. Data Interchange (JSON Schema)
 
@@ -302,3 +329,5 @@ WorkoutHook -> ProgressionHook: check(perExercise)
 ProgressionHook --> UI: alerts if difficulty exhausted
 @enduml
 ```
+
+> **Note**: All logging operations (`logSet`) must explicitly reference the `workoutSessionId` to ensure data integrity, especially when handling resumed sessions or modified exercise orders.
