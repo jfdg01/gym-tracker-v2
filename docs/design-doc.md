@@ -28,12 +28,12 @@ Tab Navigator
 | Screen | Purpose |
 |--------|---------|
 | `HomeScreen` | Quick-start workout, show active session if exists |
-| `WorkoutScreen` | Active workout: current exercise, set logging, rest timer |
+| `WorkoutScreen` | Active workout: current exercise, set logging, rest timer, progress indicator (e.g., "3/15 sets complete") |
 | `ProgramsScreen` | List programs, CRUD operations |
 | `ProgramDetailScreen` | View/edit days and exercises |
 | `ExercisesScreen` | Exercise library, CRUD operations |
-| `HistoryScreen` | Past workout sessions list |
-| `SettingsScreen` | Export/Import data as JSON |
+| `HistoryScreen` | Past workout sessions list. Tap an item for detailed view. |
+| `SettingsScreen` | Export/Import data, weight unit preference |
 
 ### UI Constraints
 **Read-Only Fields**: Fields that modify the underlying definition of an entity (e.g., an Exercise's `Default Tracking Type`) must be **greyed out/disabled** when viewed in a descendant context (e.g., within a Program Day list). This clarifies that the user is viewing an instance, not editing the global definition.
@@ -73,6 +73,7 @@ interface Exercise {
   description: string | null;
   defaultTrackingType: TrackingType;
   defaultResistanceType: ResistanceType;
+  isArchived: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -118,6 +119,7 @@ interface ExerciseSettings {
   currentWeight: number | null;
   weightIncreaseFactor: number | null;
   // Difficulty-based (user-managed ordered list)
+  /** Stored as JSON string in DB; Repository layer handles parse/stringify */
   difficultyLevels: string[]; // e.g., ["Red", "Blue", "Green"]
   currentDifficultyIndex: number;
   restTimeSeconds: number | null;
@@ -126,11 +128,26 @@ interface ExerciseSettings {
 
 interface WorkoutSession {
   id: number;
-  programDayId: number; // NOT NULL - workouts require a program
-  exercisesSnapshot: string | null; // JSON array preserving order/swaps for this specific session
+  programDayId: number | null; // Nullable to preserve history if program is deleted
+  programNameSnapshot: string | null; // Captured at start time to preserve history if program deleted
+  dayNameSnapshot: string | null;     // Captured at start time
+  exercisesSnapshot: ExerciseSnapshotItem[] | null; // Parsed from JSON; preserves order/swaps for restoring active sessions and rendering history
   startedAt: string;
   completedAt: string | null;
   status: WorkoutStatus;
+}
+
+/** Represents a single exercise entry in the exercises_snapshot JSON array */
+interface ExerciseSnapshotItem {
+  programDayExerciseId: number; // Reference to original ProgramDayExercise (for traceability)
+  exerciseId: number;           // Denormalized for history queries when original is deleted
+  exerciseName: string;         // Denormalized for display in history
+  trackingType: TrackingType;
+  resistanceType: ResistanceType;
+  sets: number;
+  targetReps: number | null;
+  targetTimeSeconds: number | null;
+  orderIndex: number;           // Captures order at snapshot time (including swaps)
 }
 
 interface WorkoutSet {
@@ -143,11 +160,12 @@ interface WorkoutSet {
   reps: number | null;
   timeSeconds: number | null;
   skipped: boolean;
+  createdAt: string;
 }
 
-### Data Integry & Logic Rules
+### Data Integrity & Logic Rules
 1.  **JSON Fields**: The Repository layer is responsible for `JSON.stringify` when writing and `JSON.parse` when reading fields like `exercise_settings.difficulty_levels`.
-2.  **Timestamps**: The Repository layer must manually set `updatedAt = new Date().toISOString()` on every UPDATE operation. We will not use SQL triggers to keep the DB layer simple and portable.
+2.  **Timestamps**: All timestamps must be stored as **UTC ISO 8601 strings** (e.g., `2023-10-27T10:00:00.000Z`). The Repository layer sets `updatedAt` on UPDATEs. The UI logic is responsible for converting to local time for display.
 
 ```
 
@@ -218,7 +236,7 @@ CREATE TABLE workout_sessions (
 CREATE TABLE workout_sets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     workout_session_id INTEGER NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
-    exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+    exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
     set_number INTEGER NOT NULL,
     weight REAL,
     difficulty TEXT,
@@ -239,6 +257,7 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 | programs | program_days | One-to-Many | CASCADE | Deleting program deletes all days |
 | program_days | program_day_exercises | One-to-Many | CASCADE | Deleting day deletes planned exercises |
 | exercises | program_day_exercises | Many-to-Many link | RESTRICT | Cannot delete exercise used in program (Archive instead) |
+| exercises | workout_sets | One-to-Many | RESTRICT | Cannot delete exercise with history (Archive instead) |
 | program_days | workout_sessions | One-to-Many | SET NULL | Deleting program/day preserves session history (orphaned sessions rely on snapshots) |
 | workout_sessions | workout_sets | One-to-Many | CASCADE | Deleting session deletes its sets |
 
@@ -254,21 +273,25 @@ CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
 
 ### Progression Logic
 - **Invoked per-exercise** on session complete (or when user exits).
-- **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged (skipped sets do not count as logged).
+- **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged (skipped sets do not count as logged). Target sets are determined by the `exercises_snapshot` captured at workout start. This ensures progression logic respects any mid-workout swaps or modifications—the snapshot is the single source of truth.
 - **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left.
-- Weight: `currentWeight += weightIncreaseFactor` (only if target reps met on last set).
+- Weight: `currentWeight += weightIncreaseFactor` (only if target reps met on **all sets**).
 - Difficulty: `currentDifficultyIndex++`. If at end, flag alert.
 
 ## 7. State Management
 
-**Approach**: **TanStack Query (React Query)** + Custom Hooks.
+**Approach**: **TanStack Query (React Query)** + Custom Hooks + React Context.
 
 - **TanStack Query**: Handles all async data fetching, caching, loading states, and side-effect management (mutations).
   - Invalidates generic keys (e.g., `['programs']`) on mutations to ensure UI stays fresh.
-- **Context**: Used strictly for *local* UI state that doesn't need persistence (e.g., "Active Rest Timer" state if it needs to persist across screens, though Zustand is also a viable option).
+- **React Context (`RestTimerContext`)**: Manages active rest timer state (remaining seconds, isRunning). This allows the timer to persist across screen navigation (e.g., user navigates away from `WorkoutScreen` and returns).
 - **Persistence**: Repositories act as the "Query Function" for TanStack Query (e.g., `useQuery({ queryKey: ['exercises'], queryFn: ExerciseRepository.getAll })`).
 
 This modernizes the stack and removes the complexity of manually managing `useEffect` loading waterfalls and cache invalidation.
+
+### Error Handling
+
+**Policy**: Errors from Repository/database operations are logged to the console for development purposes only. No user-facing error toasts or retry mechanisms are implemented in v1. Critical operations (e.g., `logSet`) are expected to succeed; if they fail, the error is logged and the app continues.
 
 ### Code Convention: Query Keys
 
@@ -314,19 +337,49 @@ participant ProgressionHook as "useProgression"
 
 User -> UI: Tap "Start Workout"
 UI -> WorkoutHook: startWorkout(programId)
-WorkoutHook --> UI: session (suggested day)
+WorkoutHook --> UI: session (suggested day, exercises_snapshot created)
 
 loop Each Set
     User -> UI: Log (reps/weight)
     UI -> WorkoutHook: logSet()
-    UI -> UI: Start Rest Timer
+    UI -> UI: Start Rest Timer (via RestTimerContext)
     UI --> User: Notification/Vibration when done
 end
 
 User -> UI: Tap "Complete"
 UI -> WorkoutHook: complete()
-WorkoutHook -> ProgressionHook: check(perExercise)
+WorkoutHook -> ProgressionHook: check(perExercise, based on snapshot)
 ProgressionHook --> UI: alerts if difficulty exhausted
+@enduml
+```
+
+### Sequence: Abandon / Resume Workout
+
+```plantuml
+@startuml
+actor User
+participant UI as "React Native UI"
+participant WorkoutHook as "useWorkout"
+participant System as "Background / App Lifecycle"
+
+== Resume Flow ==
+User -> UI: Open App
+UI -> WorkoutHook: checkActiveSession()
+WorkoutHook --> UI: session (IN_PROGRESS)
+UI --> User: Prompt "Resume workout?"
+User -> UI: Tap "Resume"
+UI -> WorkoutHook: loadSession(sessionId)
+note right: Workout continues from exercises_snapshot state
+
+== Explicit Abandon ==
+User -> UI: Tap "Abandon"
+UI -> WorkoutHook: abandon()
+WorkoutHook --> UI: session.status = ABANDONED
+
+== Auto-Abandon (20 hours) ==
+System -> WorkoutHook: Timeout check on next app open
+WorkoutHook --> System: If session.startedAt > 20h ago && status == IN_PROGRESS
+WorkoutHook --> UI: session.status = ABANDONED
 @enduml
 ```
 
