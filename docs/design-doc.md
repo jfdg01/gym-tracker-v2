@@ -7,7 +7,7 @@
 | Users | Single-user |
 | Platform | Mobile (React Native + Expo) |
 | Language | TypeScript |
-| Persistence | SQLite via expo-sqlite (with Drizzle ORM optional, or raw Repository layer) |
+| Persistence | SQLite via expo-sqlite with Drizzle ORM |
 | Architecture | Screens → Hooks (TanStack Query) → Repository → SQLite |
 
 ## 2. UI Design
@@ -66,9 +66,12 @@ enum WorkoutStatus {
 
 ### Definition Layer
 
+> **Architecture Note**: The interfaces below represent the **Domain Models** used by the UI and Application layer.
+> The **Data Layer** types are inferred directly from the Drizzle Schema definitions (using `InferSelectModel`) and mapped to these Domain Models in the Repository layer. This decouples the application code from specific database implementation details.
+
 ```typescript
 interface Exercise {
-  id: number;
+  id: string; // UUID
   name: string;
   description: string | null;
   defaultTrackingType: TrackingType;
@@ -79,25 +82,25 @@ interface Exercise {
 }
 
 interface Program {
-  id: number;
+  id: string; // UUID
   name: string;
   description: string | null;
-  lastCompletedDayId: number | null; // null = never started
+  lastCompletedDayId: string | null; // null = never started
   createdAt: string;
   updatedAt: string;
 }
 
 interface ProgramDay {
-  id: number;
-  programId: number;
+  id: string; // UUID
+  programId: string;
   name: string;
   orderIndex: number;
 }
 
 interface ProgramDayExercise {
-  id: number;
-  programDayId: number;
-  exerciseId: number;
+  id: string; // UUID
+  programDayId: string;
+  exerciseId: string;
   trackingType: TrackingType;       // Set at creation, not overridable
   resistanceType: ResistanceType;   // Set at creation, not overridable
   sets: number;
@@ -113,8 +116,8 @@ interface ProgramDayExercise {
 
 ```typescript
 interface ExerciseSettings {
-  id: number;
-  exerciseId: number;
+  id: string; // UUID
+  exerciseId: string;
   // Weight-based
   currentWeight: number | null;
   weightIncreaseFactor: number | null;
@@ -127,8 +130,8 @@ interface ExerciseSettings {
 }
 
 interface WorkoutSession {
-  id: number;
-  programDayId: number | null; // Nullable to preserve history if program is deleted
+  id: string; // UUID
+  programDayId: string | null; // Nullable to preserve history if program is deleted
   programNameSnapshot: string | null; // Captured at start time to preserve history if program deleted
   dayNameSnapshot: string | null;     // Captured at start time
   exercisesSnapshot: ExerciseSnapshotItem[] | null; // Parsed from JSON; preserves order/swaps for restoring active sessions and rendering history
@@ -139,8 +142,8 @@ interface WorkoutSession {
 
 /** Represents a single exercise entry in the exercises_snapshot JSON array */
 interface ExerciseSnapshotItem {
-  programDayExerciseId: number; // Reference to original ProgramDayExercise (for traceability)
-  exerciseId: number;           // Denormalized for history queries when original is deleted
+  programDayExerciseId: string; // Reference to original ProgramDayExercise (for traceability)
+  exerciseId: string;           // Denormalized for history queries when original is deleted
   exerciseName: string;         // Snapshot is source of truth for history display. Preserves original name even if user renames/deletes global entity.
   trackingType: TrackingType;
   resistanceType: ResistanceType;
@@ -151,9 +154,9 @@ interface ExerciseSnapshotItem {
 }
 
 interface WorkoutSet {
-  id: number;
-  workoutSessionId: number;
-  exerciseId: number;
+  id: string; // UUID
+  workoutSessionId: string;
+  exerciseId: string;
   setNumber: number;
   weight: number | null;
   difficulty: string | null; // Captured value at time of logging
@@ -169,86 +172,24 @@ interface WorkoutSet {
 
 ```
 
-## 5. SQL Schema
+## 5. Database Schema
 
-```sql
-CREATE TABLE exercises (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    default_tracking_type TEXT NOT NULL,
-    default_resistance_type TEXT NOT NULL,
-    is_archived INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+The database schema is managed via **Drizzle ORM**. This provides type safety and simpler migrations compared to raw SQL.
 
-CREATE TABLE programs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    last_completed_day_id INTEGER REFERENCES program_days(id) ON DELETE SET NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+### Naming Conventions
+- **Tables**: `snake_case` (plural) in database.
+- **Columns**: `snake_case` in database, mapped to camelCase properties in TypeScript.
 
-CREATE TABLE program_days (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    order_index INTEGER NOT NULL
-);
+### Data Types & Defaults
+- **IDs**: `TEXT PRIMARY KEY` (UUIDs). Generated by the application (crypto.randomUUID) or DB. Facilitates safe importing/merging without ID collisions.
+- **Booleans**: Stored as `INTEGER` (0 = false, 1 = true).
+- **Timestamps**: Stored as ISO 8601 Text. Defaults to `CURRENT_TIMESTAMP`.
+- **JSON**: Complex objects (e.g., `difficulty_levels`, `exercises_snapshot`) stored as TEXT.
 
-CREATE TABLE program_day_exercises (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    program_day_id INTEGER NOT NULL REFERENCES program_days(id) ON DELETE CASCADE,
-    exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
-    tracking_type TEXT NOT NULL,
-    resistance_type TEXT NOT NULL,
-    sets INTEGER NOT NULL,
-    target_reps INTEGER,
-    target_time_seconds INTEGER,
-    order_index INTEGER NOT NULL
-);
+### Indexes
+- `workout_sets`: Index on `workout_session_id` (foreign key performance).
+- `workout_sets`: Index on `exercise_id` (analytics performance).
 
-CREATE TABLE exercise_settings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    exercise_id INTEGER UNIQUE NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
-    current_weight REAL,
-    weight_increase_factor REAL,
-    difficulty_levels TEXT, -- JSON array: ["Red", "Blue"]
-    current_difficulty_index INTEGER DEFAULT 0,
-    rest_time_seconds INTEGER,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE workout_sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    program_day_id INTEGER REFERENCES program_days(id) ON DELETE SET NULL, -- Nullable to allow program deletion while keeping history
-    program_name_snapshot TEXT, -- Captured at start time to preserve history if program deleted
-    day_name_snapshot TEXT,     -- Captured at start time
-    exercises_snapshot TEXT,    -- JSON array of ordered exercise IDs/metadata. Handles swaps/reorder persistence.
-    started_at TEXT NOT NULL,
-    completed_at TEXT,
-    status TEXT NOT NULL DEFAULT 'IN_PROGRESS'
-);
-
-CREATE TABLE workout_sets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workout_session_id INTEGER NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
-    exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
-    set_number INTEGER NOT NULL,
-    weight REAL,
-    difficulty TEXT,
-    reps INTEGER,
-    time_seconds INTEGER,
-    skipped INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_workout_sets_session ON workout_sets(workout_session_id);
-CREATE INDEX idx_workout_sets_exercise ON workout_sets(exercise_id);
-```
 
 ### Cascade Behavior Summary
 
@@ -303,9 +244,9 @@ To avoid string-matching bugs and ensure consistency, use a `QueryKeyFactory`:
 export const exerciseKeys = {
   all: ['exercises'] as const,
   lists: () => [...exerciseKeys.all, 'list'] as const,
-  detail: (id: number) => [...exerciseKeys.all, 'detail', id] as const,
+  detail: (id: string) => [...exerciseKeys.all, 'detail', id] as const,
 };
-// Usage: useQuery({ queryKey: exerciseKeys.detail(1), ... })
+// Usage: useQuery({ queryKey: exerciseKeys.detail('uuid-string'), ... })
 ```
 
 ## 8. Data Interchange (JSON Schema)
@@ -315,13 +256,13 @@ export const exerciseKeys = {
   "version": 1,
   "exportedAt": "2023-10-27T10:00:00Z",
   "exercises": [
-    { "id": 1, "name": "Squat", "defaultTrackingType": "REPS", "isArchived": 0, ... }
+    { "id": "uuid-1", "name": "Squat", "defaultTrackingType": "REPS", "isArchived": 0, ... }
   ],
   "programs": [
-    { "id": 1, "name": "Starting Strength", "days": [ ... ] }
+    { "id": "uuid-2", "name": "Starting Strength", "days": [ ... ] }
   ],
   "workoutSessions": [
-    { "id": 101, "startedAt": "...", "sets": [ ... ] }
+    { "id": "uuid-3", "startedAt": "...", "sets": [ ... ] }
   ]
 }
 ```

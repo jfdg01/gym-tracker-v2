@@ -31,6 +31,7 @@
 ### Weight-Based
 **All sets** reps ≥ target → `currentWeight += weightIncreaseFactor`.
 - **Constraint**: Skipped sets are considered incomplete. Use of a skip in any targeted set prevents progression for that exercise.
+- **Failure**: If targets are not met, `currentWeight` remains unchanged (Deloading logic is Out-of-Scope).
 
 > **Note**: Exercise settings are global—the same exercise shares settings across all programs. Per-program settings are out of scope.
 
@@ -60,7 +61,7 @@ User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). 
 
 | # | Story | Acceptance |
 |---|-------|------------|
-| 1 | Start/complete workout | Select program → suggested day (last completed + 1) → log sets → complete. Updates `last_completed_day`. |
+| 1 | Start/complete workout | Select program → suggested day (last completed + 1) OR manually select any day → log sets → complete. Updates `last_completed_day`. |
 | 2 | Auto-progression | Weight: increment on target. Difficulty: advance in list. |
 | 3 | Abandon workout | User explicitly marks an IN_PROGRESS workout as `ABANDONED`. Alternatively, if a workout remains IN_PROGRESS for 20 hours, it is automatically marked as `ABANDONED`. Sets are preserved in both cases. |
 | 4 | Resume workout | If an IN_PROGRESS session exists, prompt user to resume on app open / Home screen. |
