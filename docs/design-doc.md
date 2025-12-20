@@ -7,6 +7,8 @@
 | Users | Single-user |
 | Platform | Mobile (React Native + Expo) |
 | Language | TypeScript |
+| Styling | **NativeWind** (Tailwind CSS) |
+| UI Components | **gluestack-ui** (styled with NativeWind) |
 | Persistence | SQLite via expo-sqlite with Drizzle ORM |
 | Architecture | Screens → Hooks (TanStack Query) → Repository → SQLite |
 
