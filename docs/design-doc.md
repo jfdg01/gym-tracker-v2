@@ -38,9 +38,8 @@ Tab Navigator
 ### UI Constraints
 **Read-Only Fields**: Fields that modify the underlying definition of an entity (e.g., an Exercise's `Default Tracking Type`) must be **greyed out/disabled** when viewed in a descendant context (e.g., within a Program Day list). This clarifies that the user is viewing an instance, not editing the global definition.
 
-**Workout Flow**: Linear execution (Set 1 of Exercise A -> Set 2 of Exercise A -> ... -> Exercise B). Users can navigate back to skipped sets; the flow defaults to the next incomplete set but allows manual selection. Supersets are out of scope.
-**Swap Exercise Flow**: In an active workout, the user can swap exercises (reorder or replace).
-> **Note on Persistence**: Swaps are **persisted immediately** to the active session via the `exercises_snapshot`. The snapshot is generated when "Start Workout" is triggered and updated dynamically during the session. Resuming will restore the exact modified state.
+**Workout Flow**: Linear execution (Set 1 of Exercise A -> Set 2 of Exercise A -> ... -> Exercise B). After a set is logged, the `RestTimerContext` triggers automatically. Upon completion of the target number of sets for an exercise, the `ProgressionService` is invoked to update the global `ExerciseSettings` for that exercise. The UI then automatically navigates to the start of the next exercise. Users can manually navigate back to skipped or previous sets if needed. Supersets are out of scope.
+**Swap Exercise Flow**: In an active workout, the user can swap exercises (reorder or replace). This is a **purely transient, session-level mutation** (similar to reordering tabs in a browser). It affects the `exercises_snapshot` for the active session but does not modify the global program definition. Logged sets for a swapped position are **cleared** if the exercise itself is replaced.
 
 ## 3. Types
 
@@ -74,6 +73,7 @@ interface Exercise {
   id: string; // UUID
   name: string;
   description: string | null;
+  category: string | null;
   defaultTrackingType: TrackingType;
   defaultResistanceType: ResistanceType;
   isArchived: boolean;
@@ -124,7 +124,7 @@ interface ExerciseSettings {
   // Difficulty-based (user-managed ordered list)
   /** Stored as JSON string in DB; Repository layer handles parse/stringify */
   difficultyLevels: string[]; // e.g., ["Red", "Blue", "Green"]
-  currentDifficultyIndex: number;
+  currentDifficultyLevel: string | null; // Value-based for stability
   restTimeSeconds: number | null;
   updatedAt: string;
 }
@@ -135,6 +135,7 @@ interface WorkoutSession {
   programNameSnapshot: string | null; // Captured at start time for history preservation
   dayNameSnapshot: string | null;     // Captured at start time for history preservation
   exercisesSnapshot: ExerciseSnapshotItem[] | null; // Source of truth for history and active session state (swaps/order)
+  restTimerTargetEndTime: string | null; // ISO 8601 UTC. Persisted for app-kill/resume robustness.
   startedAt: string;
   completedAt: string | null;
   status: WorkoutStatus;
@@ -146,6 +147,7 @@ interface ExerciseSnapshotItem {
   exerciseId: string;           // Denormalized for history queries when original is deleted
   exerciseName: string;         // Snapshot is source of truth for history display
   exerciseDescription: string | null;
+  exerciseCategory: string | null; // Denormalized for history filtering/display
   trackingType: TrackingType;
   resistanceType: ResistanceType;
   sets: number;
@@ -206,6 +208,89 @@ Migrations are executed at app startup using the `drizzle-orm/expo-sqlite` `migr
 | program_days | workout_sessions | One-to-Many | SET NULL | Deleting program/day preserves session history (orphaned sessions rely on snapshots) |
 | workout_sessions | workout_sets | One-to-Many | CASCADE | Deleting session deletes its sets |
 
+### Detailed Schema Draft (Drizzle)
+
+```typescript
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+
+export const exercises = sqliteTable('exercises', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  category: text('category'),
+  defaultTrackingType: text('default_tracking_type').notNull(), // 'REPS', 'TIME'
+  defaultResistanceType: text('default_resistance_type').notNull(), // 'WEIGHT', 'DIFFICULTY'
+  isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const exerciseSettings = sqliteTable('exercise_settings', {
+  id: text('id').primaryKey(),
+  exerciseId: text('exercise_id').notNull().references(() => exercises.id),
+  currentWeight: integer('current_weight'), // Decimals handled as scaled integers or float
+  weightIncreaseFactor: integer('weight_increase_factor'),
+  difficultyLevels: text('difficulty_levels'), // JSON array
+  currentDifficultyLevel: text('current_difficulty_level'),
+  restTimeSeconds: integer('rest_time_seconds'),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const programs = sqliteTable('programs', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  lastCompletedDayId: text('last_completed_day_id'), // Set by app logic
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const programDays = sqliteTable('program_days', {
+  id: text('id').primaryKey(),
+  programId: text('program_id').notNull().references(() => programs.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  orderIndex: integer('order_index').notNull(),
+});
+
+export const programDayExercises = sqliteTable('program_day_exercises', {
+  id: text('id').primaryKey(),
+  programDayId: text('program_day_id').notNull().references(() => programDays.id, { onDelete: 'cascade' }),
+  exerciseId: text('exercise_id').notNull().references(() => exercises.id),
+  sets: integer('sets').notNull(),
+  targetReps: integer('target_reps'),
+  targetTimeSeconds: integer('target_time_seconds'),
+  orderIndex: integer('order_index').notNull(),
+});
+
+export const workoutSessions = sqliteTable('workout_sessions', {
+  id: text('id').primaryKey(),
+  programDayId: text('program_day_id').references(() => programDays.id, { onDelete: 'set null' }),
+  programNameSnapshot: text('program_name_snapshot'),
+  dayNameSnapshot: text('day_name_snapshot'),
+  exercisesSnapshot: text('exercises_snapshot'), // JSON array
+  restTimerTargetEndTime: text('rest_timer_target_end_time'),
+  startedAt: text('started_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  completedAt: text('completed_at'),
+  status: text('status').notNull().default('IN_PROGRESS'),
+});
+
+export const workoutSets = sqliteTable('workout_sets', {
+  id: text('id').primaryKey(),
+  workoutSessionId: text('workout_session_id').notNull().references(() => workoutSessions.id, { onDelete: 'cascade' }),
+  exerciseId: text('exercise_id').notNull(), // Denormalized or Soft-Link
+  setNumber: integer('set_number').notNull(),
+  weight: integer('weight'),
+  difficulty: text('difficulty'),
+  reps: integer('reps'),
+  timeSeconds: integer('time_seconds'),
+  skipped: integer('skipped', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  sessionIdIdx: index('session_id_idx').on(table.workoutSessionId),
+  exerciseIdIdx: index('exercise_id_idx').on(table.exerciseId),
+}));
+```
+
 ## 6. Custom Hooks
 
 | Hook | Responsibility |
@@ -217,11 +302,11 @@ Migrations are executed at app startup using the `drizzle-orm/expo-sqlite` `migr
 | `useImportExport` | JSON export/import. Refuse import if IN_PROGRESS session exists. |
 
 ### Progression Logic
-- **Invoked per-exercise** on session complete (or when user exits).
+- **Invoked per-exercise** immediately after the last target set is logged.
 - **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged. **Constraint**: If any target set was marked "Skipped", progression is blocked for that exercise.
-- **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left.
+- **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left. Any progression already applied to finished exercises remains.
 - Weight: `currentWeight += weightIncreaseFactor` (only if target reps met on **all sets**).
-- Difficulty: `currentDifficultyIndex++` (follows the same "All sets success" rule). If at end, flag alert.
+- Difficulty: `currentDifficultyLevel` moves to next entry (follows the same "All sets success" rule). If at end, flag alert.
 
 ## 7. State Management
 
@@ -298,10 +383,8 @@ end
 
 User -> UI: Tap "Complete"
 UI -> WorkoutHook: complete()
-WorkoutHook -> ProgressionService: calculateProgress(session)
-ProgressionService --> WorkoutHook: updates to apply
-WorkoutHook -> Database: Save updates
-WorkoutHook --> UI: alerts if difficulty exhausted
+WorkoutHook -> Database: Save session status as COMPLETED
+WorkoutHook --> UI: Success
 @enduml
 ```
 

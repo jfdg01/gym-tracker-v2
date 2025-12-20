@@ -16,13 +16,13 @@
 ## 2. Domain Models
 
 ### Exercises
-- **Definition**: Name, Description, Tracking Type (`REPS`/`TIME`), Resistance Type (`WEIGHT`/`DIFFICULTY`).
+- **Definition**: Name, Description, Category (e.g., "Legs", "Push"), Tracking Type (`REPS`/`TIME`), Resistance Type (`WEIGHT`/`DIFFICULTY`).
 - **User Settings**: Current Weight OR Difficulty List (user-defined progression), Weight Increase Factor, Rest Time. These are initialized with defaults (0 or null) upon creation and can be configured before the first workout.
 
 ### Programs
 - **Program**: Days collection. **Workouts require a program.**
 - **Day**: Ordered exercises with targets. 
-- **Suggested Day**: The system suggests the day following the `last_completed_day`. If the last day of the program was completed, it loops back to the first day (based on `orderIndex`). This logic relies on ID references to handle day deletions or reorders robustly.
+- **Suggested Day**: The system suggests the day following the `last_completed_day`. If the last day of the program was completed, it loops back to the first day (based on `orderIndex`). If the `last_completed_day` reference is missing (e.g., deleted), the system defaults to the first day of the program. This logic relies on ID references to handle day deletions or reorders robustly.
 - **Progress**: `last_completed_day` per program. NULL = never started.
 
 ### Workout Logging
@@ -32,20 +32,20 @@
 ## 3. Progression Logic
 
 ### Weight-Based
-**All sets** (reps ≥ target OR time ≥ target) → `currentWeight += weightIncreaseFactor`.
+**Progression Check**: Evaluated **per-exercise** immediately after all target sets are logged. Success (reps ≥ target OR time ≥ target) on **all targeted sets** → `currentWeight += weightIncreaseFactor`.
 - **Constraint**: Skipped sets are considered incomplete. Use of a skip in any targeted set prevents progression for that exercise.
 - **Failure**: If targets are not met, `currentWeight` remains unchanged (Deloading logic is Out-of-Scope).
 - **Manual Overrides**: If the user manually changes the weight during a workout, this value immediately becomes the new `currentWeight`. The progression logic (increase vs. maintain) is then applied to this *new* weight based on the set performance.
-- **Logging Constraint**: Users input actual reps/time for the *prescribed* number of sets only. Logging extra sets beyond the target is not supported.
+- **Logging Flow**: Users are shown the prescribed number of sets. After logging a set (reps/time), the rest timer starts automatically. Once the final prescribed set is completed, the system automatically transitions to the next exercise in the program.
 
 > **Note**: Exercise settings are global—the same exercise shares settings across all programs. Per-program settings are out of scope.
 
 ### Difficulty-Based
-User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). On success:
-- Move to next item in list (`currentDifficultyIndex++`).
+User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). Progression is value-based (tracking the specific level name/ID) to remain stable across list edits. On success:
+- Move to next item in list (`currentDifficultyLevel` moves to the next entry).
 - If at end → alert user to extend list.
 - **Validation**: Difficulty lists must contain unique, non-empty strings. UI alerts are shown if the user tries to save an invalid list.
-- **List Changes**: If the user modifies the difficulty list (adds/removes items), the `currentDifficultyIndex` remains unchanged. The system points to the same *position* (index) in the list and advances to `index + 1` on success, regardless of list content changes.
+- **List Changes**: If the user modifies the difficulty list (adds/removes items), the system attempts to maintain the `currentDifficultyLevel`. If the previously active level is removed, the system defaults to the nearest valid level or the first item.
 
 ## 4. Rest Timer
 - **Active countdown** starts **automatically** immediately after a set is logged (including the last set).
