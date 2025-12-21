@@ -2,6 +2,7 @@
   "expo": {
     "name": "base-app",
     "slug": "base-app",
+    "scheme": "gym-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -27,7 +28,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-router"
     ]
   }
 }
