@@ -1,16 +1,16 @@
 # Gym Tracker - Design Document
 
-## 1. Technology
+## 1. Technology (Golden Stack 2025)
 
-| Aspect | Decision |
-|--------|----------|
-| Users | Single-user |
-| Platform | Mobile (React Native + Expo) |
-| Language | TypeScript |
-| Styling | **NativeWind** (Tailwind CSS) |
-| UI Components | **gluestack-ui** (styled with NativeWind) |
-| Persistence | SQLite via expo-sqlite with Drizzle ORM |
-| Architecture | Screens → Hooks (TanStack Query) → Repository → SQLite |
+| Aspect | Decision | Notes |
+|--------|----------|-------|
+| Users | Single-user | Offline-only |
+| Platform | Mobile (Expo SDK 52) | React Native 0.76+ (New Architecture) |
+| Language | TypeScript | Strong typing across the stack |
+| Styling | **NativeWind v4** | Tailwind CSS 3.4 compiled to Native |
+| UI Components | **gluestack-ui v2** | Headless / Copy-Paste (Source in project) |
+| Persistence | **SQLite (JSI)** | `expo-sqlite` + Drizzle ORM (Synchronous) |
+| Architecture | Modern Hooks | TanStack Query + Repository + JSI SQLite |
 
 ## 2. UI Design
 
@@ -182,7 +182,7 @@ interface WorkoutSet {
 The database schema is managed via **Drizzle ORM**. This provides type safety and simpler migrations compared to raw SQL.
 
 ### Migration Strategy
-Migrations are executed at app startup using the `drizzle-orm/expo-sqlite` `migrate` function. Migration SQL files are bundled using a Metro transformer or as raw assets. This ensures the schema is always up-to-date before any queries run.
+Migrations are executed at app startup using the `drizzle-orm/expo-sqlite` `migrate` function. Migration SQL files are bundled using the `babel-plugin-inline-import` and a custom Metro resolver (via `sourceExts`). This ensures the schema is always up-to-date and type-safe via `openDatabaseSync` (JSI).
 
 ### Naming Conventions
 - **Tables**: `snake_case` (plural) in database.

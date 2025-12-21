@@ -5,7 +5,7 @@ This document defines the visual and interactive language for the Gym Tracker v2
 ## 0. Implementation Technology
 The design system is implemented using:
 - **[NativeWind v4](https://www.nativewind.dev/)**: For utility-first styling using Tailwind CSS classes.
-- **[gluestack-ui](https://gluestack.io/)**: For accessible, high-performance UI components (Buttons, Modals, Inputs) that are styled with NativeWind.
+- **[gluestack-ui v2](https://gluestack.io/)**: For accessible, high-performance UI components (Buttons, Modals, Inputs) that are styled with NativeWind and follow the copy-paste architecture.
 
 
 ## 1. Visual Foundations
