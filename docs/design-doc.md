@@ -70,6 +70,11 @@ enum WorkoutStatus {
 
 > **Architecture Note**: The interfaces below represent the **Domain Models** used by the UI and Application layer.
 > The **Data Layer** types are inferred directly from the Drizzle Schema definitions (using `InferSelectModel`) and mapped to these Domain Models in the Repository layer. This decouples the application code from specific database implementation details.
+>
+> **Strict Decoupling Requirement**:
+
+* **Internal Mappers**: The transformation from DB Schema to Domain Model must happen via **private mapper functions** inside the Repository file.
+* **Schema Independence**: If a database column is renamed (e.g. `description` -> `desc`), ONLY the Mapper function in the Repository should be updated. The Domain Interface and the rest of the app must remain unchanged.
 
 ```typescript
 interface Exercise {
@@ -189,20 +194,20 @@ Migrations are executed at app startup using the `drizzle-orm/expo-sqlite` `migr
 
 ### Naming Conventions
 
-- **Tables**: `snake_case` (plural) in database.
-- **Columns**: `snake_case` in database, mapped to camelCase properties in TypeScript.
+* **Tables**: `snake_case` (plural) in database.
+* **Columns**: `snake_case` in database, mapped to camelCase properties in TypeScript.
 
 ### Data Types & Defaults
 
-- **IDs**: `TEXT PRIMARY KEY`. **Must be generated on the application side** (e.g., `crypto.randomUUID()`) to ensure consistency across imports/exports and offline state.
-- **Booleans**: Stored as `INTEGER` (0 = false, 1 = true).
-- **Timestamps**: Stored as ISO 8601 Text. Defaults to `CURRENT_TIMESTAMP`.
-- **JSON**: Complex objects (e.g., `difficulty_levels`, `exercises_snapshot`) stored as TEXT. Use Drizzle's `{ mode: 'json' }` option to automatically handle parsing/stringifying, ensuring type safety at the ORM level.
+* **IDs**: `TEXT PRIMARY KEY`. **Must be generated on the application side** using `expo-crypto` (e.g., `Crypto.randomUUID()`). The standard `crypto` module is not reliable across all RN environments. This ensures consistency across imports/exports and offline state.
+* **Booleans**: Stored as `INTEGER` (0 = false, 1 = true).
+* **Timestamps**: Stored as ISO 8601 Text. Defaults to `CURRENT_TIMESTAMP`.
+* **JSON**: Complex objects (e.g., `difficulty_levels`, `exercises_snapshot`) stored as TEXT. Use Drizzle's `{ mode: 'json' }` option to automatically handle parsing/stringifying, ensuring type safety at the ORM level.
 
 ### Indexes
 
-- `workout_sets`: Index on `workout_session_id` (foreign key performance).
-- `workout_sets`: Index on `exercise_id` (analytics performance).
+* `workout_sets`: Index on `workout_session_id` (foreign key performance).
+* `workout_sets`: Index on `exercise_id` (analytics performance).
 
 ### Cascade Behavior Summary
 
@@ -310,22 +315,22 @@ export const workoutSets = sqliteTable('workout_sets', {
 
 ### Progression Logic
 
-- **Invoked per-exercise** immediately after the last target set is logged.
-- **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged. **Constraint**: If any target set was marked "Skipped", progression is blocked for that exercise.
-- **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left. Any progression already applied to finished exercises remains.
-- Weight: `currentWeight += weightIncreaseFactor` (only if target reps met on **all sets**).
-- Difficulty: `currentDifficultyLevel` moves to next entry (follows the same "All sets success" rule). If at end, flag alert.
+* **Invoked per-exercise** immediately after the last target set is logged.
+* **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged. **Constraint**: If any target set was marked "Skipped", progression is blocked for that exercise.
+* **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left. Any progression already applied to finished exercises remains.
+* Weight: `currentWeight += weightIncreaseFactor` (only if target reps met on **all sets**).
+* Difficulty: `currentDifficultyLevel` moves to next entry (follows the same "All sets success" rule). If at end, flag alert.
 
 ## 7. State Management
 
-**Approach**: **TanStack Query (React Query)** + Custom Hooks + React Context.
+* **Approach**: **TanStack Query (React Query)** + Custom Hooks + React Context.
 
-- **TanStack Query**: Handles all async data fetching, caching, loading states, and side-effect management (mutations).
-  - Invalidates generic keys (e.g., `['programs']`) on mutations to ensure UI stays fresh.
-- **React Context (`RestTimerContext`)**: Manages active rest timer state.
-  - **Persistence**: The `targetEndTime` is synced to the active `WorkoutSession` in SQLite.
-  - **Background Alerts**: Uses **Expo Notifications** to schedule local notifications with sound/vibration that fire even if the app is killed or suspended.
-- **Persistence**: Repositories act as the "Query Function" for TanStack Query (e.g., `useQuery({ queryKey: ['exercises'], queryFn: ExerciseRepository.getAll })`).
+* **TanStack Query**: Handles all async data fetching, caching, loading states, and side-effect management (mutations).
+  * Invalidates generic keys (e.g., `['programs']`) on mutations to ensure UI stays fresh.
+* **React Context (`RestTimerContext`)**: Manages active rest timer state.
+  * **Persistence**: The `targetEndTime` is synced to the active `WorkoutSession` in SQLite.
+  * **Background Alerts**: Uses **Expo Notifications** to schedule local notifications with sound/vibration that fire even if the app is killed or suspended.
+* **Persistence**: Repositories act as the "Query Function" for TanStack Query (e.g., `useQuery({ queryKey: ['exercises'], queryFn: ExerciseRepository.getAll })`).
 
 This modernizes the stack and removes the complexity of manually managing `useEffect` loading waterfalls and cache invalidation.
 
