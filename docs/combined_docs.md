@@ -1028,30 +1028,6 @@ La investigación confirma categóricamente que lo dicho en el reporte base es *
 
 Este stack ofrece una experiencia de desarrollo (DX) superior con tipado fuerte, estilizado rápido y componentes modernos, todo sobre la base sólida de Expo 52\. Se recomienda su adopción para nuevos proyectos en 2025, siempre que el equipo de desarrollo esté dispuesto a gestionar la complejidad inicial de la configuración del entorno.
 
-#### **Obras citadas**
-
-1. Expo SDK 52 \- Expo Changelog, fecha de acceso: diciembre 21, 2025, [https://expo.dev/changelog/2024-11-12-sdk-52](https://expo.dev/changelog/2024-11-12-sdk-52)  
-2. React Native Update \- Expo 52 is Here | WaveMaker Docs, fecha de acceso: diciembre 21, 2025, [https://www.wavemaker.com/learn/blog/2024/12/16/expo-52-react-native-update/](https://www.wavemaker.com/learn/blog/2024/12/16/expo-52-react-native-update/)  
-3. SQLite \- Expo Documentation, fecha de acceso: diciembre 21, 2025, [https://docs.expo.dev/versions/latest/sdk/sqlite/](https://docs.expo.dev/versions/latest/sdk/sqlite/)  
-4. v4 Announcement \- Nativewind, fecha de acceso: diciembre 21, 2025, [https://www.nativewind.dev/blog/announcement-nativewind-v4](https://www.nativewind.dev/blog/announcement-nativewind-v4)  
-5. React Native 0.77 is now available with Expo SDK 52, fecha de acceso: diciembre 21, 2025, [https://expo.dev/changelog/2025-01-21-react-native-0.77](https://expo.dev/changelog/2025-01-21-react-native-0.77)  
-6. Upgrading to Expo 54 and React Native 0.81: A Developer's Survival Story \- Medium, fecha de acceso: diciembre 21, 2025, [https://medium.com/@shanavascruise/upgrading-to-expo-54-and-react-native-0-81-a-developers-survival-story-2f58abf0e326](https://medium.com/@shanavascruise/upgrading-to-expo-54-and-react-native-0-81-a-developers-survival-story-2f58abf0e326)  
-7. react-native-reanimated \- Expo Documentation, fecha de acceso: diciembre 21, 2025, [https://docs.expo.dev/versions/latest/sdk/reanimated/](https://docs.expo.dev/versions/latest/sdk/reanimated/)  
-8. gluestack-ui v2: Stable Release with NativeWind v4.1 Support, fecha de acceso: diciembre 21, 2025, [https://gluestack.io/blogs/gluestack-ui-v2-stable-release-with-nativewind-v4-1-support](https://gluestack.io/blogs/gluestack-ui-v2-stable-release-with-nativewind-v4-1-support)  
-9. Taming the Beast: A Foolproof NativeWind \+ React Native Setup (v52+) \- 2025, fecha de acceso: diciembre 21, 2025, [https://dev.to/aramoh3ni/taming-the-beast-a-foolproof-nativewind-react-native-setup-v52-2025-4dd8](https://dev.to/aramoh3ni/taming-the-beast-a-foolproof-nativewind-react-native-setup-v52-2025-4dd8)  
-10. Migrate from v4 \- Nativewind, fecha de acceso: diciembre 21, 2025, [https://www.nativewind.dev/v5/guides/migrate-from-v4](https://www.nativewind.dev/v5/guides/migrate-from-v4)  
-11. Installation \- Nativewind, fecha de acceso: diciembre 21, 2025, [https://www.nativewind.dev/docs/getting-started/installation](https://www.nativewind.dev/docs/getting-started/installation)  
-12. metro.config.js \- Uniwind, fecha de acceso: diciembre 21, 2025, [https://docs.uniwind.dev/api/metro-config](https://docs.uniwind.dev/api/metro-config)  
-13. How to Create Fluid Animations with React Native Reanimated v4 \- freeCodeCamp, fecha de acceso: diciembre 21, 2025, [https://www.freecodecamp.org/news/how-to-create-fluid-animations-with-react-native-reanimated-v4/](https://www.freecodecamp.org/news/how-to-create-fluid-animations-with-react-native-reanimated-v4/)  
-14. Getting started | React Native Reanimated, fecha de acceso: diciembre 21, 2025, [https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/)  
-15. gluestack-ui v2 is here, fecha de acceso: diciembre 21, 2025, [https://gluestack.io/blogs/gluestack-ui-v2-is-here](https://gluestack.io/blogs/gluestack-ui-v2-is-here)  
-16. Why we built gluestack-ui v2, fecha de acceso: diciembre 21, 2025, [https://gluestack.io/blogs/why-gluestack-ui-v2](https://gluestack.io/blogs/why-gluestack-ui-v2)  
-17. Build a Simple UI with gluestack-ui and Expo, fecha de acceso: diciembre 21, 2025, [https://gluestack.io/blogs/build-a-simple-ui-with-gluestack-ui-and-expo](https://gluestack.io/blogs/build-a-simple-ui-with-gluestack-ui-and-expo)  
-18. Expo SQLite \- Drizzle ORM, fecha de acceso: diciembre 21, 2025, [https://orm.drizzle.team/docs/connect-expo-sqlite](https://orm.drizzle.team/docs/connect-expo-sqlite)  
-19. Drizzle and React Native (Expo): Local SQLite setup \- LogRocket Blog, fecha de acceso: diciembre 21, 2025, [https://blog.logrocket.com/drizzle-react-native-expo-sqlite/](https://blog.logrocket.com/drizzle-react-native-expo-sqlite/)  
-20. metro.config.js Using NativeWind and SVG transformer \- Stack Overflow, fecha de acceso: diciembre 21, 2025, [https://stackoverflow.com/questions/78141734/metro-config-js-using-nativewind-and-svg-transformer](https://stackoverflow.com/questions/78141734/metro-config-js-using-nativewind-and-svg-transformer)  
-21. Troubleshooting Common Issues with NativeWind (and Why You Should Try gluestack-ui), fecha de acceso: diciembre 21, 2025, [https://gluestack.io/blogs/troubleshooting-common-issues-with-nativewind](https://gluestack.io/blogs/troubleshooting-common-issues-with-nativewind)
-
 
 ---
 
