@@ -113,7 +113,9 @@ export const ExerciseListScreen = () => {
             setEditingExercise(null);
             setEditingSettings(null);
             setSearchQuery('');
-            showToast("Success", `Exercise ${isUpdate ? 'updated' : 'created'} successfully`);
+            if (!isUpdate) {
+                showToast("Success", "Exercise created successfully");
+            }
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to save exercise", "error");
