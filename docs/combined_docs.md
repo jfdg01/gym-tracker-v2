@@ -196,6 +196,7 @@ export const ActionButton = () => (
 | **Style Flickering** | Ensure `GluestackUIProvider` wraps the root and uses NativeWind v4 `css-interop`. |
 | **Large SQLite Writes** | Use `withTransactionAsync` for bulk operations to keep the UI thread smooth. |
 
+
 ---
 
 # Design Doc
@@ -630,6 +631,7 @@ WorkoutHook --> UI: session.status = ABANDONED
 ```
 
 > **Note**: All logging operations (`logSet`) must explicitly reference the `workoutSessionId` to ensure data integrity, especially when handling resumed sessions or modified exercise orders.
+
 
 ---
 
