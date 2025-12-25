@@ -9,6 +9,21 @@ The design system is implemented using:
 - **[NativeWind v4](https://www.nativewind.dev/)**: For utility-first styling using Tailwind CSS classes.
 - **[gluestack-ui v2](https://gluestack.io/)**: For accessible, high-performance UI components (Buttons, Modals, Inputs) that are styled with NativeWind and follow the copy-paste architecture.
 
+### Styling Strategy
+
+We employ a dual-strategy approach for styling Gluestack components to balance consistency with flexibility:
+
+1. **Variant-Based Styling (The Component Way)**:
+    - **Purpose**: Use for macro-level component states defined in our design system (e.g., Primary Buttons, Error Alerts, Small Inputs).
+    - **Mechanism**: Use the built-in props defined in the component files (`components/ui/**/index.tsx`).
+    - **Example**: `<Button action="positive" variant="outline" size="lg">`
+
+2. **Usage-Site Styling (The Utility Way)**:
+    - **Purpose**: Use for layout (`flex`, `margin`), spacing, and one-off visual tweaks.
+    - **Mechanism**: Use the `className` prop with standard Tailwind classes.
+    - **Prerequisites**: Utilize semantic colors from `tailwind.config.js` (e.g., `bg-primary-500`) rather than arbitrary hex values.
+    - **Example**: `<Button className="mt-4 w-full bg-primary-energy">`
+
 ## 1. Visual Foundations
 
 ### 1.1 Color Palette
