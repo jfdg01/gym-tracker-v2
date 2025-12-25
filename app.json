@@ -4,6 +4,7 @@
     "slug": "expo-g",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "gymtracker",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -26,7 +27,9 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-router",
+      "expo-font"
     ]
   }
 }
