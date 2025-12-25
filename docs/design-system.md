@@ -3,14 +3,16 @@
 This document defines the visual and interactive language for the Gym Tracker v2 mobile application. It ensures a consistent, premium, and highly functional experience tailored for the high-energy, focused environment of a gym.
 
 ## 0. Implementation Technology
+
 The design system is implemented using:
+
 - **[NativeWind v4](https://www.nativewind.dev/)**: For utility-first styling using Tailwind CSS classes.
 - **[gluestack-ui v2](https://gluestack.io/)**: For accessible, high-performance UI components (Buttons, Modals, Inputs) that are styled with NativeWind and follow the copy-paste architecture.
-
 
 ## 1. Visual Foundations
 
 ### 1.1 Color Palette
+
 The palette is designed for high legibility in various lighting conditions (bright gyms or low-light home setups). It prioritizes "Energy" and "Clarity".
 
 | Token | Hex | Purpose |
@@ -25,6 +27,7 @@ The palette is designed for high legibility in various lighting conditions (brig
 | **Text-Muted** | `#94A3B8` | Slate - Secondary info, labels |
 
 ### 1.2 Typography
+
 We use **Inter** (system default if unavailable) for its modern feel and excellent legibility at small sizes.
 
 - **Headline (H1)**: 28px, Bold, High Emphasis (Screen Titles)
@@ -34,6 +37,7 @@ We use **Inter** (system default if unavailable) for its modern feel and excelle
 - **Numeric-L**: 32px, Monospace/Bold (Timer countdown, weights)
 
 ### 1.3 Spacing & Layout
+
 A **4px/8px Baseline Grid** ensures consistent rhythm.
 
 - **4px**: Micro-adjustments (icon to text).
@@ -47,16 +51,19 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 ## 2. Interface Components
 
 ### 2.1 Buttons
+
 - **Primary Action**: Full-width, `Primary-Energy` background, White text. High elevation shadow.
 - **Secondary Action**: Outline or Ghost style. Subtle border in `Text-Muted`.
 - **Log Set Button**: Circular, large touch target (48x48px min). `Success-Growth` when logging.
 
 ### 2.2 Cards
+
 - **Program Card**: Displays name, last completed date, and a "Start" shortcut.
 - **Exercise Item**: Shows current weight/difficulty, target reps, and progression status.
 - **History Card**: Compact, showing date, program name, and a status badge (Completed/Abandoned).
 
 ### 2.3 Input Controls
+
 - **Numeric Stepper**: Big `-` and `+` buttons flanking a central numeric value. Essential for weight/rep adjustments with sweaty/shaky hands.
 - **Picker/Dropdown**: Clean, bottom-sheet style selection for programs and exercises.
 
@@ -65,11 +72,13 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 ## 3. Specialized Workout UI
 
 ### 3.1 The Rest Timer
+
 - **Visual**: A large, centered countdown (`Numeric-L`).
 - **Progress**: A circular progress ring (`Accent-Warning`) that depletes as time runs out.
 - **Interaction**: "Skip" and "+30s" buttons clearly accessible at the bottom.
 
 ### 3.2 Logging Experience
+
 - **One-Tap Logging**: Tapping the "Target" value should instantly log it as the "Actual" value.
 - **Haptic Feedback**: Subtle vibration on set completion.
 - **Success State**: The row/card turns subtly green when a set is successfully logged.
@@ -80,9 +89,9 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 
 - **Transitions**: Smooth slide animations between exercises.
 - **Status Badges**:
-    - `SUCCESS`: Emerald pill with white text.
-    - `IN PROGRESS`: Indigo pill.
-    - `ABANDONED`: Red pill.
+  - `SUCCESS`: Emerald pill with white text.
+  - `IN PROGRESS`: Indigo pill.
+  - `ABANDONED`: Red pill.
 - **Progression Alert**: A celebratory modal/overlay when an exercise reaches progression (e.g., "Level Up! New Weight: 105kg").
 
 ---

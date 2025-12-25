@@ -3,7 +3,7 @@
 ## 1. Technology (Golden Stack 2025)
 
 | Aspect | Decision | Notes |
-|--------|----------|-------|
+| -------- | ---------- | ------- |
 | Users | Single-user | Offline-only |
 | Platform | Mobile (Expo SDK 52) | React Native 0.76+ (New Architecture) |
 | Language | TypeScript | Strong typing across the stack |
@@ -16,7 +16,7 @@
 
 ### Navigation Structure
 
-```
+```markdown
 Tab Navigator
 ├── Home (Start Workout)
 ├── Programs
@@ -28,7 +28,7 @@ Tab Navigator
 ### Key Screens
 
 | Screen | Purpose |
-|--------|---------|
+| -------- | --------- |
 | `HomeScreen` | Quick-start workout, show active session if exists |
 | `WorkoutScreen` | Active workout: current exercise, set logging, rest timer, progress indicator (e.g., "3/15 sets complete") |
 | `ProgramsScreen` | List programs, CRUD operations |
@@ -38,6 +38,7 @@ Tab Navigator
 | `SettingsScreen` | Export/Import data, weight unit preference |
 
 ### UI Constraints
+
 **Read-Only Fields**: Fields that modify the underlying definition of an entity (e.g., an Exercise's `Default Tracking Type`) must be **greyed out/disabled** when viewed in a descendant context (e.g., within a Program Day list). This clarifies that the user is viewing an instance, not editing the global definition.
 
 **Workout Flow**: Linear execution (Set 1 of Exercise A -> Set 2 of Exercise A -> ... -> Exercise B). After a set is logged, the `RestTimerContext` triggers automatically. Upon completion of the target number of sets for an exercise, the `ProgressionService` is invoked to update the global `ExerciseSettings` for that exercise. The UI then automatically navigates to the start of the next exercise. Users can manually navigate back to skipped or previous sets if needed. Supersets are out of scope.
@@ -173,36 +174,40 @@ interface WorkoutSet {
 ```
 
 ### Data Integrity & Logic Rules
-1.  **orderedIndex Sequences**: The Repository layer is responsible for maintaining dense sequences for `orderIndex`. When an item is deleted or moved, the `orderIndex` of subsequent items must be recalculated to prevent gaps.
-2.  **Timestamps**: All timestamps must be stored as **UTC ISO 8601 strings** (e.g., `2023-10-27T10:00:00.000Z`). The Repository layer sets `updatedAt` on UPDATEs. The UI logic is responsible for converting to local time for display.
-3.  **Soft Deletes (Archiving)**: When a user requests to delete an exercise, the Repository layer first checks for associated history or program usage. If found, it performs an `UPDATE exercises SET is_archived = 1` instead of a physical `DELETE`. The UI must filter out archived exercises from active selection lists.
+
+1. **orderedIndex Sequences**: The Repository layer is responsible for maintaining dense sequences for `orderIndex`. When an item is deleted or moved, the `orderIndex` of subsequent items must be recalculated to prevent gaps.
+2. **Timestamps**: All timestamps must be stored as **UTC ISO 8601 strings** (e.g., `2023-10-27T10:00:00.000Z`). The Repository layer sets `updatedAt` on UPDATEs. The UI logic is responsible for converting to local time for display.
+3. **Soft Deletes (Archiving)**: When a user requests to delete an exercise, the Repository layer first checks for associated history or program usage. If found, it performs an `UPDATE exercises SET is_archived = 1` instead of a physical `DELETE`. The UI must filter out archived exercises from active selection lists.
 
 ## 5. Database Schema
 
 The database schema is managed via **Drizzle ORM**. This provides type safety and simpler migrations compared to raw SQL.
 
 ### Migration Strategy
+
 Migrations are executed at app startup using the `drizzle-orm/expo-sqlite` `migrate` function. Migration SQL files are bundled using the `babel-plugin-inline-import` and a custom Metro resolver (via `sourceExts`). This ensures the schema is always up-to-date and type-safe via `openDatabaseSync` (JSI).
 
 ### Naming Conventions
+
 - **Tables**: `snake_case` (plural) in database.
 - **Columns**: `snake_case` in database, mapped to camelCase properties in TypeScript.
 
 ### Data Types & Defaults
+
 - **IDs**: `TEXT PRIMARY KEY`. **Must be generated on the application side** (e.g., `crypto.randomUUID()`) to ensure consistency across imports/exports and offline state.
 - **Booleans**: Stored as `INTEGER` (0 = false, 1 = true).
 - **Timestamps**: Stored as ISO 8601 Text. Defaults to `CURRENT_TIMESTAMP`.
 - **JSON**: Complex objects (e.g., `difficulty_levels`, `exercises_snapshot`) stored as TEXT. Use Drizzle's `{ mode: 'json' }` option to automatically handle parsing/stringifying, ensuring type safety at the ORM level.
 
 ### Indexes
+
 - `workout_sets`: Index on `workout_session_id` (foreign key performance).
 - `workout_sets`: Index on `exercise_id` (analytics performance).
-
 
 ### Cascade Behavior Summary
 
 | Parent Table | Child Table | Relationship | Behavior | Note |
-|--------------|-------------|--------------|----------|------|
+| -------------- | ------------- | -------------- | ---------- | ------ |
 | programs | program_days | One-to-Many | CASCADE | Deleting program deletes all days |
 | program_days | program_day_exercises | One-to-Many | CASCADE | Deleting day deletes planned exercises |
 | exercises | program_day_exercises | Many-to-Many link | RESTRICT | Cannot delete exercise used in program (Archive instead) |
@@ -296,7 +301,7 @@ export const workoutSets = sqliteTable('workout_sets', {
 ## 6. Custom Hooks
 
 | Hook | Responsibility |
-|------|-----------|
+| ------ | ----------- |
 | `useWorkout` | Start/complete sessions, log sets, manage rest timer state. Calls `ProgressionService` on completion. |
 | `ProgressionService` | **Pure Logic (Not a Hook)**. Accepts session data, determines next state. Per-exercise: check sets → update weight OR advance difficultyIndex. |
 | `useProgramService` | CRUD, get next day (looping logic: `(last + 1) % total`) |
@@ -304,6 +309,7 @@ export const workoutSets = sqliteTable('workout_sets', {
 | `useImportExport` | JSON export/import. Refuse import if IN_PROGRESS session exists. |
 
 ### Progression Logic
+
 - **Invoked per-exercise** immediately after the last target set is logged.
 - **Atomic Completion**: An exercise is considered "completed" for progression if all target sets were logged. **Constraint**: If any target set was marked "Skipped", progression is blocked for that exercise.
 - **Resume**: If user exits mid-workout, state is saved. Resuming acts as if they never left. Any progression already applied to finished exercises remains.
@@ -326,6 +332,7 @@ This modernizes the stack and removes the complexity of manually managing `useEf
 ### Error Handling
 
 **Policy**:
+
 1. **Development**: Complete error logging to console.
 2. **User-Facing**: If a critical operation fails (e.g., `logSet` fails to write to DB), the app must show a native **Alert** (`Alert.alert`).
 3. **State Sync**: Manual weight overrides during a session are persisted **immediately** to the `ExerciseSettings` table to ensure the change is captured even if the session is abandoned.

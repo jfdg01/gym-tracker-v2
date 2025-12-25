@@ -3,7 +3,7 @@
 ## 1. Scope
 
 | In-Scope | Out-of-Scope |
-|----------|--------------|
+| ---------- | -------------- |
 | Single-user, offline-only | Multi-user / Cloud |
 | Mobile (React Native + TypeScript) | Web / Desktop |
 | SQLite (expo-sqlite) | Free-form workouts (no program) |
@@ -16,23 +16,28 @@
 ## 2. Domain Models
 
 ### Exercises
+
 - **Definition**: Name, Description, Category (e.g., "Legs", "Push"), Tracking Type (`REPS`/`TIME`), Resistance Type (`WEIGHT`/`DIFFICULTY`).
 - **User Settings**: Current Weight OR Difficulty List (user-defined progression), Weight Increase Factor, Rest Time. These are initialized with defaults (0 or null) upon creation and can be configured before the first workout.
 
 ### Programs
+
 - **Program**: Days collection. **Workouts require a program.**
-- **Day**: Ordered exercises with targets. 
+- **Day**: Ordered exercises with targets.
 - **Suggested Day**: The system suggests the day following the `last_completed_day`. If the last day of the program was completed, it loops back to the first day (based on `orderIndex`). If the `last_completed_day` reference is missing (e.g., deleted), the system defaults to the first day of the program. This logic relies on ID references to handle day deletions or reorders robustly.
 - **Progress**: `last_completed_day` per program. NULL = never started.
 
 ### Workout Logging
+
 - **Session**: Links to ProgramDay, `startedAt`, `completedAt`, `status`.
 - **Set**: Actual reps/weight/difficulty, skipped flag.
 
 ## 3. Progression Logic
 
 ### Weight-Based
+
 **Progression Check**: Evaluated **per-exercise** immediately after all target sets are logged. Success (reps ≥ target OR time ≥ target) on **all targeted sets** → `currentWeight += weightIncreaseFactor`.
+
 - **Constraint**: Skipped sets are considered incomplete. Use of a skip in any targeted set prevents progression for that exercise.
 - **Failure**: If targets are not met, `currentWeight` remains unchanged (Deloading logic is Out-of-Scope).
 - **Manual Overrides**: If the user manually changes the weight during a workout, this value immediately becomes the new `currentWeight`. The progression logic (increase vs. maintain) is then applied to this *new* weight based on the set performance.
@@ -41,21 +46,25 @@
 > **Note**: Exercise settings are global—the same exercise shares settings across all programs. Per-program settings are out of scope.
 
 ### Difficulty-Based
+
 User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). Progression is value-based (tracking the specific level name/ID) to remain stable across list edits. On success:
+
 - Move to next item in list (`currentDifficultyLevel` moves to the next entry).
 - If at end → alert user to extend list.
 - **Validation**: Difficulty lists must contain unique, non-empty strings. UI alerts are shown if the user tries to save an invalid list.
 - **List Changes**: If the user modifies the difficulty list (adds/removes items), the system attempts to maintain the `currentDifficultyLevel`. If the previously active level is removed, the system defaults to the nearest valid level or the first item.
 
 ## 4. Rest Timer
+
 - **Active countdown** starts **automatically** immediately after a set is logged (including the last set).
 - **Notification**: Standard local notification if app is backgrounded.
 - **Sound/Vibration**: Respects system silent/do-not-disturb modes. On Android, uses a dedicated notification channel.
 - Can be skipped manually.
 
 ## 5. Data Validation
+
 | Field | Rule |
-|-------|------|
+| ------- | ------ |
 | Name (Program/Exercise) | Required, max 100 chars. |
 | Description | Optional, max 200 chars. |
 | Sets | 1-20 |
@@ -68,7 +77,7 @@ User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). 
 ## 6. User Stories
 
 | # | Story | Acceptance |
-|---|-------|------------|
+| --- | ------- | ------------ |
 | 1 | Start/complete workout | Select program → suggested day (last completed + 1) OR manually select any day → log sets → complete. Updates `last_completed_day`. |
 | 2 | Auto-progression | Weight: increment on target. Difficulty: advance in list. |
 | 3 | Abandon workout | User explicitly marks an IN_PROGRESS workout as `ABANDONED`. Alternatively, if a workout remains IN_PROGRESS for >20 hours, it is marked as `ABANDONED` on next app open. Sets are preserved. |
@@ -90,7 +99,7 @@ User defines an ordered list (e.g., `["Red Band", "Blue Band", "Green Band"]`). 
 ## 7. Edge Cases
 
 | Case | Behavior |
-|------|----------|
+| ------ | ---------- |
 | Program has 0 days | Cannot start; error message. |
 | Log set on completed session | Rejected. |
 | Difficulty list exhausted | Alert user to update. |

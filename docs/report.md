@@ -177,8 +177,8 @@ config.transformer.babelTransformerPath \= require.resolve("react-native-svg-tra
 
 // 5\. Envolver la configuración final con NativeWind  
 // NativeWind necesita saber dónde está el archivo de entrada CSS  
-module.exports \= withNativeWind(config, {   
-  input: './global.css'   
+module.exports \= withNativeWind(config, {
+  input: './global.css'
 });
 
 *Análisis del Código:* Este script asegura que NativeWind reciba una configuración que *ya* tiene el soporte para SQL y SVG. Si se invirtiera el orden (aplicando NativeWind primero y luego modificando), se correría el riesgo de romper la cadena de transformación de CSS.11
@@ -199,9 +199,9 @@ module.exports \= function(api) {
     presets:,  
       "nativewind/babel",  
     \],  
-    plugins: }\],   
+    plugins: }\],
       // Plugin de Reanimated (Generalmente al final)  
-      "react-native-reanimated/plugin",   
+      "react-native-reanimated/plugin",
     \],  
   };  
 };
