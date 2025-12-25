@@ -14,9 +14,12 @@ import { PlusIcon } from 'lucide-react-native';
 import { ExerciseService } from '@/src/services/ExerciseService';
 import { Exercise } from '@/src/types/domain';
 import { ExerciseForm } from '@/src/components/ExerciseForm';
+import { SearchBar } from '@/src/components/SearchBar';
 
 export const TestExerciseScreen = () => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
+    const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
@@ -26,6 +29,7 @@ export const TestExerciseScreen = () => {
         try {
             const data = await ExerciseService.getAllExercises();
             setExercises(data);
+            setFilteredExercises(data);
         } catch (e) {
             console.error(e);
         } finally {
@@ -36,6 +40,20 @@ export const TestExerciseScreen = () => {
     useEffect(() => {
         loadExercises();
     }, []);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setFilteredExercises(exercises);
+        } else {
+            const lowerQuery = searchQuery.toLowerCase();
+            const filtered = exercises.filter(
+                (ex) =>
+                    ex.name.toLowerCase().includes(lowerQuery) ||
+                    (ex.category && ex.category.toLowerCase().includes(lowerQuery))
+            );
+            setFilteredExercises(filtered);
+        }
+    }, [searchQuery, exercises]);
 
     const handleCreateOrUpdate = async (data: Partial<Exercise>) => {
         try {
@@ -61,6 +79,7 @@ export const TestExerciseScreen = () => {
             await loadExercises();
             setShowForm(false);
             setEditingExercise(null);
+            setSearchQuery('');
         } catch (e) {
             console.error(e);
         }
@@ -90,17 +109,23 @@ export const TestExerciseScreen = () => {
             <VStack space="md" className="flex-1">
                 <Heading className="text-typography-900 mt-8 mb-4">Exercises</Heading>
 
+                <SearchBar
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Search exercises..."
+                />
+
                 <ScrollView
                     className="flex-1"
                     refreshControl={
                         <RefreshControl refreshing={loading} onRefresh={loadExercises} tintColor="#fff" />
                     }
                 >
-                    <VStack space="sm" className="pb-24">
-                        {exercises.length === 0 ? (
+                    <VStack space="sm" className="pb-24 pt-4">
+                        {filteredExercises.length === 0 ? (
                             <Text className="text-typography-500 text-center mt-4">No exercises found.</Text>
                         ) : (
-                            exercises.map((ex) => (
+                            filteredExercises.map((ex) => (
                                 <Pressable key={ex.id} onPress={() => openEdit(ex)}>
                                     <Card className="p-4 bg-surface-elevated">
                                         <HStack className="justify-between items-center">
