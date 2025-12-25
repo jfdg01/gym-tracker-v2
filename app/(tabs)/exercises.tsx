@@ -1,5 +1,5 @@
-import { TestExerciseScreen } from '@/src/screens/TestExerciseScreen';
+import { ExerciseListScreen } from '@/src/screens/ExerciseListScreen';
 
 export default function ExercisesRoute() {
-    return <TestExerciseScreen />;
+    return <ExerciseListScreen />;
 }

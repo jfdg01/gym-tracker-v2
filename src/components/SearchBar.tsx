@@ -20,6 +20,7 @@ export const SearchBar = ({ value, onChangeText, placeholder = "Search...", onCl
                 onChangeText={onChangeText}
                 placeholder={placeholder}
                 className="text-typography-900"
+                autoCorrect={false}
             />
             {value.length > 0 && (
                 <InputSlot className="pr-3" onPress={() => {

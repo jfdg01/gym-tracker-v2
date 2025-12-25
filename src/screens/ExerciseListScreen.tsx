@@ -12,17 +12,38 @@ import { Fab, FabIcon } from '@/components/ui/fab';
 import { Icon } from '@/components/ui/icon';
 import { PlusIcon } from 'lucide-react-native';
 import { ExerciseService } from '@/src/services/ExerciseService';
-import { Exercise } from '@/src/types/domain';
+import { Exercise, ExerciseSettings } from '@/src/types/domain';
 import { ExerciseForm } from '@/src/components/ExerciseForm';
 import { SearchBar } from '@/src/components/SearchBar';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 
-export const TestExerciseScreen = () => {
+export const ExerciseListScreen = () => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+    const [editingSettings, setEditingSettings] = useState<ExerciseSettings | null>(null);
+    const toast = useToast();
+
+    const showToast = (title: string, description: string, action: 'success' | 'error' = 'success') => {
+        toast.show({
+            placement: 'top',
+            render: ({ id }) => {
+                const toastId = "toast-" + id;
+                return (
+                    <Toast nativeID={toastId} action={action} variant="outline">
+                        <VStack space="xs">
+                            <ToastTitle>{title}</ToastTitle>
+                            <ToastDescription>{description}</ToastDescription>
+                        </VStack>
+                    </Toast>
+                )
+            },
+        })
+    }
 
     const loadExercises = async () => {
         setLoading(true);
@@ -32,6 +53,7 @@ export const TestExerciseScreen = () => {
             setFilteredExercises(data);
         } catch (e) {
             console.error(e);
+            showToast("Error", "Failed to load exercises", "error");
         } finally {
             setLoading(false);
         }
@@ -55,8 +77,11 @@ export const TestExerciseScreen = () => {
         }
     }, [searchQuery, exercises]);
 
-    const handleCreateOrUpdate = async (data: Partial<Exercise>) => {
+    const handleCreateOrUpdate = async (data: Partial<Exercise>, settings: Partial<ExerciseSettings>) => {
         try {
+            let targetId = editingExercise?.id;
+            let isUpdate = !!editingExercise;
+
             if (editingExercise) {
                 // Update
                 await ExerciseService.updateExercise(editingExercise.id, {
@@ -68,20 +93,30 @@ export const TestExerciseScreen = () => {
                 });
             } else {
                 // Create
-                await ExerciseService.createExercise({
+                const newEx = await ExerciseService.createExercise({
                     name: data.name!,
                     description: data.description || null,
                     category: data.category || 'Strength',
                     defaultTrackingType: data.defaultTrackingType!,
                     defaultResistanceType: data.defaultResistanceType!,
                 });
+                targetId = newEx.id;
             }
+
+            // Save Settings (for both Create and Update)
+            if (targetId) {
+                await ExerciseService.updateExerciseSettings(targetId, settings);
+            }
+
             await loadExercises();
             setShowForm(false);
             setEditingExercise(null);
+            setEditingSettings(null);
             setSearchQuery('');
+            showToast("Success", `Exercise ${isUpdate ? 'updated' : 'created'} successfully`);
         } catch (e) {
             console.error(e);
+            showToast("Error", "Failed to save exercise", "error");
         }
     };
 
@@ -89,18 +124,27 @@ export const TestExerciseScreen = () => {
         try {
             await ExerciseService.archiveExercise(id);
             await loadExercises();
+            showToast("Archived", "Exercise has been archived");
         } catch (e) {
             console.error(e);
+            showToast("Error", "Failed to archive exercise", "error");
         }
     };
 
-    const openEdit = (exercise: Exercise) => {
+    const openEdit = async (exercise: Exercise) => {
         setEditingExercise(exercise);
+        try {
+            const settings = await ExerciseService.getExerciseSettings(exercise.id);
+            setEditingSettings(settings);
+        } catch (e) {
+            console.error("Failed to load settings", e);
+        }
         setShowForm(true);
     };
 
     const openCreate = () => {
         setEditingExercise(null);
+        setEditingSettings(null);
         setShowForm(true);
     };
 
@@ -129,10 +173,16 @@ export const TestExerciseScreen = () => {
                                 <Pressable key={ex.id} onPress={() => openEdit(ex)}>
                                     <Card className="p-4 bg-surface-elevated">
                                         <HStack className="justify-between items-center">
-                                            <VStack>
+                                            <VStack space="xs">
                                                 <Text className="text-typography-900 font-bold text-lg">{ex.name}</Text>
-                                                <Text className="text-typography-500 text-sm">{ex.category}</Text>
-                                                <Text className="text-typography-500 text-xs">{ex.defaultTrackingType} / {ex.defaultResistanceType}</Text>
+                                                <HStack space="sm" className="mt-1">
+                                                    <Badge size="sm" variant="solid" action="muted">
+                                                        <BadgeText>{ex.category}</BadgeText>
+                                                    </Badge>
+                                                    <Badge size="sm" variant="outline" action="info">
+                                                        <BadgeText>{ex.defaultTrackingType}</BadgeText>
+                                                    </Badge>
+                                                </HStack>
                                             </VStack>
                                             <Button
                                                 size="sm"
@@ -166,6 +216,7 @@ export const TestExerciseScreen = () => {
                 onClose={() => setShowForm(false)}
                 onSubmit={handleCreateOrUpdate}
                 initialData={editingExercise}
+                initialSettings={editingSettings}
             />
         </Box>
     );
