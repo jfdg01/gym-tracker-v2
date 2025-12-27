@@ -82,16 +82,6 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 - **Numeric Stepper**: Big `-` and `+` buttons flanking a central numeric value. Essential for weight/rep adjustments with sweaty/shaky hands.
 - **Picker/Dropdown**: Clean, bottom-sheet style selection for programs and exercises.
 
-#### Technical Implementation Note: Text Inputs
-
-To ensure performance and avoid jumper cursor/text loss (jitter) on the JavaScript/Native bridge:
-
-1. **Uncontrolled Inputs**: Use `defaultValue` and `useRef` for text fields instead of storing every keystroke in React state (`value`).
-2. **Form Resets**: Use a `key={formId}` on the form container to force a clean re-mount when switching entries, ensuring `defaultValue` is updated.
-3. **AutoCorrect**: Use `autoCorrect={false}` for inputs involving codes, proper nouns, or mixed content to prevent dictionary-based native UI flickering.
-
----
-
 ## 3. Specialized Workout UI
 
 ### 3.1 The Rest Timer

@@ -63,17 +63,21 @@ export const ExerciseListScreen = () => {
         loadExercises();
     }, []);
 
+    const [isPending, startTransition] = React.useTransition();
+
     useEffect(() => {
         if (!searchQuery.trim()) {
             setFilteredExercises(exercises);
         } else {
             const lowerQuery = searchQuery.toLowerCase();
-            const filtered = exercises.filter(
-                (ex) =>
-                    ex.name.toLowerCase().includes(lowerQuery) ||
-                    (ex.category && ex.category.toLowerCase().includes(lowerQuery))
-            );
-            setFilteredExercises(filtered);
+            startTransition(() => {
+                const filtered = exercises.filter(
+                    (ex) =>
+                        ex.name.toLowerCase().includes(lowerQuery) ||
+                        (ex.category && ex.category.toLowerCase().includes(lowerQuery))
+                );
+                setFilteredExercises(filtered);
+            });
         }
     }, [searchQuery, exercises]);
 
