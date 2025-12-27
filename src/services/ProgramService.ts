@@ -1,5 +1,6 @@
 import { ProgramRepository } from '../repositories/ProgramRepository';
-import { Program } from '../types/domain';
+import { ProgramDayRepository } from '../repositories/ProgramDayRepository';
+import { Program, ProgramDay } from '../types/domain';
 
 /**
  * Service layer for Program-related business logic.
@@ -53,5 +54,27 @@ export const ProgramService = {
      */
     updateProgression: async (id: string, lastCompletedDayId: string | null): Promise<void> => {
         return await ProgramRepository.updateLastCompletedDay(id, lastCompletedDayId);
+    },
+
+    /**
+     * Suggests the next day to work out for a given program.
+     */
+    getSuggestedDay: async (programId: string): Promise<ProgramDay | null> => {
+        const program = await ProgramRepository.getById(programId);
+        if (!program) return null;
+
+        const days = await ProgramDayRepository.getByProgramId(programId);
+        if (days.length === 0) return null;
+
+        if (!program.lastCompletedDayId) {
+            return days[0];
+        }
+
+        const lastIndex = days.findIndex((d: ProgramDay) => d.id === program.lastCompletedDayId);
+        if (lastIndex === -1 || lastIndex === days.length - 1) {
+            return days[0];
+        }
+
+        return days[lastIndex + 1];
     }
 };
