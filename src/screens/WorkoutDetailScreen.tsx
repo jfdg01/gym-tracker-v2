@@ -54,47 +54,47 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
     };
 
     if (loading) return (
-        <Box className="flex-1 bg-background-dark justify-center items-center">
-            <Text className="text-typography-500">Loading details...</Text>
+        <Box className="flex-1 bg-surface-deep justify-center items-center">
+            <Text className="text-typography-500 font-medium">Loading details...</Text>
         </Box>
     );
 
     if (!session) return (
-        <Box className="flex-1 bg-background-dark justify-center items-center p-6">
-            <Text className="text-typography-400 text-center">Workout not found.</Text>
-            <Button className="mt-4" onPress={() => router.back()}>
-                <ButtonText>Back</ButtonText>
+        <Box className="flex-1 bg-surface-deep justify-center items-center p-6">
+            <Text className="text-typography-400 text-center font-medium">Workout not found.</Text>
+            <Button className="mt-4 bg-primary-energy rounded-full" onPress={() => router.back()}>
+                <ButtonText className="font-bold">Back</ButtonText>
             </Button>
         </Box>
     );
 
     return (
-        <Box className="flex-1 bg-background-dark">
+        <Box className="flex-1 bg-surface-deep">
             {/* Header */}
-            <VStack className="pt-12 pb-4 px-4 bg-surface-dark border-b border-outline-dark">
+            <VStack className="pt-12 pb-4 px-4 bg-surface-deep border-b border-outline-dark/10 shadow-sm">
                 <HStack space="md" className="items-center">
-                    <Pressable onPress={() => router.back()}>
+                    <Pressable onPress={() => router.back()} hitSlop={20}>
                         <Icon as={ChevronLeftIcon} size="xl" className="text-typography-500" />
                     </Pressable>
                     <VStack className="flex-1">
-                        <Heading size="md" className="text-typography-900">{session.dayNameSnapshot}</Heading>
-                        <Text size="xs" className="text-typography-500">{session.programNameSnapshot}</Text>
+                        <Heading size="md" className="text-typography-950 font-heading">{session.dayNameSnapshot}</Heading>
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tighter">{session.programNameSnapshot}</Text>
                     </VStack>
                 </HStack>
             </VStack>
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="lg" className="p-4 pb-20">
-                    <Card className="bg-surface-elevated border-0 p-4">
+                    <Card className="p-4 shadow-soft-1 border border-outline-dark/5">
                         <HStack space="md" className="items-center">
-                            <Icon as={CalendarIcon} size="sm" className="text-primary-500" />
-                            <Text className="text-typography-300 font-medium">
+                            <Icon as={CalendarIcon} size="sm" className="text-primary-energy" />
+                            <Text className="text-typography-500 font-semibold">
                                 {session.completedAt ? formatDate(session.completedAt) : 'N/A'}
                             </Text>
                         </HStack>
                     </Card>
 
-                    <Heading size="sm" className="text-typography-900 px-1">Exercises</Heading>
+                    <Heading size="sm" className="text-typography-950 px-1 font-heading">Exercises</Heading>
 
                     {session.exercisesSnapshot?.map((ex) => {
                         const exerciseSets = sets.filter(s => s.exerciseId === ex.exerciseId);
@@ -102,16 +102,16 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                         return (
                             <VStack key={ex.programDayExerciseId} space="xs" className="mb-4">
                                 <HStack space="xs" className="items-center px-1">
-                                    <Icon as={DumbbellIcon} size="xs" className="text-primary-500" />
-                                    <Heading size="xs" className="text-typography-900">{ex.exerciseName}</Heading>
+                                    <Icon as={DumbbellIcon} size="xs" className="text-primary-energy" />
+                                    <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
                                 </HStack>
 
-                                <Card className="bg-surface-elevated border-0 p-2">
+                                <Card className="p-0 overflow-hidden shadow-soft-1 border border-outline-dark/5">
                                     <VStack>
-                                        <HStack className="bg-surface-dark/50 py-2 px-3 rounded-t-lg">
-                                            <Text size="xs" className="w-10 text-typography-500 font-bold">SET</Text>
-                                            <Text size="xs" className="flex-1 text-typography-500 font-bold">RESISTANCE</Text>
-                                            <Text size="xs" className="flex-1 text-typography-500 font-bold">RESULT</Text>
+                                        <HStack className="bg-background-50/50 py-2 px-3">
+                                            <Text size="xs" className="w-10 text-typography-500 font-bold uppercase tracking-wider">SET</Text>
+                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">RESISTANCE</Text>
+                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">RESULT</Text>
                                         </HStack>
 
                                         {exerciseSets.length === 0 ? (

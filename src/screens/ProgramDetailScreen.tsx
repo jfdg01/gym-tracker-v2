@@ -56,6 +56,7 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
 
     const showToast = (title: string, description: string, action: 'success' | 'error' = 'success') => {
         toast.show({
+            id: 'program-status-toast',
             placement: 'top',
             render: ({ id }) => (
                 <Toast nativeID={"toast-" + id} action={action} variant="outline">
@@ -195,24 +196,24 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
 
     if (!program && loading) {
         return (
-            <Box className="flex-1 bg-background-dark justify-center items-center">
-                <Text>Loading...</Text>
+            <Box className="flex-1 bg-surface-deep justify-center items-center">
+                <Text className="text-typography-500 font-medium font-body">Loading...</Text>
             </Box>
         );
     }
 
     return (
-        <Box className="flex-1 bg-background-dark">
+        <Box className="flex-1 bg-surface-deep">
             {/* Header */}
-            <VStack className="px-4 pt-12 pb-4 bg-surface-dark border-b border-outline-dark">
+            <VStack className="px-4 pt-12 pb-4 bg-surface-deep border-b border-outline-dark/10 shadow-sm">
                 <HStack space="md" className="items-center mb-4">
-                    <Pressable onPress={() => router.back()}>
+                    <Pressable onPress={() => router.back()} hitSlop={20}>
                         <Icon as={ChevronLeftIcon} size="xl" className="text-typography-500" />
                     </Pressable>
                     <VStack className="flex-1">
-                        <Heading size="xl" className="text-typography-900">{program?.name}</Heading>
+                        <Heading size="xl" className="text-typography-950 font-heading">{program?.name}</Heading>
                         {program?.description && (
-                            <Text size="sm" className="text-typography-500">{program.description}</Text>
+                            <Text size="sm" className="text-typography-500 font-medium">{program.description}</Text>
                         )}
                     </VStack>
                 </HStack>
@@ -232,27 +233,29 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                         </VStack>
                     ) : (
                         days.sort((a, b) => a.orderIndex - b.orderIndex).map((day) => (
-                            <VStack key={day.id} space="sm">
-                                <HStack className="justify-between items-center mb-1">
-                                    <Heading size="md" className={`${day.isRestDay ? 'text-typography-500' : 'text-primary-500'} italic`}>
+                            <VStack key={day.id} space="md" className="mb-8">
+                                <HStack className="justify-between items-center mb-4 px-1">
+                                    <Heading size="lg" className={`${day.isRestDay ? 'text-typography-400' : 'text-primary-energy'} italic font-heading`}>
                                         {day.name.toUpperCase()} {day.isRestDay && '(REST)'}
                                     </Heading>
-                                    <HStack space="xs">
-                                        <Button size="xs" variant="link" onPress={() => handleToggleRestDay(day.id, !!day.isRestDay)}>
-                                            <Icon as={day.isRestDay ? DumbbellIcon : MoonIcon} size="xs" className="text-typography-400" />
+                                    <HStack space="sm">
+                                        <Button size="sm" variant="outline" onPress={() => handleToggleRestDay(day.id, !!day.isRestDay)} className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9">
+                                            <Icon as={day.isRestDay ? DumbbellIcon : MoonIcon} size="sm" className="text-typography-500" />
+                                            <ButtonText className="text-typography-500 text-sm font-bold">{day.isRestDay ? 'Workout' : 'Rest'}</ButtonText>
                                         </Button>
-                                        <Button size="xs" variant="link" action="negative" onPress={() => handleDeleteDay(day.id)}>
-                                            <Icon as={TrashIcon} size="xs" className="text-error-500" />
+                                        <Button size="sm" variant="outline" action="negative" onPress={() => handleDeleteDay(day.id)} className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9">
+                                            <Icon as={TrashIcon} size="sm" className="text-error-critical" />
+                                            <ButtonText className="text-error-critical text-sm font-bold">Remove</ButtonText>
                                         </Button>
                                     </HStack>
                                 </HStack>
 
-                                <Card className="p-0 overflow-hidden bg-surface-elevated border border-outline-dark">
+                                <Card className="p-0 overflow-hidden shadow-soft-1 border border-outline-dark/5 rounded-2xl">
                                     {day.isRestDay ? (
-                                        <VStack className="p-10 items-center justify-center bg-surface-dark/30">
+                                        <VStack className="p-10 items-center justify-center bg-background-50/30">
                                             <Icon as={CoffeeIcon} size="xl" className="text-typography-300 mb-2" />
-                                            <Text className="text-typography-400 font-medium font-roboto">Rest & Recovery</Text>
-                                            <Text size="xs" className="text-typography-500 text-center mt-1">Take it easy today to let your muscles grow.</Text>
+                                            <Text className="text-typography-500 font-bold uppercase tracking-widest text-xs">Rest & Recovery</Text>
+                                            <Text size="xs" className="text-typography-500 text-center mt-2 font-medium">Take it easy today to let your muscles grow.</Text>
                                         </VStack>
                                     ) : (
                                         <VStack>
@@ -261,47 +264,49 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                                     className="p-8 items-center justify-center border-b border-outline-dark border-dashed"
                                                     onPress={() => handleOpenSelector(day.id)}
                                                 >
-                                                    <Icon as={PlusIcon} size="sm" className="text-typography-400 mb-2" />
-                                                    <Text size="xs" className="text-typography-400">Add Exercise</Text>
+                                                    <Icon as={PlusIcon} size="md" className="text-typography-400 mb-2" />
+                                                    <Text size="sm" className="text-typography-400">Add Exercise</Text>
                                                 </Pressable>
                                             ) : (
                                                 day.exercises.sort((a, b) => a.orderIndex - b.orderIndex).map((de, idx) => (
                                                     <Box
                                                         key={de.id}
-                                                        className={`p-4 ${idx !== day.exercises.length - 1 ? 'border-b border-outline-dark' : ''}`}
+                                                        className={`p-6 ${idx !== day.exercises.length - 1 ? 'border-b border-outline-dark/5' : ''}`}
                                                     >
-                                                        <HStack className="justify-between items-center">
-                                                            <VStack space="xs" className="flex-1">
+                                                        <HStack className="justify-between items-center space-x-4">
+                                                            <VStack space="sm" className="flex-1">
                                                                 <HStack space="xs" className="items-center">
-                                                                    <Icon as={DumbbellIcon} size="xs" className="text-primary-400" />
-                                                                    <Text className="font-bold text-typography-900">
+                                                                    <Icon as={DumbbellIcon} size="sm" className="text-primary-energy" />
+                                                                    <Text size="lg" className="font-bold text-typography-950">
                                                                         {de.exercise?.name || 'Unknown Exercise'}
                                                                     </Text>
                                                                 </HStack>
-                                                                <Text size="xs" className="text-typography-500">
+                                                                <Text size="sm" className="text-typography-500 font-medium">
                                                                     {de.sets} sets • {de.trackingType === 'REPS' ? `${de.targetReps} reps` : `${de.targetTimeSeconds}s`} • {de.resistanceType}
                                                                 </Text>
                                                             </VStack>
-                                                            <HStack space="sm">
-                                                                <Button size="xs" variant="link" onPress={() => handleEditExercise(de, de.exercise)}>
-                                                                    <Icon as={EditIcon} size="xs" className="text-typography-400" />
+                                                            <VStack space="sm">
+                                                                <Button size="sm" variant="outline" onPress={() => handleEditExercise(de, de.exercise)} className="justify-center bg-background-50 border-outline-100 rounded-lg w-28 h-9">
+                                                                    <Icon as={EditIcon} size="sm" className="text-typography-500" />
+                                                                    <ButtonText className="text-typography-500 text-sm font-bold">Edit</ButtonText>
                                                                 </Button>
-                                                                <Button size="xs" variant="link" action="negative" onPress={() => handleDeleteExercise(de.id)}>
-                                                                    <Icon as={TrashIcon} size="xs" className="text-error-500" />
+                                                                <Button size="sm" variant="outline" action="negative" onPress={() => handleDeleteExercise(de.id)} className="justify-center bg-background-50 border-outline-100 rounded-lg w-28 h-9">
+                                                                    <Icon as={TrashIcon} size="sm" className="text-error-critical" />
+                                                                    <ButtonText className="text-error-critical text-sm font-bold">Delete</ButtonText>
                                                                 </Button>
-                                                            </HStack>
+                                                            </VStack>
                                                         </HStack>
                                                     </Box>
                                                 ))
                                             )}
                                             <Button
-                                                variant="link"
-                                                size="sm"
-                                                className="py-3 bg-surface-dark items-center justify-center h-12"
+                                                variant="solid"
+                                                size="lg"
+                                                className="py-4 bg-background-50/50 items-center justify-center h-16 rounded-none border-t border-outline-dark/5"
                                                 onPress={() => handleOpenSelector(day.id)}
                                             >
-                                                <ButtonIcon as={PlusIcon} />
-                                                <ButtonText className="ml-2">ADD EXERCISE</ButtonText>
+                                                <ButtonIcon as={PlusIcon} className="text-primary-energy" size="lg" />
+                                                <ButtonText className="ml-2 text-primary-energy font-bold text-md tracking-wider">ADD EXERCISE</ButtonText>
                                             </Button>
                                         </VStack>
                                     )}
@@ -311,9 +316,13 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                     )}
 
                     {days.length > 0 && (
-                        <Button onPress={handleAddDay} variant="outline" className="mt-4 border-dashed border-2">
-                            <ButtonIcon as={PlusIcon} />
-                            <ButtonText>ADD ANOTHER DAY</ButtonText>
+                        <Button
+                            onPress={handleAddDay}
+                            variant="outline"
+                            className="mt-8 border-dashed border-2 h-24 rounded-2xl border-primary-energy/30 mb-8"
+                        >
+                            <ButtonIcon as={PlusIcon} className="text-primary-energy" size="xl" />
+                            <ButtonText className="text-primary-energy font-bold text-lg">ADD ANOTHER DAY</ButtonText>
                         </Button>
                     )}
                 </VStack>

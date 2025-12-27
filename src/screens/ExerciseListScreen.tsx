@@ -30,6 +30,7 @@ export const ExerciseListScreen = () => {
 
     const showToast = (title: string, description: string, action: 'success' | 'error' = 'success') => {
         toast.show({
+            id: 'gym-tracker-toast',
             placement: 'top',
             render: ({ id }) => {
                 const toastId = "toast-" + id;
@@ -155,9 +156,9 @@ export const ExerciseListScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-background-dark p-4">
+        <Box className="flex-1 bg-surface-deep px-4">
             <VStack space="md" className="flex-1">
-                <Heading className="text-typography-900 mt-8 mb-4">Exercises</Heading>
+                <Heading className="text-typography-950 mt-12 mb-4 font-heading">Exercises</Heading>
 
                 <SearchBar
                     value={searchQuery}
@@ -176,17 +177,17 @@ export const ExerciseListScreen = () => {
                             <Text className="text-typography-500 text-center mt-4">No exercises found.</Text>
                         ) : (
                             filteredExercises.map((ex) => (
-                                <Pressable key={ex.id} onPress={() => openEdit(ex)}>
-                                    <Card className="p-4 bg-surface-elevated">
+                                <Pressable key={ex.id} onPress={() => openEdit(ex)} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
+                                    <Card className="p-4 mb-2 shadow-soft-1 border border-outline-dark/5">
                                         <HStack className="justify-between items-center">
                                             <VStack space="xs">
                                                 <Text className="text-typography-900 font-bold text-lg">{ex.name}</Text>
                                                 <HStack space="sm" className="mt-1">
-                                                    <Badge size="sm" variant="solid" action="muted">
-                                                        <BadgeText>{ex.category}</BadgeText>
+                                                    <Badge size="sm" variant="solid" className="bg-background-100 rounded-full">
+                                                        <BadgeText className="text-typography-500 font-bold">{ex.category}</BadgeText>
                                                     </Badge>
-                                                    <Badge size="sm" variant="outline" action="info">
-                                                        <BadgeText>{ex.defaultTrackingType}</BadgeText>
+                                                    <Badge size="sm" variant="outline" className="border-primary-energy/30 rounded-full">
+                                                        <BadgeText className="text-primary-energy font-bold">{ex.defaultTrackingType}</BadgeText>
                                                     </Badge>
                                                 </HStack>
                                             </VStack>
@@ -194,10 +195,10 @@ export const ExerciseListScreen = () => {
                                                 size="sm"
                                                 variant="outline"
                                                 action="negative"
-                                                className="border-error-500"
+                                                className="border-error-critical/20"
                                                 onPress={() => handleArchive(ex.id)}
                                             >
-                                                <ButtonText className="text-error-500">Archive</ButtonText>
+                                                <ButtonText className="text-error-critical font-bold">Archive</ButtonText>
                                             </Button>
                                         </HStack>
                                     </Card>
@@ -212,7 +213,7 @@ export const ExerciseListScreen = () => {
                 size="lg"
                 placement="bottom right"
                 onPress={openCreate}
-                className="bg-primary-500"
+                className="bg-primary-energy shadow-xl"
             >
                 <FabIcon as={PlusIcon} />
             </Fab>

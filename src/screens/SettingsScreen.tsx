@@ -77,6 +77,7 @@ export const SettingsScreen = () => {
                             try {
                                 await DataPortabilityService.importData(data);
                                 toast.show({
+                                    id: 'gym-tracker-toast',
                                     placement: 'top',
                                     render: ({ id }) => (
                                         <Toast nativeID={"toast-" + id} action="success" variant="outline">
@@ -104,9 +105,9 @@ export const SettingsScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-background-dark p-4">
-            <VStack space="xl" className="flex-1 mt-8">
-                <Heading className="text-typography-900 mb-4">Settings</Heading>
+        <Box className="flex-1 bg-surface-deep px-4">
+            <VStack space="xl" className="flex-1 mt-12">
+                <Heading className="text-typography-950 mb-4 font-heading">Settings</Heading>
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <VStack space="lg" className="pb-24">
@@ -114,11 +115,11 @@ export const SettingsScreen = () => {
                             <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">Data Portability</Text>
                             <Card className="bg-surface-elevated border-0 p-0 overflow-hidden">
                                 <VStack>
-                                    <Pressable onPress={handleExport} disabled={loading}>
-                                        <HStack className="p-4 items-center justify-between border-b border-outline-dark/20">
+                                    <Pressable onPress={handleExport} disabled={loading} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
+                                        <HStack className="p-4 items-center justify-between border-b border-outline-dark/5">
                                             <HStack space="md" className="items-center">
-                                                <Box className="p-2 bg-primary-100 rounded-lg">
-                                                    <Icon as={DownloadIcon} size="sm" className="text-primary-600" />
+                                                <Box className="p-2 bg-primary-energy/10 rounded-lg">
+                                                    <Icon as={DownloadIcon} size="sm" className="text-primary-energy" />
                                                 </Box>
                                                 <VStack>
                                                     <Text className="text-typography-900 font-medium">Export Data</Text>
@@ -129,11 +130,11 @@ export const SettingsScreen = () => {
                                         </HStack>
                                     </Pressable>
 
-                                    <Pressable onPress={handleImport} disabled={loading}>
+                                    <Pressable onPress={handleImport} disabled={loading} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
                                         <HStack className="p-4 items-center justify-between">
                                             <HStack space="md" className="items-center">
-                                                <Box className="p-2 bg-secondary-100 rounded-lg">
-                                                    <Icon as={UploadIcon} size="sm" className="text-secondary-600" />
+                                                <Box className="p-2 bg-background-100 rounded-lg">
+                                                    <Icon as={UploadIcon} size="sm" className="text-typography-500" />
                                                 </Box>
                                                 <VStack>
                                                     <Text className="text-typography-900 font-medium">Import Data</Text>
@@ -152,10 +153,12 @@ export const SettingsScreen = () => {
                             <Card className="bg-surface-elevated border-0 p-4">
                                 <VStack space="md">
                                     <HStack space="md" className="items-center">
-                                        <Icon as={InfoIcon} size="sm" className="text-typography-400" />
+                                        <Box className="p-2 bg-background-100 rounded-lg">
+                                            <Icon as={InfoIcon} size="sm" className="text-typography-500" />
+                                        </Box>
                                         <VStack>
-                                            <Text className="text-typography-900 font-medium">Gym Tracker v2.0</Text>
-                                            <Text size="xs" className="text-typography-500">Offline-first training companion</Text>
+                                            <Text className="text-typography-950 font-bold">Gym Tracker v2.0</Text>
+                                            <Text size="xs" className="text-typography-500 font-medium">Offline-first training companion</Text>
                                         </VStack>
                                     </HStack>
                                     <HStack space="md" className="items-center">

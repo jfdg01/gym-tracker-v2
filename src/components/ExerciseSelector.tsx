@@ -101,13 +101,14 @@ export const ExerciseSelector = ({ isOpen, onClose, onSelect }: ExerciseSelector
                                 <Pressable
                                     key={ex.id}
                                     onPress={() => onSelect(ex)}
-                                    className="p-4 bg-surface-elevated rounded-lg border border-outline-dark"
+                                    className="p-4 mb-2 bg-surface-deep rounded-xl border border-outline-dark/5 shadow-soft-1"
+                                    android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}
                                 >
                                     <VStack space="xs">
-                                        <Text className="font-bold text-typography-900">{ex.name}</Text>
+                                        <Text className="font-bold text-lg text-typography-950">{ex.name}</Text>
                                         <HStack space="xs">
-                                            <Badge size="sm" variant="solid" action="muted">
-                                                <BadgeText>{ex.category}</BadgeText>
+                                            <Badge size="sm" variant="solid" className="bg-background-100 rounded-full">
+                                                <BadgeText className="text-typography-500 font-bold">{ex.category}</BadgeText>
                                             </Badge>
                                         </HStack>
                                     </VStack>

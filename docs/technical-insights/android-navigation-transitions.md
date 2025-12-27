@@ -26,4 +26,5 @@ Ensuring the native root view background matches the application’s dark theme 
 - **Opaque Tab Screens**: Ensure all tab screens have a hardcoded dark background color (e.g., via NativeWind `bg-background-dark`) to prevent transparency artifacts.
 
 ## Impact of the New Architecture (Fabric)
+
 Fabric behaves differently during "commit" and "mount" phases, sometimes exacerbating flickering due to layout recalculations on the UI thread. Disabling the New Architecture can sometimes be a last-resort fix for these specific artifacts.

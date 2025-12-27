@@ -114,3 +114,12 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 - **Dark Mode First**: The default and optimized theme.
 - **Touch Targets**: All interactive elements are at least **44x44px**.
 - **Contrast**: Ensuring WCAG AA compliance (4.5:1) for all critical text.
+
+## 6. Notifications (Toasts)
+
+To maintain a clean and uncluttered UI, we enforce a **Single Active Toast** pattern.
+
+- **Behavior**: New toasts **replace** existing ones instead of stacking vertically.
+- **Implementation**: Always provide a unique `id` (e.g., `id: 'gym-tracker-toast'`) when calling `toast.show()`.
+- **Placement**: Top of the screen (`placement: 'top'`).
+- **Duration**: Short duration for success/info, indefinite or longer for errors that require reading.

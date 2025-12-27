@@ -45,9 +45,9 @@ export const HistoryScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-background-dark p-4">
-            <VStack space="md" className="flex-1 mt-8">
-                <Heading className="text-typography-900 mb-4">History</Heading>
+        <Box className="flex-1 bg-surface-deep px-4">
+            <VStack space="md" className="flex-1 mt-12">
+                <Heading className="text-typography-950 mb-4 font-heading">History</Heading>
 
                 <ScrollView
                     className="flex-1"
@@ -67,19 +67,37 @@ export const HistoryScreen = () => {
                                     key={session.id}
                                     onPress={() => router.push(`/history/${session.id}`)}
                                 >
-                                    <Card className="p-4 bg-surface-elevated border-0 mb-1">
+                                    <Card className="p-4 mb-2 shadow-soft-1 border border-outline-dark/5">
                                         <HStack className="justify-between items-center">
                                             <VStack space="xs" className="flex-1">
-                                                <HStack space="xs" className="items-center">
-                                                    <Icon as={CalendarIcon} size="xs" className="text-primary-500" />
-                                                    <Text className="text-typography-400 text-xs font-medium">
-                                                        {session.completedAt ? formatDate(session.completedAt) : 'In Progress'}
-                                                    </Text>
+                                                <HStack space="md" className="items-center">
+                                                    <HStack space="xs" className="items-center">
+                                                        <Icon as={CalendarIcon} size="xs" className="text-primary-energy" />
+                                                        <Text className="text-typography-500 text-xs font-semibold">
+                                                            {session.completedAt ? formatDate(session.completedAt) : 'In Progress'}
+                                                        </Text>
+                                                    </HStack>
+
+                                                    {session.status === 'COMPLETED' ? (
+                                                        <Box className="bg-success-500/10 px-2 py-0.5 rounded-full">
+                                                            <Text className="text-success-growth text-[10px] font-bold uppercase">Success</Text>
+                                                        </Box>
+                                                    ) : session.status === 'ABANDONED' ? (
+                                                        <Box className="bg-error-500/10 px-2 py-0.5 rounded-full">
+                                                            <Text className="text-error-critical text-[10px] font-bold uppercase">Abandoned</Text>
+                                                        </Box>
+                                                    ) : (
+                                                        <Box className="bg-primary-energy/10 px-2 py-0.5 rounded-full">
+                                                            <Text className="text-primary-energy text-[10px] font-bold uppercase">Active</Text>
+                                                        </Box>
+                                                    )}
                                                 </HStack>
-                                                <Text className="text-typography-900 font-bold text-lg">{session.dayNameSnapshot}</Text>
-                                                <Text className="text-typography-500 text-sm">{session.programNameSnapshot}</Text>
+                                                <Text className="text-typography-950 font-bold text-lg">{session.dayNameSnapshot}</Text>
+                                                <Text className="text-typography-500 text-sm font-medium">{session.programNameSnapshot}</Text>
                                             </VStack>
-                                            <Icon as={ChevronRightIcon} size="sm" className="text-typography-300" />
+                                            <Box className="bg-background-50/50 p-2 rounded-full">
+                                                <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
+                                            </Box>
                                         </HStack>
                                     </Card>
                                 </Pressable>

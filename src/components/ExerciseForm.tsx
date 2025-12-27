@@ -254,10 +254,10 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
                             <Button
                                 onPress={handleManualSave}
                                 isDisabled={loading}
-                                className="mt-4 mb-8"
+                                className="mt-4 mb-8 h-14 bg-primary-energy rounded-xl"
                             >
                                 {loading && <Spinner color="white" className="mr-2" />}
-                                <ButtonText>{loading ? 'Saving...' : 'Save Exercise'}</ButtonText>
+                                <ButtonText className="font-bold text-lg">{loading ? 'Saving...' : 'Save Exercise'}</ButtonText>
                             </Button>
                         </VStack>
                     </ActionsheetScrollView>

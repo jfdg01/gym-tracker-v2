@@ -30,6 +30,7 @@ export const ProgramListScreen = () => {
 
     const showToast = (title: string, description: string, action: 'success' | 'error' = 'success') => {
         toast.show({
+            id: 'gym-tracker-toast',
             placement: 'top',
             render: ({ id }) => {
                 const toastId = "toast-" + id;
@@ -111,9 +112,9 @@ export const ProgramListScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-background-dark p-4">
+        <Box className="flex-1 bg-surface-deep px-4">
             <VStack space="md" className="flex-1">
-                <Heading className="text-typography-900 mt-8 mb-4">My Programs</Heading>
+                <Heading className="text-typography-950 mt-12 mb-4 font-heading">My Programs</Heading>
 
                 <ScrollView
                     className="flex-1"
@@ -126,7 +127,7 @@ export const ProgramListScreen = () => {
                             <Text className="text-typography-500 text-center mt-4">No programs found. Create your first one!</Text>
                         ) : (
                             programs.map((p) => (
-                                <Card key={p.id} className="p-4 bg-surface-elevated border-l-4 border-primary-500 mb-2">
+                                <Card key={p.id} className="p-4 mb-2 shadow-soft-1 border border-outline-dark/5">
                                     <HStack className="justify-between items-center">
                                         <Pressable onPress={() => router.push(`/program/${p.id}`)} className="flex-1">
                                             <VStack space="xs">
@@ -137,8 +138,8 @@ export const ProgramListScreen = () => {
                                                     </Text>
                                                 )}
                                                 <HStack space="xs" className="mt-2 items-center">
-                                                    <Icon as={CalendarIcon} size="xs" className="text-primary-500" />
-                                                    <Text className="text-typography-400 text-xs">
+                                                    <Icon as={CalendarIcon} size="xs" className="text-primary-energy" />
+                                                    <Text className="text-typography-500 text-xs font-semibold">
                                                         {programDayCounts[p.id]?.total || 0} {programDayCounts[p.id]?.total === 1 ? 'Day' : 'Days'}
                                                         {(programDayCounts[p.id]?.workout || 0) > 0 && ` • ${programDayCounts[p.id].workout} Workouts`}
                                                     </Text>
@@ -160,7 +161,7 @@ export const ProgramListScreen = () => {
                                                 action="negative"
                                                 onPress={() => handleDelete(p.id)}
                                             >
-                                                <ButtonText className="text-error-500">Delete</ButtonText>
+                                                <ButtonText className="text-error-critical font-bold">Delete</ButtonText>
                                             </Button>
                                             <Icon as={ChevronRightIcon} className="text-typography-300" />
                                         </HStack>
@@ -183,7 +184,7 @@ export const ProgramListScreen = () => {
                 size="lg"
                 placement="bottom right"
                 onPress={handleCreateProgram}
-                className="bg-primary-500"
+                className="bg-primary-energy shadow-xl"
             >
                 <FabIcon as={PlusIcon} />
             </Fab>

@@ -15,16 +15,19 @@ export default function TabLayout() {
                 headerShown: false,
                 tabBarStyle: {
                     backgroundColor: '#1E1E1E', // Surface-Elevated
-                    borderTopColor: '#333',
+                    borderTopColor: 'rgba(255, 255, 255, 0.05)',
                     paddingTop: 5,
                     height: 60,
                     paddingBottom: 5,
+                    elevation: 0,
+                    shadowOpacity: 0,
                 },
                 tabBarActiveTintColor: '#4F46E5', // Primary-Energy
                 tabBarInactiveTintColor: '#94A3B8', // Text-Muted
                 tabBarLabelStyle: {
                     fontSize: 10,
                     marginBottom: 5,
+                    fontWeight: '600',
                 }
             }}>
             <Tabs.Screen
