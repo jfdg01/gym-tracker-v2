@@ -129,3 +129,48 @@ To maintain a clean and uncluttered UI, we enforce a **Single Active Toast** pat
 - **Implementation**: Always provide a unique `id` (e.g., `id: 'gym-tracker-toast'`) when calling `toast.show()`.
 - **Placement**: Top of the screen (`placement: 'top'`).
 - **Duration**: Short duration for success/info, indefinite or longer for errors that require reading.
+
+## 7. Alerts (AppAlert)
+
+For user confirmations and critical messages, we use a custom **AppAlert** component instead of React Native's native `Alert.alert`.
+
+- **Component**: `src/components/ui-library/AppAlert.tsx`
+- **Wraps**: gluestack's `AlertDialog` for consistent dark-themed styling.
+- **Pattern**: Declarative (React state) rather than imperative.
+
+### Why Not `Alert.alert`?
+
+- Native alerts don't follow the app's dark theme.
+- Inconsistent styling across platforms.
+- Limited customization options.
+
+### Usage Pattern
+
+```tsx
+// 1. Add state
+const [showAlert, setShowAlert] = useState(false);
+
+// 2. Trigger alert
+setShowAlert(true);
+
+// 3. Render component
+<AppAlert
+  isOpen={showAlert}
+  onClose={() => setShowAlert(false)}
+  title="Confirm Action"
+  message="Are you sure you want to proceed?"
+  buttons={[
+    { text: "Cancel", style: "cancel" },
+    { text: "Confirm", onPress: handleConfirm },
+    { text: "Delete", style: "destructive", onPress: handleDelete }
+  ]}
+/>
+```
+
+### Button Styles
+
+| Style | Appearance |
+|-------|------------|
+| `default` | Primary solid button |
+| `cancel` | Outline button (closes dialog) |
+| `destructive` | Red/negative action button |

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Alert, Share } from 'react-native';
+import { Share, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -7,7 +8,6 @@ import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
@@ -15,18 +15,28 @@ import { Icon } from '@/components/ui/icon';
 import {
     DownloadIcon,
     UploadIcon,
-    SettingsIcon,
     InfoIcon,
     ShieldCheckIcon,
-    DatabaseIcon,
-    ChevronRightIcon
+    ChevronRightIcon,
+    LayoutIcon
 } from 'lucide-react-native';
 import { DataPortabilityService } from '@/src/services/DataPortabilityService';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
+import { AppAlert } from '@/src/components/ui-library/AppAlert';
 
 export const SettingsScreen = () => {
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
     const toast = useToast();
+
+    // Alert states
+    const [showExportSuccessAlert, setShowExportSuccessAlert] = useState(false);
+    const [exportFilePath, setExportFilePath] = useState('');
+    const [showExportErrorAlert, setShowExportErrorAlert] = useState(false);
+    const [showImportConfirmAlert, setShowImportConfirmAlert] = useState(false);
+    const [showImportErrorAlert, setShowImportErrorAlert] = useState(false);
+    const [showImportFailedAlert, setShowImportFailedAlert] = useState(false);
+    const [pendingImportData, setPendingImportData] = useState<any>(null);
 
     const handleExport = async () => {
         setLoading(true);
@@ -43,11 +53,12 @@ export const SettingsScreen = () => {
             if (await Sharing.isAvailableAsync()) {
                 await Sharing.shareAsync(fileUri);
             } else {
-                Alert.alert("Export Successful", `Backup saved to: ${fileUri}`);
+                setExportFilePath(fileUri);
+                setShowExportSuccessAlert(true);
             }
         } catch (e) {
             console.error(e);
-            Alert.alert("Export Failed", "There was an error exporting your data.");
+            setShowExportErrorAlert(true);
         } finally {
             setLoading(false);
         }
@@ -61,47 +72,44 @@ export const SettingsScreen = () => {
                 copyToCacheDirectory: true,
             });
 
-            if (result.canceled) return;
+            if (result.canceled) {
+                setLoading(false);
+                return;
+            }
 
             const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri);
             const data = JSON.parse(fileContent);
-
-            Alert.alert(
-                "Import Data",
-                "This will merge the imported data with your current data. Existing records with the same ID will be updated. Proceed?",
-                [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                        text: "Import",
-                        onPress: async () => {
-                            try {
-                                await DataPortabilityService.importData(data);
-                                toast.show({
-                                    id: 'gym-tracker-toast',
-                                    placement: 'top',
-                                    render: ({ id }) => (
-                                        <Toast nativeID={"toast-" + id} action="success" variant="outline">
-                                            <VStack space="xs">
-                                                <ToastTitle>Import Successful</ToastTitle>
-                                                <ToastDescription>Your data has been imported.</ToastDescription>
-                                            </VStack>
-                                        </Toast>
-                                    ),
-                                });
-                            } catch (err) {
-                                console.error(err);
-                                Alert.alert("Import Error", "The file format might be invalid.");
-                            }
-                        }
-                    }
-                ]
-            );
+            setPendingImportData(data);
+            setShowImportConfirmAlert(true);
         } catch (e) {
             console.error(e);
-            Alert.alert("Import Failed", "Failed to read the selected file.");
+            setShowImportFailedAlert(true);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleConfirmImport = async () => {
+        setShowImportConfirmAlert(false);
+        try {
+            await DataPortabilityService.importData(pendingImportData);
+            toast.show({
+                id: 'gym-tracker-toast',
+                placement: 'top',
+                render: ({ id }) => (
+                    <Toast nativeID={"toast-" + id} action="success" variant="outline">
+                        <VStack space="xs">
+                            <ToastTitle>Import Successful</ToastTitle>
+                            <ToastDescription>Your data has been imported.</ToastDescription>
+                        </VStack>
+                    </Toast>
+                ),
+            });
+        } catch (err) {
+            console.error(err);
+            setShowImportErrorAlert(true);
+        }
+        setPendingImportData(null);
     };
 
     return (
@@ -149,6 +157,26 @@ export const SettingsScreen = () => {
                         </VStack>
 
                         <VStack space="sm">
+                            <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">Developer Tools</Text>
+                            <Card className="bg-surface-elevated border-0 p-0 overflow-hidden">
+                                <Pressable onPress={() => router.push('/components-gallery')} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
+                                    <HStack className="p-4 items-center justify-between">
+                                        <HStack space="md" className="items-center">
+                                            <Box className="p-2 bg-primary-energy/10 rounded-lg">
+                                                <Icon as={LayoutIcon} size="sm" className="text-primary-energy" />
+                                            </Box>
+                                            <VStack>
+                                                <Text className="text-typography-900 font-medium">Components Gallery</Text>
+                                                <Text size="xs" className="text-typography-500">Visual test library for our custom components</Text>
+                                            </VStack>
+                                        </HStack>
+                                        <Icon as={ChevronRightIcon} size="xs" className="text-typography-400" />
+                                    </HStack>
+                                </Pressable>
+                            </Card>
+                        </VStack>
+
+                        <VStack space="sm">
                             <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">About</Text>
                             <Card className="bg-surface-elevated border-0 p-4">
                                 <VStack space="md">
@@ -171,8 +199,52 @@ export const SettingsScreen = () => {
                     </VStack>
                 </ScrollView>
             </VStack>
+
+            <AppAlert
+                isOpen={showExportSuccessAlert}
+                onClose={() => setShowExportSuccessAlert(false)}
+                title="Export Successful"
+                message={`Backup saved to: ${exportFilePath}`}
+                buttons={[{ text: "OK" }]}
+            />
+
+            <AppAlert
+                isOpen={showExportErrorAlert}
+                onClose={() => setShowExportErrorAlert(false)}
+                title="Export Failed"
+                message="There was an error exporting your data."
+                buttons={[{ text: "OK" }]}
+            />
+
+            <AppAlert
+                isOpen={showImportConfirmAlert}
+                onClose={() => {
+                    setShowImportConfirmAlert(false);
+                    setPendingImportData(null);
+                }}
+                title="Import Data"
+                message="This will merge the imported data with your current data. Existing records with the same ID will be updated. Proceed?"
+                buttons={[
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Import", onPress: handleConfirmImport }
+                ]}
+            />
+
+            <AppAlert
+                isOpen={showImportErrorAlert}
+                onClose={() => setShowImportErrorAlert(false)}
+                title="Import Error"
+                message="The file format might be invalid."
+                buttons={[{ text: "OK" }]}
+            />
+
+            <AppAlert
+                isOpen={showImportFailedAlert}
+                onClose={() => setShowImportFailedAlert(false)}
+                title="Import Failed"
+                message="Failed to read the selected file."
+                buttons={[{ text: "OK" }]}
+            />
         </Box>
     );
 };
-
-import { Pressable } from 'react-native';

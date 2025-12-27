@@ -30,7 +30,7 @@ export const SearchBar = memo(({ value = '', onChangeText, placeholder = "Search
     }, [onChangeText, onClear]);
 
     return (
-        <Input variant="outline" size="md" className="w-full bg-background-50 border-background-200">
+        <Input variant="outline" size="md" className="w-full bg-background-dark/30 border-outline-dark/20 h-12">
             <InputSlot className="pl-3">
                 <InputIcon as={SearchIcon} className="text-typography-400" />
             </InputSlot>

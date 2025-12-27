@@ -1,24 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Pressable, RefreshControl } from 'react-native';
-import {
-    Actionsheet,
-    ActionsheetContent,
-    ActionsheetDragIndicator,
-    ActionsheetDragIndicatorWrapper,
-    ActionsheetBackdrop,
-    ActionsheetScrollView,
-} from '@/components/ui/actionsheet';
+import { Pressable } from 'react-native';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
-import { Icon, SearchIcon } from '@/components/ui/icon';
-import { Heading } from '@/components/ui/heading';
-import { Badge, BadgeText } from '@/components/ui/badge';
+import { SearchIcon } from '@/components/ui/icon';
 import { Exercise } from '@/src/types/domain';
 import { ExerciseService } from '@/src/services/ExerciseService';
-import { X } from 'lucide-react-native';
-import { Button } from '@/components/ui/button';
+import { AppFormSheet } from './ui-library/AppFormSheet';
+import { StatusBadge } from './ui-library/StatusBadge';
+import { AppCard } from './ui-library/AppCard';
 
 interface ExerciseSelectorProps {
     isOpen: boolean;
@@ -65,59 +56,49 @@ export const ExerciseSelector = ({ isOpen, onClose, onSelect }: ExerciseSelector
     }, [search, exercises]);
 
     return (
-        <Actionsheet isOpen={isOpen} onClose={onClose}>
-            <ActionsheetBackdrop />
-            <ActionsheetContent className="max-h-[85%]">
-                <ActionsheetDragIndicatorWrapper>
-                    <ActionsheetDragIndicator />
-                </ActionsheetDragIndicatorWrapper>
+        <AppFormSheet
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Select Exercise"
+        >
+            <VStack space="md" className="w-full">
+                <Input className="bg-background-dark/30 border-outline-dark/20 h-12">
+                    <InputSlot className="pl-3">
+                        <InputIcon as={SearchIcon} className="text-typography-400" />
+                    </InputSlot>
+                    <InputField
+                        placeholder="Search exercises..."
+                        value={search}
+                        onChangeText={setSearch}
+                        className="text-typography-900"
+                    />
+                </Input>
 
-                <VStack space="md" className="w-full p-4">
-                    <HStack className="justify-between items-center">
-                        <Heading size="md">Select Exercise</Heading>
-                        <Button variant="link" size="sm" onPress={onClose}>
-                            <Icon as={X} size="xl" className="text-typography-500" />
-                        </Button>
-                    </HStack>
-
-                    <Input>
-                        <InputSlot className="pl-3">
-                            <InputIcon as={SearchIcon} />
-                        </InputSlot>
-                        <InputField
-                            placeholder="Search exercises..."
-                            value={search}
-                            onChangeText={setSearch}
-                        />
-                    </Input>
-                </VStack>
-
-                <ActionsheetScrollView className="w-full">
-                    <VStack space="sm" className="px-4 pb-8">
-                        {filtered.length === 0 ? (
-                            <Text className="text-typography-500 text-center py-10">No exercises found</Text>
-                        ) : (
-                            filtered.map(ex => (
-                                <Pressable
-                                    key={ex.id}
-                                    onPress={() => onSelect(ex)}
-                                    className="p-4 mb-2 bg-surface-deep rounded-xl border border-outline-dark/5 shadow-soft-1"
-                                    android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}
+                <VStack space="sm" className="pb-8 mt-2">
+                    {filtered.length === 0 ? (
+                        <Text className="text-typography-500 text-center py-10 italic">
+                            {loading ? 'Loading...' : 'No exercises found'}
+                        </Text>
+                    ) : (
+                        filtered.map(ex => (
+                            <Pressable
+                                key={ex.id}
+                                onPress={() => onSelect(ex)}
+                            >
+                                <AppCard
+                                    className="p-4 mb-2"
+                                    style={{ elevation: 1 }}
                                 >
                                     <VStack space="xs">
-                                        <Text className="font-bold text-lg text-typography-950">{ex.name}</Text>
-                                        <HStack space="xs">
-                                            <Badge size="sm" variant="solid" className="bg-background-100 rounded-full">
-                                                <BadgeText className="text-typography-500 font-bold">{ex.category}</BadgeText>
-                                            </Badge>
-                                        </HStack>
+                                        <Text className="font-bold text-lg text-white">{ex.name}</Text>
+                                        <StatusBadge label={ex.category || 'General'} variant="neutral" />
                                     </VStack>
-                                </Pressable>
-                            ))
-                        )}
-                    </VStack>
-                </ActionsheetScrollView>
-            </ActionsheetContent>
-        </Actionsheet>
+                                </AppCard>
+                            </Pressable>
+                        ))
+                    )}
+                </VStack>
+            </VStack>
+        </AppFormSheet>
     );
 };

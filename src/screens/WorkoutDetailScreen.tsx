@@ -6,11 +6,12 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
-import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
 import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, InfoIcon } from 'lucide-react-native';
 import { Button, ButtonText } from '@/components/ui/button';
+import { AppHeader } from '@/src/components/ui-library/AppHeader';
+import { AppCard } from '@/src/components/ui-library/AppCard';
 import { WorkoutService } from '@/src/services/WorkoutService';
 import { WorkoutSession, WorkoutSet, ResistanceType, TrackingType } from '@/src/types/domain';
 
@@ -70,29 +71,22 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
 
     return (
         <Box className="flex-1 bg-surface-deep">
-            {/* Header */}
-            <VStack className="pt-12 pb-4 px-4 bg-surface-deep border-b border-outline-dark/10 shadow-sm">
-                <HStack space="md" className="items-center">
-                    <Pressable onPress={() => router.back()} hitSlop={20}>
-                        <Icon as={ChevronLeftIcon} size="xl" className="text-typography-500" />
-                    </Pressable>
-                    <VStack className="flex-1">
-                        <Heading size="md" className="text-typography-950 font-heading">{session.dayNameSnapshot}</Heading>
-                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tighter">{session.programNameSnapshot}</Text>
-                    </VStack>
-                </HStack>
-            </VStack>
+            <AppHeader
+                title={session.dayNameSnapshot || 'Unknown Day'}
+                subTitle={session.programNameSnapshot || undefined}
+                showBack={true}
+            />
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="lg" className="p-4 pb-20">
-                    <Card className="p-4 shadow-soft-1 border border-outline-dark/5">
+                    <AppCard className="p-4">
                         <HStack space="md" className="items-center">
                             <Icon as={CalendarIcon} size="sm" className="text-primary-energy" />
                             <Text className="text-typography-500 font-semibold">
                                 {session.completedAt ? formatDate(session.completedAt) : 'N/A'}
                             </Text>
                         </HStack>
-                    </Card>
+                    </AppCard>
 
                     <Heading size="sm" className="text-typography-950 px-1 font-heading">Exercises</Heading>
 
@@ -106,9 +100,12 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                                     <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
                                 </HStack>
 
-                                <Card className="p-0 overflow-hidden shadow-soft-1 border border-outline-dark/5">
+                                <AppCard className="p-0 overflow-hidden">
                                     <VStack>
-                                        <HStack className="bg-background-50/50 py-2 px-3">
+                                        <HStack
+                                            className="py-2 px-3"
+                                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                                        >
                                             <Text size="xs" className="w-10 text-typography-500 font-bold uppercase tracking-wider">SET</Text>
                                             <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">RESISTANCE</Text>
                                             <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">RESULT</Text>
@@ -122,21 +119,22 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                                             exerciseSets.map((s, idx) => (
                                                 <HStack
                                                     key={s.id}
-                                                    className={`py-3 px-3 ${idx < exerciseSets.length - 1 ? 'border-b border-outline-dark/20' : ''}`}
+                                                    className="py-3 px-3"
+                                                    style={idx < exerciseSets.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
                                                 >
                                                     <Text size="sm" className="w-10 text-typography-400 font-bold">{s.setNumber}</Text>
                                                     <Box className="flex-1">
                                                         {s.skipped ? (
                                                             <Text size="sm" className="text-typography-600 italic">Skipped</Text>
                                                         ) : (
-                                                            <Text size="sm" className="text-typography-200">
+                                                            <Text size="sm" className="text-white">
                                                                 {ex.resistanceType === ResistanceType.WEIGHT ? `${s.weight} kg` : s.difficulty || 'N/A'}
                                                             </Text>
                                                         )}
                                                     </Box>
                                                     <Box className="flex-1">
                                                         {!s.skipped && (
-                                                            <Text size="sm" className="text-typography-200 font-medium">
+                                                            <Text size="sm" className="text-white font-medium">
                                                                 {ex.trackingType === TrackingType.REPS ? `${s.reps} reps` : `${s.timeSeconds}s`}
                                                             </Text>
                                                         )}
@@ -145,7 +143,7 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                                             ))
                                         )}
                                     </VStack>
-                                </Card>
+                                </AppCard>
                             </VStack>
                         );
                     })}

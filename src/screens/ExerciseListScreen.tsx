@@ -11,13 +11,16 @@ import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { Icon } from '@/components/ui/icon';
-import { PlusIcon, ArchiveIcon } from 'lucide-react-native';
+import { PlusIcon, Trash2Icon } from 'lucide-react-native';
 import { ExerciseService } from '@/src/services/ExerciseService';
 import { Exercise, ExerciseSettings } from '@/src/types/domain';
 import { ExerciseForm } from '@/src/components/ExerciseForm';
 import { SearchBar } from '@/src/components/SearchBar';
-import { Badge, BadgeText } from '@/components/ui/badge';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
+import { AppHeader } from '@/src/components/ui-library/AppHeader';
+import { AppCard } from '@/src/components/ui-library/AppCard';
+import { AppButton } from '@/src/components/ui-library/AppButton';
+import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
 
 export const ExerciseListScreen = () => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -159,10 +162,10 @@ export const ExerciseListScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-surface-deep px-4">
-            <VStack space="md" className="flex-1">
-                <Heading className="text-typography-950 mt-12 mb-4 font-heading">Exercises</Heading>
+        <Box className="flex-1 bg-surface-deep">
+            <AppHeader title="Exercises" showBack={false} />
 
+            <VStack space="md" className="flex-1 px-4 mt-4">
                 <SearchBar
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -175,37 +178,46 @@ export const ExerciseListScreen = () => {
                         <RefreshControl refreshing={loading} onRefresh={loadExercises} tintColor="#fff" />
                     }
                 >
-                    <VStack space="sm" className="pb-24 pt-4">
+                    <VStack space="sm" className="pb-24 pt-2">
                         {filteredExercises.length === 0 ? (
                             <Text className="text-typography-500 text-center mt-4">No exercises found.</Text>
                         ) : (
                             filteredExercises.map((ex) => (
-                                <Pressable key={ex.id} onPress={() => openEdit(ex)} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
-                                    <Card className="p-4 mb-3 shadow-soft-1 border border-outline-dark/5 rounded-2xl">
+                                <Pressable
+                                    key={ex.id}
+                                    onPress={() => openEdit(ex)}
+                                    android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}
+                                    className="active:opacity-80"
+                                >
+                                    <AppCard className="p-4 mb-1">
                                         <HStack className="justify-between items-center">
-                                            <VStack space="xs">
-                                                <Text className="text-typography-900 font-bold text-lg">{ex.name}</Text>
+                                            <VStack space="xs" className="flex-1">
+                                                <Text className="text-white font-bold text-lg">{ex.name}</Text>
                                                 <HStack space="sm" className="mt-1">
-                                                    <Badge size="sm" variant="solid" className="bg-background-100 rounded-full">
-                                                        <BadgeText className="text-typography-500 font-bold">{ex.category}</BadgeText>
-                                                    </Badge>
-                                                    <Badge size="sm" variant="outline" className="border-primary-energy/30 rounded-full">
-                                                        <BadgeText className="text-primary-energy font-bold">{ex.defaultTrackingType}</BadgeText>
-                                                    </Badge>
+                                                    <StatusBadge
+                                                        label={ex.category || 'Uncategorized'}
+                                                        variant="neutral"
+                                                    />
+                                                    <StatusBadge
+                                                        label={ex.defaultTrackingType}
+                                                        variant="primary"
+                                                    />
                                                 </HStack>
                                             </VStack>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                action="negative"
-                                                className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9"
-                                                onPress={() => handleArchive(ex.id)}
-                                            >
-                                                <Icon as={ArchiveIcon} size="sm" className="text-error-critical" />
-                                                <ButtonText className="text-error-critical text-sm font-bold">Archive</ButtonText>
-                                            </Button>
+
+                                            <VStack space="sm">
+                                                <AppButton
+                                                    title="Archive"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    action="negative"
+                                                    icon={Trash2Icon}
+                                                    onPress={() => handleArchive(ex.id)}
+                                                    className="h-9 px-3"
+                                                />
+                                            </VStack>
                                         </HStack>
-                                    </Card>
+                                    </AppCard>
                                 </Pressable>
                             ))
                         )}

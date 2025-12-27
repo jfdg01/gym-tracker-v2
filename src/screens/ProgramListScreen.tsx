@@ -17,6 +17,9 @@ import { ProgramDayService } from '@/src/services/ProgramDayService';
 import { Program } from '@/src/types/domain';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { ProgramForm } from '@/src/components/ProgramForm';
+import { AppHeader } from '@/src/components/ui-library/AppHeader';
+import { AppCard } from '@/src/components/ui-library/AppCard';
+import { AppButton } from '@/src/components/ui-library/AppButton';
 
 export const ProgramListScreen = () => {
     const router = useRouter();
@@ -114,9 +117,10 @@ export const ProgramListScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-surface-deep px-4">
-            <VStack space="md" className="flex-1">
-                <Heading className="text-typography-950 mt-12 mb-4 font-heading">My Programs</Heading>
+        <Box className="flex-1 bg-surface-deep">
+            <AppHeader title="My Programs" showBack={false} />
+
+            <VStack space="md" className="flex-1 px-4 mt-4">
 
                 <ScrollView
                     className="flex-1"
@@ -129,11 +133,11 @@ export const ProgramListScreen = () => {
                             <Text className="text-typography-500 text-center mt-4">No programs found. Create your first one!</Text>
                         ) : (
                             programs.map((p) => (
-                                <Card key={p.id} className="p-4 mb-3 shadow-soft-1 border border-outline-dark/5 rounded-2xl">
+                                <AppCard key={p.id} className="p-4 mb-3">
                                     <HStack className="justify-between items-center">
                                         <Pressable onPress={() => router.push(`/program/${p.id}`)} className="flex-1">
                                             <VStack space="xs">
-                                                <Text className="text-typography-900 font-bold text-lg">{p.name}</Text>
+                                                <Text className="text-white font-bold text-lg">{p.name}</Text>
                                                 {p.description && (
                                                     <Text className="text-typography-500 text-sm italic" numberOfLines={1}>
                                                         {p.description}
@@ -151,30 +155,28 @@ export const ProgramListScreen = () => {
 
                                         <HStack space="sm" className="items-center">
                                             <VStack space="sm">
-                                                <Button
+                                                <AppButton
                                                     size="sm"
                                                     variant="outline"
                                                     onPress={() => handleEditProgram(p)}
-                                                    className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9"
-                                                >
-                                                    <Icon as={Edit2Icon} size="sm" className="text-typography-500" />
-                                                    <ButtonText className="text-typography-500 text-sm font-bold">Edit</ButtonText>
-                                                </Button>
-                                                <Button
+                                                    className="justify-center w-24 h-9"
+                                                    title="Edit"
+                                                    icon={Edit2Icon}
+                                                />
+                                                <AppButton
                                                     size="sm"
                                                     variant="outline"
                                                     action="negative"
                                                     onPress={() => handleDelete(p.id)}
-                                                    className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9"
-                                                >
-                                                    <Icon as={TrashIcon} size="sm" className="text-error-critical" />
-                                                    <ButtonText className="text-error-critical text-sm font-bold">Delete</ButtonText>
-                                                </Button>
+                                                    className="justify-center w-24 h-9"
+                                                    title="Delete"
+                                                    icon={TrashIcon}
+                                                />
                                             </VStack>
-                                            <Icon as={ChevronRightIcon} className="text-typography-300" />
+                                            <Icon as={ChevronRightIcon} className="text-typography-300 ml-2" />
                                         </HStack>
                                     </HStack>
-                                </Card>
+                                </AppCard>
                             ))
                         )}
                     </VStack>

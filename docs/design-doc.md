@@ -339,7 +339,7 @@ This modernizes the stack and removes the complexity of manually managing `useEf
 **Policy**:
 
 1. **Development**: Complete error logging to console.
-2. **User-Facing**: If a critical operation fails (e.g., `logSet` fails to write to DB), the app must show a native **Alert** (`Alert.alert`).
+2. **User-Facing**: If a critical operation fails (e.g., `logSet` fails to write to DB), the app must show an **AppAlert** (custom component from `src/components/ui-library/AppAlert.tsx`). Do **not** use the native `Alert.alert` from React Native—use `AppAlert` for consistent styling.
 3. **State Sync**: Manual weight overrides during a session are persisted **immediately** to the `ExerciseSettings` table to ensure the change is captured even if the session is abandoned.
 
 ### Code Convention: Query Keys

@@ -12,6 +12,9 @@ import { Icon } from '@/components/ui/icon';
 import { CalendarIcon, ChevronRightIcon, TrendingUpIcon } from 'lucide-react-native';
 import { WorkoutService } from '@/src/services/WorkoutService';
 import { WorkoutSession } from '@/src/types/domain';
+import { AppHeader } from '@/src/components/ui-library/AppHeader';
+import { AppCard } from '@/src/components/ui-library/AppCard';
+import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
 
 export const HistoryScreen = () => {
     const router = useRouter();
@@ -47,9 +50,10 @@ export const HistoryScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-surface-deep px-4">
-            <VStack space="md" className="flex-1 mt-12">
-                <Heading className="text-typography-950 mb-4 font-heading">History</Heading>
+        <Box className="flex-1 bg-surface-deep">
+            <AppHeader title="History" showBack={false} />
+
+            <VStack space="md" className="flex-1 px-4 mt-4">
 
                 <ScrollView
                     className="flex-1"
@@ -69,7 +73,7 @@ export const HistoryScreen = () => {
                                     key={session.id}
                                     onPress={() => router.push(`/history/${session.id}`)}
                                 >
-                                    <Card className="p-4 mb-3 shadow-soft-1 border border-outline-dark/5 rounded-2xl">
+                                    <AppCard className="p-4 mb-3">
                                         <HStack className="justify-between items-center">
                                             <VStack space="xs" className="flex-1">
                                                 <HStack space="md" className="items-center">
@@ -80,28 +84,22 @@ export const HistoryScreen = () => {
                                                         </Text>
                                                     </HStack>
 
-                                                    {session.status === 'COMPLETED' ? (
-                                                        <Box className="bg-success-500/10 px-2 py-0.5 rounded-full">
-                                                            <Text className="text-success-growth text-[10px] font-bold uppercase">Success</Text>
-                                                        </Box>
-                                                    ) : session.status === 'ABANDONED' ? (
-                                                        <Box className="bg-error-500/10 px-2 py-0.5 rounded-full">
-                                                            <Text className="text-error-critical text-[10px] font-bold uppercase">Abandoned</Text>
-                                                        </Box>
-                                                    ) : (
-                                                        <Box className="bg-primary-energy/10 px-2 py-0.5 rounded-full">
-                                                            <Text className="text-primary-energy text-[10px] font-bold uppercase">Active</Text>
-                                                        </Box>
-                                                    )}
+                                                    <StatusBadge
+                                                        label={session.status === 'COMPLETED' ? 'Success' : session.status === 'ABANDONED' ? 'Abandoned' : 'Active'}
+                                                        variant={session.status === 'COMPLETED' ? 'success' : session.status === 'ABANDONED' ? 'error' : 'primary'}
+                                                    />
                                                 </HStack>
-                                                <Text className="text-typography-950 font-bold text-lg">{session.dayNameSnapshot}</Text>
+                                                <Text className="text-white font-bold text-lg">{session.dayNameSnapshot}</Text>
                                                 <Text className="text-typography-500 text-sm font-medium">{session.programNameSnapshot}</Text>
                                             </VStack>
-                                            <Box className="bg-background-50/50 p-2 rounded-full">
+                                            <Box
+                                                className="p-2 rounded-full"
+                                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                                            >
                                                 <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
                                             </Box>
                                         </HStack>
-                                    </Card>
+                                    </AppCard>
                                 </Pressable>
                             ))
                         )}
