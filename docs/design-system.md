@@ -59,6 +59,7 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 - **8px**: Small spacing (item internal padding).
 - **16px**: Standard spacing (gap between list items).
 - **24px**: Section spacing.
+- **32px+**: "Breathing Room" spacing for list sections (e.g., `mb-8` between cards).
 - **Corner Radius**: 12px for cards/buttons (Soft-modern feel).
 
 ---
@@ -68,7 +69,12 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 ### 2.1 Buttons
 
 - **Primary Action**: Full-width, `Primary-Energy` background, White text. High elevation shadow.
-- **Secondary Action**: Outline or Ghost style. Subtle border in `Text-Muted`.
+- **Hero Action**: Large, "bubbly" touch targets for major additions (e.g., "Add Day").
+  - `h-24`, `rounded-2xl`, `bg-background-50` with dashed/subtle border.
+- **Compact Action (Standard)**: Used for item-level actions (Edit, Delete, Remove).
+  - **Dimensions**: Fixed `w-28` width, `h-9` height.
+  - **Style**: `variant="outline"`, `bg-background-50`, `border-outline-100`, `rounded-lg`.
+  - **Content**: Icon `size="sm"`, Text `size="sm"`, **Title Case** (e.g., "Edit"), Centered content.
 - **Log Set Button**: Circular, large touch target (48x48px min). `Success-Growth` when logging.
 
 ### 2.2 Cards
