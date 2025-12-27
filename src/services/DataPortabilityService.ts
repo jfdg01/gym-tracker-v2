@@ -46,9 +46,10 @@ export const DataPortabilityService = {
                     try {
                         // Using insert().onConflictUpdate() would be ideal but expo-sqlite driver support varies.
                         // We'll use a basic insert and ignore if exists for now, or just try-catch.
+                        const { id, ...updateValues } = record;
                         await db.insert(table.schema).values(record).onConflictDoUpdate({
                             target: (table.schema as any).id,
-                            set: record
+                            set: updateValues
                         });
                     } catch (e) {
                         console.error(`Failed to import record into ${table.name}`, e);

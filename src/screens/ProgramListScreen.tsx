@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Pressable, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -70,9 +70,11 @@ export const ProgramListScreen = () => {
         }
     };
 
-    useEffect(() => {
-        loadPrograms();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadPrograms();
+        }, [])
+    );
 
     const handleCreateProgram = () => {
         setEditingProgram(null);

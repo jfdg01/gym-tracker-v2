@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Pressable, RefreshControl } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -60,9 +61,11 @@ export const ExerciseListScreen = () => {
         }
     };
 
-    useEffect(() => {
-        loadExercises();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadExercises();
+        }, [])
+    );
 
     const [isPending, startTransition] = React.useTransition();
 

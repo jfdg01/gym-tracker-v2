@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Pressable, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -30,9 +30,11 @@ export const HistoryScreen = () => {
         }
     }, []);
 
-    useEffect(() => {
-        loadHistory();
-    }, [loadHistory]);
+    useFocusEffect(
+        useCallback(() => {
+            loadHistory();
+        }, [loadHistory])
+    );
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
