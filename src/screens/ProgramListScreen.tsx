@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { Icon } from '@/components/ui/icon';
-import { PlusIcon, CalendarIcon, ChevronRightIcon, Edit2Icon } from 'lucide-react-native';
+import { PlusIcon, CalendarIcon, ChevronRightIcon, Edit2Icon, TrashIcon } from 'lucide-react-native';
 import { ProgramService } from '@/src/services/ProgramService';
 import { ProgramDayService } from '@/src/services/ProgramDayService';
 import { Program } from '@/src/types/domain';
@@ -127,7 +127,7 @@ export const ProgramListScreen = () => {
                             <Text className="text-typography-500 text-center mt-4">No programs found. Create your first one!</Text>
                         ) : (
                             programs.map((p) => (
-                                <Card key={p.id} className="p-4 mb-2 shadow-soft-1 border border-outline-dark/5">
+                                <Card key={p.id} className="p-4 mb-3 shadow-soft-1 border border-outline-dark/5 rounded-2xl">
                                     <HStack className="justify-between items-center">
                                         <Pressable onPress={() => router.push(`/program/${p.id}`)} className="flex-1">
                                             <VStack space="xs">
@@ -148,21 +148,27 @@ export const ProgramListScreen = () => {
                                         </Pressable>
 
                                         <HStack space="sm" className="items-center">
-                                            <Button
-                                                size="xs"
-                                                variant="link"
-                                                onPress={() => handleEditProgram(p)}
-                                            >
-                                                <Icon as={Edit2Icon} size="sm" className="text-typography-400" />
-                                            </Button>
-                                            <Button
-                                                size="xs"
-                                                variant="link"
-                                                action="negative"
-                                                onPress={() => handleDelete(p.id)}
-                                            >
-                                                <ButtonText className="text-error-critical font-bold">Delete</ButtonText>
-                                            </Button>
+                                            <VStack space="sm">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onPress={() => handleEditProgram(p)}
+                                                    className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9"
+                                                >
+                                                    <Icon as={Edit2Icon} size="sm" className="text-typography-500" />
+                                                    <ButtonText className="text-typography-500 text-sm font-bold">Edit</ButtonText>
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    action="negative"
+                                                    onPress={() => handleDelete(p.id)}
+                                                    className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9"
+                                                >
+                                                    <Icon as={TrashIcon} size="sm" className="text-error-critical" />
+                                                    <ButtonText className="text-error-critical text-sm font-bold">Delete</ButtonText>
+                                                </Button>
+                                            </VStack>
                                             <Icon as={ChevronRightIcon} className="text-typography-300" />
                                         </HStack>
                                     </HStack>

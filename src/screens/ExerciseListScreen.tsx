@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { Icon } from '@/components/ui/icon';
-import { PlusIcon } from 'lucide-react-native';
+import { PlusIcon, ArchiveIcon } from 'lucide-react-native';
 import { ExerciseService } from '@/src/services/ExerciseService';
 import { Exercise, ExerciseSettings } from '@/src/types/domain';
 import { ExerciseForm } from '@/src/components/ExerciseForm';
@@ -178,7 +178,7 @@ export const ExerciseListScreen = () => {
                         ) : (
                             filteredExercises.map((ex) => (
                                 <Pressable key={ex.id} onPress={() => openEdit(ex)} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
-                                    <Card className="p-4 mb-2 shadow-soft-1 border border-outline-dark/5">
+                                    <Card className="p-4 mb-3 shadow-soft-1 border border-outline-dark/5 rounded-2xl">
                                         <HStack className="justify-between items-center">
                                             <VStack space="xs">
                                                 <Text className="text-typography-900 font-bold text-lg">{ex.name}</Text>
@@ -195,10 +195,11 @@ export const ExerciseListScreen = () => {
                                                 size="sm"
                                                 variant="outline"
                                                 action="negative"
-                                                className="border-error-critical/20"
+                                                className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9"
                                                 onPress={() => handleArchive(ex.id)}
                                             >
-                                                <ButtonText className="text-error-critical font-bold">Archive</ButtonText>
+                                                <Icon as={ArchiveIcon} size="sm" className="text-error-critical" />
+                                                <ButtonText className="text-error-critical text-sm font-bold">Archive</ButtonText>
                                             </Button>
                                         </HStack>
                                     </Card>

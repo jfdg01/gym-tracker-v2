@@ -67,7 +67,7 @@ export const HistoryScreen = () => {
                                     key={session.id}
                                     onPress={() => router.push(`/history/${session.id}`)}
                                 >
-                                    <Card className="p-4 mb-2 shadow-soft-1 border border-outline-dark/5">
+                                    <Card className="p-4 mb-3 shadow-soft-1 border border-outline-dark/5 rounded-2xl">
                                         <HStack className="justify-between items-center">
                                             <VStack space="xs" className="flex-1">
                                                 <HStack space="md" className="items-center">
