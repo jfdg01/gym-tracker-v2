@@ -55,9 +55,11 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const [activeDayId, setActiveDayId] = useState<string | null>(null);
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
     const [editingDayEx, setEditingDayEx] = useState<ProgramDayExercise | null>(null);
+    const [dayToDeleteId, setDayToDeleteId] = useState<string | null>(null);
 
     const { activeSession, startWorkout } = useWorkout();
     const [showActiveSessionAlert, setShowActiveSessionAlert] = useState(false);
+    const [showDeleteDayAlert, setShowDeleteDayAlert] = useState(false);
 
     const toast = useToast();
 
@@ -127,13 +129,22 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     };
 
     const handleDeleteDay = async (dayId: string) => {
+        setDayToDeleteId(dayId);
+        setShowDeleteDayAlert(true);
+    };
+
+    const confirmDeleteDay = async () => {
+        if (!dayToDeleteId) return;
         try {
-            await ProgramDayService.deleteDay(dayId);
+            await ProgramDayService.deleteDay(dayToDeleteId);
             await loadData();
             showToast("Success", "Day deleted");
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to delete day", "error");
+        } finally {
+            setShowDeleteDayAlert(false);
+            setDayToDeleteId(null);
         }
     };
 
@@ -201,20 +212,6 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         }
     };
 
-    const handleStartWorkout = async (dayId: string) => {
-        try {
-            if (activeSession) {
-                setShowActiveSessionAlert(true);
-                return;
-            }
-            await startWorkout(dayId);
-            router.push('/active-workout');
-        } catch (e: any) {
-            console.error(e);
-            showToast("Error", e.message || "Failed to start workout", "error");
-        }
-    };
-
     if (!program && loading) {
         return (
             <Box className="flex-1 bg-surface-deep justify-center items-center">
@@ -249,29 +246,28 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                         </VStack>
                     ) : (
                         days.sort((a, b) => a.orderIndex - b.orderIndex).map((day) => (
-                            <VStack key={day.id} space="md" className="mb-8">
+                            <VStack key={day.id} space="md" className="mb-4">
                                 <HStack className="justify-between items-center mb-4 px-1">
                                     <Heading size="lg" className={`${day.isRestDay ? 'text-typography-400' : 'text-primary-energy'} italic font-heading`}>
                                         {day.name.toUpperCase()} {day.isRestDay && '(REST)'}
                                     </Heading>
                                     <HStack space="sm">
-                                        {!day.isRestDay && (
-                                            <AppButton
-                                                title="START"
-                                                size="sm"
-                                                action="primary"
-                                                icon={PlayIcon}
-                                                onPress={() => handleStartWorkout(day.id)}
-                                                className="w-28 h-9 shadow-sm"
-                                            />
-                                        )}
                                         <AppButton
                                             title={day.isRestDay ? 'Workout' : 'Rest'}
                                             size="sm"
                                             variant="outline"
                                             icon={day.isRestDay ? DumbbellIcon : MoonIcon}
                                             onPress={() => handleToggleRestDay(day.id, !!day.isRestDay)}
-                                            className="w-28 h-9"
+                                            className="w-15 h-9 border border-neutral-600 text-neutral-600"
+                                        />
+                                        <AppButton
+                                            title="Delete"
+                                            size="sm"
+                                            variant="solid"
+                                            action="negative"
+                                            icon={TrashIcon}
+                                            onPress={() => handleDeleteDay(day.id)}
+                                            className="w-15 h-9"
                                         />
                                     </HStack>
                                 </HStack>
@@ -368,7 +364,7 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                             onPress={handleAddDay}
                             variant="outline"
                             icon={PlusIcon}
-                            className="mt-8 border-dashed border-2 h-24 rounded-2xl border-primary-energy/30 mb-8 bg-transparent"
+                            className="mt-4 border-dashed border-2 h-20 rounded-2xl border-primary-energy/30 mb-4 bg-transparent"
                             textClassName="text-primary-energy font-bold text-lg"
                         />
                     )}
@@ -401,6 +397,21 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                             setShowActiveSessionAlert(false);
                             router.push('/active-workout');
                         }
+                    },
+                    { text: "Cancel", style: "cancel" }
+                ]}
+            />
+
+            <AppAlert
+                isOpen={showDeleteDayAlert}
+                onClose={() => setShowDeleteDayAlert(false)}
+                title="Delete Day"
+                message="Are you sure you want to delete this day? All scheduled exercises for this day will be removed."
+                buttons={[
+                    {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: confirmDeleteDay
                     },
                     { text: "Cancel", style: "cancel" }
                 ]}

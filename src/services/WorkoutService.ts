@@ -84,7 +84,7 @@ export const WorkoutService = {
      * Completes the session.
      */
     completeWorkout: async (sessionId: string): Promise<void> => {
-        // Logic for progression should be called after this or within this
+        // TODO: Refactor: Move progression evaluation logic here (currently in useWorkout) to centralize business logic
         await WorkoutRepository.completeSession(sessionId);
     },
 

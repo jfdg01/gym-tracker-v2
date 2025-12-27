@@ -87,7 +87,9 @@ export const WorkoutSetRow = React.memo(({
                 </Box>
             ) : (
                 <Box className="flex-[1.2]">
-                    {/* Placeholder for difficulty selection if needed */}
+                    {
+                        // TODO: Implement difficulty selection UI (RPE) 
+                    }
                 </Box>
             )}
 

@@ -29,8 +29,7 @@ export const ExerciseService = {
     },
 
     archiveExercise: async (id: string): Promise<void> => {
-        // TODO: Add check for active usage in programs or workout history before archiving
-        // This is the "Smart Delete" logic placeholder
+        // TODO: Implement "Smart Delete" logic: Add check for active usage in programs or workout history before archiving
         return await ExerciseRepository.archive(id);
     },
 

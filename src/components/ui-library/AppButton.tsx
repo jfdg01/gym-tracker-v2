@@ -71,7 +71,7 @@ export const AppButton = ({
             ) : (
                 <>
                     {IconComponent && (
-                        <ButtonIcon as={IconComponent} className={cn("mr-2", textColorClasses)} />
+                        <ButtonIcon as={IconComponent} className={cn(textColorClasses)} />
                     )}
                     <ButtonText className={textColorClasses}>
                         {title}
