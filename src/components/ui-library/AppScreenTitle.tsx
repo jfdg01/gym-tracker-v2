@@ -17,10 +17,10 @@ interface AppScreenTitleProps {
  */
 export const AppScreenTitle = ({ title, subtitle, className }: AppScreenTitleProps) => {
     return (
-        <VStack className={cn("mb-2", className)}>
+        <VStack className={cn("my-2", className)}>
             <Heading
                 size="2xl"
-                className="text-white font-heading"
+                className="text-white font-heading mt-5 text-center"
                 style={{
                     fontSize: 28,
                     fontWeight: '700',

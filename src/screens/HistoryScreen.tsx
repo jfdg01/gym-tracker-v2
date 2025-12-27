@@ -12,8 +12,8 @@ import { Icon } from '@/components/ui/icon';
 import { CalendarIcon, ChevronRightIcon, TrendingUpIcon } from 'lucide-react-native';
 import { WorkoutService } from '@/src/services/WorkoutService';
 import { WorkoutSession } from '@/src/types/domain';
-import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppCard } from '@/src/components/ui-library/AppCard';
+import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
 import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
 
 export const HistoryScreen = () => {
@@ -51,9 +51,8 @@ export const HistoryScreen = () => {
 
     return (
         <Box className="flex-1 bg-surface-deep">
-            <AppHeader title="History" showBack={false} />
-
-            <VStack space="md" className="flex-1 px-4 mt-4">
+            <VStack space="md" className="flex-1 px-4 pt-12">
+                <AppScreenTitle title="History" />
 
                 <ScrollView
                     className="flex-1"

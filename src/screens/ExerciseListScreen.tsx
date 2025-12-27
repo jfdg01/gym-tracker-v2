@@ -17,9 +17,9 @@ import { Exercise, ExerciseSettings } from '@/src/types/domain';
 import { ExerciseForm } from '@/src/components/ExerciseForm';
 import { SearchBar } from '@/src/components/SearchBar';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
-import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
+import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
 import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
 
 export const ExerciseListScreen = () => {
@@ -163,9 +163,8 @@ export const ExerciseListScreen = () => {
 
     return (
         <Box className="flex-1 bg-surface-deep">
-            <AppHeader title="Exercises" showBack={false} />
-
-            <VStack space="md" className="flex-1 px-4 mt-4">
+            <VStack space="md" className="flex-1 px-4 pt-12">
+                <AppScreenTitle title="Exercises" />
                 <SearchBar
                     value={searchQuery}
                     onChangeText={setSearchQuery}

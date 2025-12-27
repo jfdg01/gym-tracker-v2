@@ -17,9 +17,9 @@ import { ProgramDayService } from '@/src/services/ProgramDayService';
 import { Program } from '@/src/types/domain';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { ProgramForm } from '@/src/components/ProgramForm';
-import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
+import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
 
 export const ProgramListScreen = () => {
     const router = useRouter();
@@ -118,9 +118,8 @@ export const ProgramListScreen = () => {
 
     return (
         <Box className="flex-1 bg-surface-deep">
-            <AppHeader title="My Programs" showBack={false} />
-
-            <VStack space="md" className="flex-1 px-4 mt-4">
+            <VStack space="md" className="flex-1 px-4 pt-12">
+                <AppScreenTitle title="My Programs" />
 
                 <ScrollView
                     className="flex-1"

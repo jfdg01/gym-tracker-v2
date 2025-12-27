@@ -10,7 +10,6 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Card } from '@/components/ui/card';
-import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
 import {
     DownloadIcon,
@@ -23,6 +22,7 @@ import {
 import { DataPortabilityService } from '@/src/services/DataPortabilityService';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { AppAlert } from '@/src/components/ui-library/AppAlert';
+import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
 
 export const SettingsScreen = () => {
     const [loading, setLoading] = useState(false);
@@ -115,7 +115,7 @@ export const SettingsScreen = () => {
     return (
         <Box className="flex-1 bg-surface-deep px-4">
             <VStack space="xl" className="flex-1 mt-12">
-                <Heading className="text-typography-950 mb-4 font-heading">Settings</Heading>
+                <AppScreenTitle title="Settings" />
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <VStack space="lg" className="pb-24">
