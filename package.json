@@ -1,20 +1,25 @@
 {
-  "name": "expo-g",
+  "name": "gym-tracker",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --android",
     "clear": "expo start --android -c",
     "tunnel": "expo start --tunnel",
+    "tc": "expo start --tunnel -c",
     "web": "expo start --web",
     "docs:combine": "node scripts/combine_docs.js",
-    "mcp": "node mcp/gluestack-mcp/index.js"
+    "mcp": "node mcp/gluestack-mcp/index.js",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/html-elements": "^0.12.5",
     "@gluestack-ui/core": "^3.0.12",
     "@gluestack-ui/utils": "^3.0.13",
     "@legendapp/motion": "^2.5.3",
+    "@react-navigation/native": "^7.0.14",
+    "dom-helpers": "^6.0.1",
     "drizzle-orm": "^0.45.1",
     "expo": "~52.0.0",
     "expo-asset": "~11.0.5",

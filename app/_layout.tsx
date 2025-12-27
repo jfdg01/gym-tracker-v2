@@ -1,5 +1,3 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -11,8 +9,7 @@ import '@/global.css';
 
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '@/drizzle/migrations';
-import { db, expoDb } from '@/src/db/client';
-import { deleteDatabaseAsync } from 'expo-sqlite';
+import { db } from '@/src/db/client';
 import { RestTimerProvider } from '@/src/components/RestTimerContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.

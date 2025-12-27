@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -158,5 +159,3 @@ export default function HomeScreen() {
         </Box>
     );
 }
-
-import { Pressable } from 'react-native';

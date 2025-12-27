@@ -23,12 +23,7 @@
         "backgroundColor": "#121212"
       },
       "backgroundColor": "#121212",
-      "androidNavigationBar": {
-        "backgroundColor": "#121212"
-      },
-      "statusBar": {
-        "translucent": true
-      }
+      "package": "com.anonymous.expog"
     },
     "web": {
       "favicon": "./assets/favicon.png"
