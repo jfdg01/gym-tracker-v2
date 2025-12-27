@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -50,6 +50,17 @@ export default function HomeScreen() {
 
     const handleStartWorkout = async (dayId: string) => {
         try {
+            if (activeSession) {
+                Alert.alert(
+                    "Workout in Progress",
+                    "A session is already active. Please finish or abandon it first.",
+                    [
+                        { text: "Go to Active Workout", onPress: () => router.push('/active-workout') },
+                        { text: "Cancel", style: "cancel" }
+                    ]
+                );
+                return;
+            }
             await startWorkout(dayId);
             router.push('/active-workout');
         } catch (e: any) {
@@ -76,7 +87,7 @@ export default function HomeScreen() {
                     <VStack space="lg" className="pb-8">
                         {/* Active Session Card */}
                         {activeSession ? (
-                            <Card className="bg-primary-energy p-6 border-0 shadow-soft-2">
+                            <Card className="bg-primary-energy p-6 border-0" style={{ elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 }}>
                                 <VStack space="md">
                                     <HStack className="justify-between items-start">
                                         <VStack space="xs">
@@ -84,7 +95,7 @@ export default function HomeScreen() {
                                             <Heading className="text-white" size="xl">{activeSession.dayNameSnapshot}</Heading>
                                             <Text className="text-white/90 font-medium">{activeSession.programNameSnapshot}</Text>
                                         </VStack>
-                                        <Box className="bg-white/20 p-2 rounded-full">
+                                        <Box className="rounded-full p-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
                                             <Icon as={RotateCcwIcon} size="xl" className="text-white" />
                                         </Box>
                                     </HStack>
@@ -125,7 +136,7 @@ export default function HomeScreen() {
                                 programs.map((p) => {
                                     const suggestedDay = suggestedDays[p.id];
                                     return (
-                                        <Card key={p.id} className="p-0 overflow-hidden shadow-soft-1">
+                                        <Card key={p.id} className="p-0 overflow-hidden" style={{ elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}>
                                             <Pressable
                                                 onPress={() => suggestedDay && handleStartWorkout(suggestedDay.id)}
                                                 disabled={!suggestedDay}
@@ -145,7 +156,7 @@ export default function HomeScreen() {
                                                             <Text className="text-typography-500 text-xs italic">No days configured</Text>
                                                         )}
                                                     </VStack>
-                                                    <Box className="bg-primary-energy/10 p-2 rounded-full">
+                                                    <Box className="rounded-full p-2" style={{ backgroundColor: 'rgba(79, 70, 230, 0.1)' }}>
                                                         <Icon as={ChevronRightIcon} size="sm" className="text-primary-energy" />
                                                     </Box>
                                                 </HStack>

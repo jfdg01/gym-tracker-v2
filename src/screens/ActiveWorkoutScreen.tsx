@@ -76,7 +76,14 @@ const ActiveSetRow = React.memo(({
     const isWeight = exercise.resistanceType === ResistanceType.WEIGHT;
 
     return (
-        <HStack space="md" className={`items-center py-3 px-3 rounded-xl mb-1 ${logged ? 'bg-success-500/10' : skipped ? 'bg-background-50/50 opacity-40' : 'bg-background-50/20'}`}>
+        <HStack
+            space="md"
+            className="items-center py-3 px-3 rounded-xl mb-1"
+            style={{
+                backgroundColor: logged ? 'rgba(34, 197, 94, 0.1)' : skipped ? 'rgba(24, 23, 25, 0.5)' : 'rgba(24, 23, 25, 0.2)',
+                opacity: skipped ? 0.4 : 1
+            }}
+        >
             <Box className="w-8 items-center">
                 <Text size="sm" className="font-bold text-typography-500">{setNumber}</Text>
             </Box>
@@ -210,7 +217,10 @@ export const ActiveWorkoutScreen = () => {
     return (
         <Box className="flex-1 bg-surface-deep">
             {/* Header */}
-            <VStack className="pt-12 pb-4 px-4 bg-surface-deep border-b border-outline-dark/10 shadow-sm">
+            <VStack
+                className="pt-12 pb-4 px-4 bg-surface-deep border-b border-outline-dark/10"
+                style={{ elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3 }}
+            >
                 <HStack className="justify-between items-center">
                     <HStack space="md" className="items-center flex-1">
                         <Pressable onPress={() => router.back()} hitSlop={20}>
@@ -244,14 +254,21 @@ export const ActiveWorkoutScreen = () => {
                         const completedCount = exerciseSets.filter(s => !s.skipped).length;
 
                         return (
-                            <Card key={ex.programDayExerciseId} className="p-0 overflow-hidden bg-surface-elevated border-0 shadow-sm">
+                            <Card
+                                key={ex.programDayExerciseId}
+                                className="p-0 overflow-hidden bg-surface-elevated border-0"
+                                style={{ elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
+                            >
                                 <Pressable
                                     onPress={() => setExpandedExercise(isExpanded ? "" : ex.programDayExerciseId)}
                                     className="p-4"
                                 >
                                     <HStack className="justify-between items-center">
                                         <HStack space="md" className="items-center flex-1">
-                                            <Box className="w-12 h-12 rounded-xl bg-primary-energy/10 items-center justify-center">
+                                            <Box
+                                                className="w-12 h-12 rounded-xl items-center justify-center"
+                                                style={{ backgroundColor: 'rgba(79, 70, 229, 0.1)' }}
+                                            >
                                                 <Icon as={DumbbellIcon} size="md" className="text-primary-energy" />
                                             </Box>
                                             <VStack className="flex-1">
@@ -266,7 +283,11 @@ export const ActiveWorkoutScreen = () => {
                                 </Pressable>
 
                                 {isExpanded && (
-                                    <VStack className="px-4 pb-4 border-t border-outline-dark/30 pt-4" space="xs">
+                                    <VStack
+                                        className="px-4 pb-4 border-t pt-4"
+                                        space="xs"
+                                        style={{ borderTopColor: 'rgba(255, 255, 255, 0.05)' }}
+                                    >
                                         {Array.from({ length: ex.sets }).map((_, i) => (
                                             <ActiveSetRow
                                                 key={`${ex.exerciseId}-${i + 1}`}
@@ -286,7 +307,10 @@ export const ActiveWorkoutScreen = () => {
 
             {/* Rest Timer Overlay */}
             {isActive && (
-                <Box className="absolute inset-0 bg-surface-deep/90 justify-center items-center z-50">
+                <Box
+                    className="absolute inset-0 justify-center items-center z-50"
+                    style={{ backgroundColor: 'rgba(18, 18, 18, 0.9)' }}
+                >
                     <VStack space="2xl" className="items-center">
                         <Box className="w-64 h-64 rounded-full border-8 border-accent-warning items-center justify-center">
                             <VStack className="items-center">

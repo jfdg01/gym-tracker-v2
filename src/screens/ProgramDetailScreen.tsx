@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { RefreshControl, Pressable } from 'react-native';
+import { RefreshControl, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -20,8 +20,10 @@ import {
     ArrowUpIcon,
     ArrowDownIcon,
     MoonIcon,
-    CoffeeIcon
+    CoffeeIcon,
+    PlayIcon
 } from 'lucide-react-native';
+import { useWorkout } from '@/src/hooks/useWorkout';
 import { ProgramService } from '@/src/services/ProgramService';
 import { ProgramDayService } from '@/src/services/ProgramDayService';
 import { ProgramDayExerciseService } from '@/src/services/ProgramDayExerciseService';
@@ -51,6 +53,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const [activeDayId, setActiveDayId] = useState<string | null>(null);
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
     const [editingDayEx, setEditingDayEx] = useState<ProgramDayExercise | null>(null);
+
+    const { activeSession, startWorkout } = useWorkout();
 
     const toast = useToast();
 
@@ -194,6 +198,27 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         }
     };
 
+    const handleStartWorkout = async (dayId: string) => {
+        try {
+            if (activeSession) {
+                Alert.alert(
+                    "Workout in Progress",
+                    "A session is already active. Please finish or abandon it first.",
+                    [
+                        { text: "Go to Active Workout", onPress: () => router.push('/active-workout') },
+                        { text: "Cancel", style: "cancel" }
+                    ]
+                );
+                return;
+            }
+            await startWorkout(dayId);
+            router.push('/active-workout');
+        } catch (e: any) {
+            console.error(e);
+            showToast("Error", e.message || "Failed to start workout", "error");
+        }
+    };
+
     if (!program && loading) {
         return (
             <Box className="flex-1 bg-surface-deep justify-center items-center">
@@ -205,7 +230,10 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     return (
         <Box className="flex-1 bg-surface-deep">
             {/* Header */}
-            <VStack className="px-4 pt-12 pb-4 bg-surface-deep border-b border-outline-dark/10 shadow-sm">
+            <VStack
+                className="px-4 pt-12 pb-4 bg-surface-deep border-b border-outline-dark/10"
+                style={{ elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3 }}
+            >
                 <HStack space="md" className="items-center mb-4">
                     <Pressable onPress={() => router.back()} hitSlop={20}>
                         <Icon as={ChevronLeftIcon} size="xl" className="text-typography-500" />
@@ -239,22 +267,39 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                         {day.name.toUpperCase()} {day.isRestDay && '(REST)'}
                                     </Heading>
                                     <HStack space="sm">
+                                        {!day.isRestDay && (
+                                            <Button
+                                                size="sm"
+                                                action="primary"
+                                                onPress={() => handleStartWorkout(day.id)}
+                                                className="bg-primary-energy border-0 rounded-lg justify-center w-28 h-9 shadow-sm"
+                                            >
+                                                <Icon as={PlayIcon} size="sm" className="text-white" />
+                                                <ButtonText className="text-white text-sm font-bold">START</ButtonText>
+                                            </Button>
+                                        )}
                                         <Button size="sm" variant="outline" onPress={() => handleToggleRestDay(day.id, !!day.isRestDay)} className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9">
                                             <Icon as={day.isRestDay ? DumbbellIcon : MoonIcon} size="sm" className="text-typography-500" />
                                             <ButtonText className="text-typography-500 text-sm font-bold">{day.isRestDay ? 'Workout' : 'Rest'}</ButtonText>
                                         </Button>
-                                        <Button size="sm" variant="outline" action="negative" onPress={() => handleDeleteDay(day.id)} className="bg-background-50 border-outline-100 rounded-lg justify-center w-28 h-9">
-                                            <Icon as={TrashIcon} size="sm" className="text-error-critical" />
-                                            <ButtonText className="text-error-critical text-sm font-bold">Remove</ButtonText>
-                                        </Button>
                                     </HStack>
                                 </HStack>
 
-                                <Card className="p-0 overflow-hidden shadow-soft-1 border border-outline-dark/5 rounded-2xl">
+                                <Card
+                                    className="p-0 overflow-hidden rounded-2xl border"
+                                    style={{
+                                        elevation: 2,
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.1,
+                                        shadowRadius: 4,
+                                        borderColor: 'rgba(255, 255, 255, 0.05)'
+                                    }}
+                                >
                                     {day.isRestDay ? (
-                                        <VStack className="p-10 items-center justify-center bg-background-50/30">
+                                        <VStack className="p-10 items-center justify-center" style={{ backgroundColor: 'rgba(24, 23, 25, 0.1)' }}>
                                             <Icon as={CoffeeIcon} size="xl" className="text-typography-300 mb-2" />
-                                            <Text className="text-typography-500 font-bold uppercase tracking-widest text-xs">Rest & Recovery</Text>
+                                            <Text className="text-typography-400 font-bold uppercase tracking-widest text-xs">Rest & Recovery</Text>
                                             <Text size="xs" className="text-typography-500 text-center mt-2 font-medium">Take it easy today to let your muscles grow.</Text>
                                         </VStack>
                                     ) : (
@@ -271,7 +316,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                                 day.exercises.sort((a, b) => a.orderIndex - b.orderIndex).map((de, idx) => (
                                                     <Box
                                                         key={de.id}
-                                                        className={`p-6 ${idx !== day.exercises.length - 1 ? 'border-b border-outline-dark/5' : ''}`}
+                                                        className="p-6"
+                                                        style={idx !== day.exercises.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
                                                     >
                                                         <HStack className="justify-between items-center space-x-4">
                                                             <VStack space="sm" className="flex-1">
@@ -302,7 +348,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                             <Button
                                                 variant="solid"
                                                 size="lg"
-                                                className="py-4 bg-background-50/50 items-center justify-center h-16 rounded-none border-t border-outline-dark/5"
+                                                className="py-4 items-center justify-center h-16 rounded-none border-t"
+                                                style={{ borderTopColor: 'rgba(255, 255, 255, 0.05)', backgroundColor: 'rgba(24, 23, 25, 0.2)' }}
                                                 onPress={() => handleOpenSelector(day.id)}
                                             >
                                                 <ButtonIcon as={PlusIcon} className="text-primary-energy" size="lg" />
