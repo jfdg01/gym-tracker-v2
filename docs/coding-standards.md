@@ -88,3 +88,15 @@ To prevent visual artifacts such as the "white flash" during navigation transiti
 - **Global Theme Synchronization**: Always wrap the root navigator in a `ThemeProvider` with `DarkTheme`.
 
 For the full structural analysis and mitigation roadmap, see: [Android Navigation Transitions Report](./technical-insights/android-navigation-transitions.md)
+
+## NativeWind & Navigation Context
+
+In Expo SDK 52 (Expo Router v4), NativeWind v4's runtime CSS engine can occasionally block the initialization of the React Navigation context during hydration.
+
+### Prevention Strategy
+
+- **Avoid Heavy Utilities on Entry Screens**: Do not use `shadow-*`, `opacity-*`, or `bg-color/alpha` (e.g., `bg-primary/10`) on the entry screens of your navigation (Home, Tab entry points, Splash).
+- **Favor Inline Styles for Decor**: For shadows and background opacities on layout-critical components, use inline `style` objects.
+- **Why**: This ensures that React Navigation's context is fully available before expensive CSS interop processing occurs.
+
+For the full technical analysis, see: [NativeWind Navigation Race Condition](./technical-insights/nativewind-navigation-race-condition.md)

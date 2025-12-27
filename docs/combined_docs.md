@@ -90,6 +90,17 @@ To prevent visual artifacts such as the "white flash" during navigation transiti
 - **Global Theme Synchronization**: Always wrap the root navigator in a `ThemeProvider` with `DarkTheme`.
 
 For the full structural analysis and mitigation roadmap, see: [Android Navigation Transitions Report](./technical-insights/android-navigation-transitions.md)
+## NativeWind & Navigation Context
+
+In Expo SDK 52 (Expo Router v4), NativeWind v4's runtime CSS engine can occasionally block the initialization of the React Navigation context during hydration.
+
+### Prevention Strategy
+
+- **Avoid Heavy Utilities on Entry Screens**: Do not use `shadow-*`, `opacity-*`, or `bg-color/alpha` (e.g., `bg-primary/10`) on the entry screens of your navigation (Home, Tab entry points, Splash).
+- **Favor Inline Styles for Decor): For shadows and background opacities on layout-critical components, use inline `style` objects.
+- **Why**: This ensures that React Navigation's context is fully available before expensive CSS interop processing occurs.
+
+For the full technical analysis, see: [NativeWind Navigation Race Condition](./technical-insights/nativewind-navigation-race-condition.md)
 
 
 ---
@@ -799,6 +810,7 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 - **8px**: Small spacing (item internal padding).
 - **16px**: Standard spacing (gap between list items).
 - **24px**: Section spacing.
+- **32px+**: "Breathing Room" spacing for list sections (e.g., `mb-8` between cards).
 - **Corner Radius**: 12px for cards/buttons (Soft-modern feel).
 
 ---
@@ -808,7 +820,12 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 ### 2.1 Buttons
 
 - **Primary Action**: Full-width, `Primary-Energy` background, White text. High elevation shadow.
-- **Secondary Action**: Outline or Ghost style. Subtle border in `Text-Muted`.
+- **Hero Action**: Large, "bubbly" touch targets for major additions (e.g., "Add Day").
+  - `h-24`, `rounded-2xl`, `bg-background-50` with dashed/subtle border.
+- **Compact Action (Standard)**: Used for item-level actions (Edit, Delete, Remove).
+  - **Dimensions**: Fixed `w-28` width, `h-9` height.
+  - **Style**: `variant="outline"`, `bg-background-50`, `border-outline-100`, `rounded-lg`.
+  - **Content**: Icon `size="sm"`, Text `size="sm"`, **Title Case** (e.g., "Edit"), Centered content.
 - **Log Set Button**: Circular, large touch target (48x48px min). `Success-Growth` when logging.
 
 ### 2.2 Cards
@@ -854,6 +871,15 @@ A **4px/8px Baseline Grid** ensures consistent rhythm.
 - **Dark Mode First**: The default and optimized theme.
 - **Touch Targets**: All interactive elements are at least **44x44px**.
 - **Contrast**: Ensuring WCAG AA compliance (4.5:1) for all critical text.
+
+## 6. Notifications (Toasts)
+
+To maintain a clean and uncluttered UI, we enforce a **Single Active Toast** pattern.
+
+- **Behavior**: New toasts **replace** existing ones instead of stacking vertically.
+- **Implementation**: Always provide a unique `id` (e.g., `id: 'gym-tracker-toast'`) when calling `toast.show()`.
+- **Placement**: Top of the screen (`placement: 'top'`).
+- **Duration**: Short duration for success/info, indefinite or longer for errors that require reading.
 
 
 ---
