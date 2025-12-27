@@ -9,6 +9,7 @@ const mapProgramDay = (doc: typeof programDays.$inferSelect): ProgramDay => ({
     programId: doc.programId,
     name: doc.name,
     orderIndex: doc.orderIndex,
+    isRestDay: !!doc.isRestDay,
 });
 
 export const ProgramDayRepository = {
@@ -37,7 +38,7 @@ export const ProgramDayRepository = {
      * Creates a new program day.
      * Automatically calculates the next orderIndex if not provided.
      */
-    create: async (data: Omit<ProgramDay, 'id' | 'orderIndex'> & { orderIndex?: number }): Promise<ProgramDay> => {
+    create: async (data: Omit<ProgramDay, 'id' | 'orderIndex' | 'isRestDay'> & { orderIndex?: number, isRestDay?: boolean }): Promise<ProgramDay> => {
         const id = Crypto.randomUUID();
 
         let orderIndex = data.orderIndex;
@@ -51,6 +52,7 @@ export const ProgramDayRepository = {
             programId: data.programId,
             name: data.name,
             orderIndex,
+            isRestDay: data.isRestDay ?? false,
         };
 
         await db.insert(programDays).values(newDay);

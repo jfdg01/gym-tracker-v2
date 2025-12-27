@@ -12,15 +12,15 @@ export const ProgramDayService = {
     /**
      * Creates a new day in a program.
      */
-    createDay: async (programId: string, name: string): Promise<ProgramDay> => {
-        return await ProgramDayRepository.create({ programId, name });
+    createDay: async (programId: string, name: string, isRestDay: boolean = false): Promise<ProgramDay> => {
+        return await ProgramDayRepository.create({ programId, name, isRestDay });
     },
 
     /**
      * Updates a day's name.
      */
-    updateDay: async (id: string, name: string): Promise<void> => {
-        return await ProgramDayRepository.update(id, { name });
+    updateDay: async (id: string, updates: Partial<Omit<ProgramDay, 'id' | 'programId'>>): Promise<void> => {
+        return await ProgramDayRepository.update(id, updates);
     },
 
     /**

@@ -1,0 +1,1 @@
+ALTER TABLE `program_days` ADD `is_rest_day` integer DEFAULT false NOT NULL;

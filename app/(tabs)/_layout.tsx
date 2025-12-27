@@ -10,6 +10,7 @@ export default function TabLayout() {
 
     return (
         <Tabs
+            detachInactiveScreens={false}
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {

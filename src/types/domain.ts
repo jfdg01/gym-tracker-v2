@@ -54,6 +54,7 @@ export interface ProgramDay {
     programId: string;
     name: string;
     orderIndex: number;
+    isRestDay: boolean;
 }
 
 export interface ProgramDayExercise {

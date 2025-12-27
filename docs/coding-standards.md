@@ -76,3 +76,15 @@ const OptimizedInput = memo(({ initialValue, onValueChange }) => {
 - **DO** verify `nativewind` configuration to ensure styles are compiled effectively.
 
 For a deep dive into the technical reasoning, see: [Text Input Optimization Report](./technical-insights/text-input-handling-rn76.md)
+
+## Navigation Transitions (Android)
+
+To prevent visual artifacts such as the "white flash" during navigation transitions on Android, we adhere to system-level theme synchronization and navigator-layer optimizations.
+
+### Guidelines
+
+- **Native Theme Locking**: Ensure `userInterfaceStyle` is set to `dark` for Android and the `windowBackground` matches the app's dark background.
+- **Navigator Optimization**: Disable screen detachment (`detachInactiveScreens: false`) in navigators when transitions between discrete contexts (e.g., Stack to Tabs) expose background containers.
+- **Global Theme Synchronization**: Always wrap the root navigator in a `ThemeProvider` with `DarkTheme`.
+
+For the full structural analysis and mitigation roadmap, see: [Android Navigation Transitions Report](./technical-insights/android-navigation-transitions.md)

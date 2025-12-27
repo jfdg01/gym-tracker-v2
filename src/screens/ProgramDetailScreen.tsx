@@ -18,7 +18,9 @@ import {
     EditIcon,
     DumbbellIcon,
     ArrowUpIcon,
-    ArrowDownIcon
+    ArrowDownIcon,
+    MoonIcon,
+    CoffeeIcon
 } from 'lucide-react-native';
 import { ProgramService } from '@/src/services/ProgramService';
 import { ProgramDayService } from '@/src/services/ProgramDayService';
@@ -180,6 +182,17 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         }
     };
 
+    const handleToggleRestDay = async (dayId: string, currentStatus: boolean) => {
+        try {
+            await ProgramDayService.updateDay(dayId, { isRestDay: !currentStatus });
+            await loadData();
+            showToast("Success", !currentStatus ? "Marked as Rest Day" : "Marked as Workout Day");
+        } catch (e) {
+            console.error(e);
+            showToast("Error", "Failed to update day", "error");
+        }
+    };
+
     if (!program && loading) {
         return (
             <Box className="flex-1 bg-background-dark justify-center items-center">
@@ -221,10 +234,13 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                         days.sort((a, b) => a.orderIndex - b.orderIndex).map((day) => (
                             <VStack key={day.id} space="sm">
                                 <HStack className="justify-between items-center mb-1">
-                                    <Heading size="md" className="text-primary-500 italic">
-                                        {day.name.toUpperCase()}
+                                    <Heading size="md" className={`${day.isRestDay ? 'text-typography-500' : 'text-primary-500'} italic`}>
+                                        {day.name.toUpperCase()} {day.isRestDay && '(REST)'}
                                     </Heading>
                                     <HStack space="xs">
+                                        <Button size="xs" variant="link" onPress={() => handleToggleRestDay(day.id, !!day.isRestDay)}>
+                                            <Icon as={day.isRestDay ? DumbbellIcon : MoonIcon} size="xs" className="text-typography-400" />
+                                        </Button>
                                         <Button size="xs" variant="link" action="negative" onPress={() => handleDeleteDay(day.id)}>
                                             <Icon as={TrashIcon} size="xs" className="text-error-500" />
                                         </Button>
@@ -232,55 +248,63 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                 </HStack>
 
                                 <Card className="p-0 overflow-hidden bg-surface-elevated border border-outline-dark">
-                                    <VStack>
-                                        {day.exercises.length === 0 ? (
-                                            <Pressable
-                                                className="p-8 items-center justify-center border-b border-outline-dark border-dashed"
+                                    {day.isRestDay ? (
+                                        <VStack className="p-10 items-center justify-center bg-surface-dark/30">
+                                            <Icon as={CoffeeIcon} size="xl" className="text-typography-300 mb-2" />
+                                            <Text className="text-typography-400 font-medium font-roboto">Rest & Recovery</Text>
+                                            <Text size="xs" className="text-typography-500 text-center mt-1">Take it easy today to let your muscles grow.</Text>
+                                        </VStack>
+                                    ) : (
+                                        <VStack>
+                                            {day.exercises.length === 0 ? (
+                                                <Pressable
+                                                    className="p-8 items-center justify-center border-b border-outline-dark border-dashed"
+                                                    onPress={() => handleOpenSelector(day.id)}
+                                                >
+                                                    <Icon as={PlusIcon} size="sm" className="text-typography-400 mb-2" />
+                                                    <Text size="xs" className="text-typography-400">Add Exercise</Text>
+                                                </Pressable>
+                                            ) : (
+                                                day.exercises.sort((a, b) => a.orderIndex - b.orderIndex).map((de, idx) => (
+                                                    <Box
+                                                        key={de.id}
+                                                        className={`p-4 ${idx !== day.exercises.length - 1 ? 'border-b border-outline-dark' : ''}`}
+                                                    >
+                                                        <HStack className="justify-between items-center">
+                                                            <VStack space="xs" className="flex-1">
+                                                                <HStack space="xs" className="items-center">
+                                                                    <Icon as={DumbbellIcon} size="xs" className="text-primary-400" />
+                                                                    <Text className="font-bold text-typography-900">
+                                                                        {de.exercise?.name || 'Unknown Exercise'}
+                                                                    </Text>
+                                                                </HStack>
+                                                                <Text size="xs" className="text-typography-500">
+                                                                    {de.sets} sets • {de.trackingType === 'REPS' ? `${de.targetReps} reps` : `${de.targetTimeSeconds}s`} • {de.resistanceType}
+                                                                </Text>
+                                                            </VStack>
+                                                            <HStack space="sm">
+                                                                <Button size="xs" variant="link" onPress={() => handleEditExercise(de, de.exercise)}>
+                                                                    <Icon as={EditIcon} size="xs" className="text-typography-400" />
+                                                                </Button>
+                                                                <Button size="xs" variant="link" action="negative" onPress={() => handleDeleteExercise(de.id)}>
+                                                                    <Icon as={TrashIcon} size="xs" className="text-error-500" />
+                                                                </Button>
+                                                            </HStack>
+                                                        </HStack>
+                                                    </Box>
+                                                ))
+                                            )}
+                                            <Button
+                                                variant="link"
+                                                size="sm"
+                                                className="py-3 bg-surface-dark items-center justify-center h-12"
                                                 onPress={() => handleOpenSelector(day.id)}
                                             >
-                                                <Icon as={PlusIcon} size="sm" className="text-typography-400 mb-2" />
-                                                <Text size="xs" className="text-typography-400">Add Exercise</Text>
-                                            </Pressable>
-                                        ) : (
-                                            day.exercises.sort((a, b) => a.orderIndex - b.orderIndex).map((de, idx) => (
-                                                <Box
-                                                    key={de.id}
-                                                    className={`p-4 ${idx !== day.exercises.length - 1 ? 'border-b border-outline-dark' : ''}`}
-                                                >
-                                                    <HStack className="justify-between items-center">
-                                                        <VStack space="xs" className="flex-1">
-                                                            <HStack space="xs" className="items-center">
-                                                                <Icon as={DumbbellIcon} size="xs" className="text-primary-400" />
-                                                                <Text className="font-bold text-typography-900">
-                                                                    {de.exercise?.name || 'Unknown Exercise'}
-                                                                </Text>
-                                                            </HStack>
-                                                            <Text size="xs" className="text-typography-500">
-                                                                {de.sets} sets • {de.trackingType === 'REPS' ? `${de.targetReps} reps` : `${de.targetTimeSeconds}s`} • {de.resistanceType}
-                                                            </Text>
-                                                        </VStack>
-                                                        <HStack space="sm">
-                                                            <Button size="xs" variant="link" onPress={() => handleEditExercise(de, de.exercise)}>
-                                                                <Icon as={EditIcon} size="xs" className="text-typography-400" />
-                                                            </Button>
-                                                            <Button size="xs" variant="link" action="negative" onPress={() => handleDeleteExercise(de.id)}>
-                                                                <Icon as={TrashIcon} size="xs" className="text-error-500" />
-                                                            </Button>
-                                                        </HStack>
-                                                    </HStack>
-                                                </Box>
-                                            ))
-                                        )}
-                                        <Button
-                                            variant="link"
-                                            size="sm"
-                                            className="py-3 bg-surface-dark items-center justify-center h-12"
-                                            onPress={() => handleOpenSelector(day.id)}
-                                        >
-                                            <ButtonIcon as={PlusIcon} />
-                                            <ButtonText className="ml-2">ADD EXERCISE</ButtonText>
-                                        </Button>
-                                    </VStack>
+                                                <ButtonIcon as={PlusIcon} />
+                                                <ButtonText className="ml-2">ADD EXERCISE</ButtonText>
+                                            </Button>
+                                        </VStack>
+                                    )}
                                 </Card>
                             </VStack>
                         ))

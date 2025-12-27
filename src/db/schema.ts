@@ -38,6 +38,7 @@ export const programDays = sqliteTable('program_days', {
     programId: text('program_id').notNull().references(() => programs.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     orderIndex: integer('order_index').notNull(),
+    isRestDay: integer('is_rest_day', { mode: 'boolean' }).notNull().default(false),
 });
 
 export const programDayExercises = sqliteTable('program_day_exercises', {

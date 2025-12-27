@@ -61,9 +61,9 @@ export default function RootLayout() {
 
     return (
         <GluestackUIProvider mode="dark">
-            <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
+            <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="+not-found" options={{ headerShown: true, title: 'Oops!' }} />
             </Stack>
             <StatusBar style="light" />
         </GluestackUIProvider>

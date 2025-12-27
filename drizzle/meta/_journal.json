@@ -8,6 +8,13 @@
       "when": 1766835437458,
       "tag": "0000_burly_sharon_ventura",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1766836610915,
+      "tag": "0001_lumpy_iron_lad",
+      "breakpoints": true
     }
   ]
 }

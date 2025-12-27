@@ -21,7 +21,7 @@ import { ProgramForm } from '@/src/components/ProgramForm';
 export const ProgramListScreen = () => {
     const router = useRouter();
     const [programs, setPrograms] = useState<Program[]>([]);
-    const [programDayCounts, setProgramDayCounts] = useState<Record<string, number>>({});
+    const [programDayCounts, setProgramDayCounts] = useState<Record<string, { total: number, workout: number }>>({});
     const [loading, setLoading] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
     const [editingProgram, setEditingProgram] = useState<Program | null>(null);
@@ -52,10 +52,13 @@ export const ProgramListScreen = () => {
             setPrograms(data);
 
             // Load day counts for each program
-            const counts: Record<string, number> = {};
+            const counts: Record<string, { total: number, workout: number }> = {};
             for (const program of data) {
                 const days = await ProgramDayService.getDaysByProgramId(program.id);
-                counts[program.id] = days.length;
+                counts[program.id] = {
+                    total: days.length,
+                    workout: days.filter(d => !d.isRestDay).length,
+                };
             }
             setProgramDayCounts(counts);
         } catch (e) {
@@ -136,7 +139,8 @@ export const ProgramListScreen = () => {
                                                 <HStack space="xs" className="mt-2 items-center">
                                                     <Icon as={CalendarIcon} size="xs" className="text-primary-500" />
                                                     <Text className="text-typography-400 text-xs">
-                                                        {programDayCounts[p.id] || 0} {programDayCounts[p.id] === 1 ? 'Day' : 'Days'}
+                                                        {programDayCounts[p.id]?.total || 0} {programDayCounts[p.id]?.total === 1 ? 'Day' : 'Days'}
+                                                        {(programDayCounts[p.id]?.workout || 0) > 0 && ` • ${programDayCounts[p.id].workout} Workouts`}
                                                     </Text>
                                                 </HStack>
                                             </VStack>
