@@ -81,9 +81,14 @@ export const useWorkout = () => {
 
         // Update program progression
         if (activeSession.programDayId) {
-            const day = await ProgramDayRepository.getById(activeSession.programDayId);
-            if (day) {
-                await ProgramService.updateProgression(day.programId, day.id);
+            try {
+                const day = await ProgramDayRepository.getById(activeSession.programDayId);
+                if (day) {
+                    await ProgramService.updateProgression(day.programId, day.id);
+                }
+            } catch (error) {
+                console.warn('Failed to update progression (program might have been deleted):', error);
+                // Continue with completion - do not block user
             }
         }
 

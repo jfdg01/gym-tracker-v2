@@ -22,7 +22,7 @@ export const ExerciseCard = ({
     showChevron = true
 }: ExerciseCardProps) => {
     return (
-        <AppCard className="mb-3 p-0 overflow-hidden">
+        <AppCard className="mb-3 overflow-hidden">
             <Box className="p-4">
                 <HStack space="md" className="items-center justify-between">
                     <HStack space="md" className="flex-1 items-center">

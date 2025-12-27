@@ -1,4 +1,5 @@
 import { ProgramRepository } from '../repositories/ProgramRepository';
+import { WorkoutRepository } from '../repositories/WorkoutRepository';
 import { ProgramDayRepository } from '../repositories/ProgramDayRepository';
 import { Program, ProgramDay } from '../types/domain';
 
@@ -44,7 +45,15 @@ export const ProgramService = {
      * Deletes a program.
      */
     deleteProgram: async (id: string): Promise<void> => {
-        // Future Logic: check if there's an active session using this program before deletion
+        // Check if there's an active session using this program before deletion
+        const activeSession = await WorkoutRepository.getActiveSession();
+        if (activeSession && activeSession.programDayId) {
+            const sessionDay = await ProgramDayRepository.getById(activeSession.programDayId);
+            if (sessionDay && sessionDay.programId === id) {
+                throw new Error("Cannot delete program while a session is active. Please finish or abandon your workout first.");
+            }
+        }
+
         return await ProgramRepository.delete(id);
     },
 
