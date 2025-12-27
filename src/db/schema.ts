@@ -44,6 +44,8 @@ export const programDayExercises = sqliteTable('program_day_exercises', {
     id: text('id').primaryKey(),
     programDayId: text('program_day_id').notNull().references(() => programDays.id, { onDelete: 'cascade' }),
     exerciseId: text('exercise_id').notNull().references(() => exercises.id),
+    trackingType: text('tracking_type').notNull(), // 'REPS', 'TIME'
+    resistanceType: text('resistance_type').notNull(), // 'WEIGHT', 'DIFFICULTY'
     sets: integer('sets').notNull(),
     targetReps: integer('target_reps'),
     targetTimeSeconds: integer('target_time_seconds'),

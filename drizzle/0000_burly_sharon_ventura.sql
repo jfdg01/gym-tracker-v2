@@ -26,6 +26,8 @@ CREATE TABLE `program_day_exercises` (
 	`id` text PRIMARY KEY NOT NULL,
 	`program_day_id` text NOT NULL,
 	`exercise_id` text NOT NULL,
+	`tracking_type` text NOT NULL,
+	`resistance_type` text NOT NULL,
 	`sets` integer NOT NULL,
 	`target_reps` integer,
 	`target_time_seconds` integer,

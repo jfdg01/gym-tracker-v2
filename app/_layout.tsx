@@ -11,13 +11,32 @@ import '@/global.css';
 
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '@/drizzle/migrations';
-import { db } from '@/src/db/client';
+import { db, expoDb } from '@/src/db/client';
+import { deleteDatabaseAsync } from 'expo-sqlite';
 
+// ... inside RootLayout component
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const { success: dbSuccess, error: dbError } = useMigrations(db, migrations);
+
+    // TEMPORARY: Use this to wipe the database if you have migration issues
+    useEffect(() => {
+        async function clearDb() {
+            try {
+                // WARNING: This deletes the database file!
+                console.log("Attempting to delete database...");
+                await expoDb.closeAsync();
+                await deleteDatabaseAsync('gym-tracker.db');
+                console.log("Database deleted - please reload app again");
+            } catch (e) {
+                console.error("Failed to delete database:", e);
+            }
+        }
+        // UNCOMMENT the line below to wipe it once, then comment it back out
+        // clearDb();
+    }, []);
 
     useEffect(() => {
         if (dbSuccess || dbError) {
