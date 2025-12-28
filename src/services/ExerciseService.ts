@@ -29,8 +29,12 @@ export const ExerciseService = {
     },
 
     archiveExercise: async (id: string): Promise<void> => {
-        // TODO: Implement "Smart Delete" logic: Add check for active usage in programs or workout history before archiving
-        return await ExerciseRepository.archive(id);
+        const isUsed = await ExerciseRepository.checkUsage(id);
+        if (isUsed) {
+            return await ExerciseRepository.archive(id);
+        } else {
+            return await ExerciseRepository.delete(id);
+        }
     },
 
     getExerciseSettings: async (exerciseId: string): Promise<ExerciseSettings | null> => {

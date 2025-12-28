@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/client';
-import { exercises, exerciseSettings } from '../db/schema';
+import { exercises, exerciseSettings, programDayExercises, workoutSets } from '../db/schema';
 import { Exercise, ExerciseSettings, TrackingType, ResistanceType } from '../types/domain';
 
 const mapExercise = (doc: typeof exercises.$inferSelect): Exercise => ({
@@ -84,5 +84,19 @@ export const ExerciseRepository = {
         await db.update(exerciseSettings)
             .set(dbUpdates)
             .where(eq(exerciseSettings.exerciseId, exerciseId));
+    },
+
+    checkUsage: async (id: string): Promise<boolean> => {
+        const programUsage = await db.select().from(programDayExercises).where(eq(programDayExercises.exerciseId, id));
+        if (programUsage.length > 0) return true;
+
+        const historyUsage = await db.select().from(workoutSets).where(eq(workoutSets.exerciseId, id));
+        if (historyUsage.length > 0) return true;
+
+        return false;
+    },
+
+    delete: async (id: string): Promise<void> => {
+        await db.delete(exercises).where(eq(exercises.id, id));
     }
 };
