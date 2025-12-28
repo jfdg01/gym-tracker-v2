@@ -8,6 +8,15 @@ import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
+import {
+    AlertDialog,
+    AlertDialogBackdrop,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogBody,
+    AlertDialogFooter,
+} from '@/components/ui/alert-dialog';
+import { Input, InputField } from '@/components/ui/input';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppButton } from '@/src/components/ui-library/AppButton';
 import { AppCard } from '@/src/components/ui-library/AppCard';
@@ -61,6 +70,9 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const { activeSession, startWorkout } = useWorkout();
     const [showActiveSessionAlert, setShowActiveSessionAlert] = useState(false);
     const [showDeleteDayAlert, setShowDeleteDayAlert] = useState(false);
+    const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+    const [renamingDayId, setRenamingDayId] = useState<string | null>(null);
+    const [renamingDayName, setRenamingDayName] = useState("");
 
     const toast = useToast();
 
@@ -223,6 +235,23 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         }
     };
 
+    const handleRenameDay = async () => {
+        if (!renamingDayId || submitting) return;
+        setSubmitting(true);
+        try {
+            await ProgramDayService.updateDay(renamingDayId, { name: renamingDayName });
+            await loadData();
+            showToast("Success", "Day renamed");
+        } catch (e) {
+            console.error(e);
+            showToast("Error", "Failed to rename day", "error");
+        } finally {
+            setSubmitting(false);
+            setIsRenameModalOpen(false);
+            setRenamingDayId(null);
+        }
+    };
+
     if (!program && loading) {
         return (
             <Box className="flex-1 bg-surface-deep justify-center items-center">
@@ -259,9 +288,21 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                         days.sort((a, b) => a.orderIndex - b.orderIndex).map((day) => (
                             <VStack key={day.id} space="md" className="mb-4">
                                 <HStack className="justify-between items-center mb-4 px-1">
-                                    <Heading size="lg" className={`${day.isRestDay ? 'text-typography-400' : 'text-primary-energy'} italic font-heading`}>
-                                        {day.name.toUpperCase()} {day.isRestDay && '(REST)'}
-                                    </Heading>
+                                    <Pressable
+                                        onPress={() => {
+                                            setRenamingDayId(day.id);
+                                            setRenamingDayName(day.name);
+                                            setIsRenameModalOpen(true);
+                                        }}
+                                        className="flex-1 active:opacity-60"
+                                    >
+                                        <HStack space="xs" className="items-center">
+                                            <Heading size="lg" className={`${day.isRestDay ? 'text-typography-400' : 'text-primary-energy'} italic font-heading`}>
+                                                {day.name.toUpperCase()} {day.isRestDay && '(REST)'}
+                                            </Heading>
+                                            <Icon as={EditIcon} size="md" className="text-primary-energy/40 ml-1" />
+                                        </HStack>
+                                    </Pressable>
                                     <HStack space="sm">
                                         <AppButton
                                             title={day.isRestDay ? 'Workout' : 'Rest'}
@@ -409,6 +450,49 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                     { text: "Cancel", style: "cancel" }
                 ]}
             />
+
+            <AlertDialog isOpen={isRenameModalOpen} onClose={() => setIsRenameModalOpen(false)}>
+                <AlertDialogBackdrop />
+                <AlertDialogContent
+                    className="bg-surface-elevated border"
+                    style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}
+                >
+                    <AlertDialogHeader>
+                        <Heading size="md" className="text-white">Rename Day</Heading>
+                    </AlertDialogHeader>
+                    <AlertDialogBody className="mt-3 mb-4">
+                        <VStack space="sm">
+                            <Text size="sm" className="text-typography-400">
+                                Enter a new name for this day.
+                            </Text>
+                            <Input variant="outline" size="md" className="mt-2 border-primary-energy/30">
+                                <InputField
+                                    placeholder="e.g. Leg Day"
+                                    value={renamingDayName}
+                                    onChangeText={setRenamingDayName}
+                                    className="text-white"
+                                    autoFocus
+                                />
+                            </Input>
+                        </VStack>
+                    </AlertDialogBody>
+                    <AlertDialogFooter className="space-x-3">
+                        <AppButton
+                            title="Cancel"
+                            variant="outline"
+                            onPress={() => setIsRenameModalOpen(false)}
+                            size="sm"
+                        />
+                        <AppButton
+                            title="Rename"
+                            action="primary"
+                            onPress={handleRenameDay}
+                            size="sm"
+                            disabled={submitting || !renamingDayName.trim()}
+                        />
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AppAlert
                 isOpen={showDeleteDayAlert}

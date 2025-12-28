@@ -58,5 +58,21 @@ export const DataPortabilityService = {
                 }
             }
         }
+    },
+
+    /**
+     * Deletes all data from the database.
+     * DANGER: This is irreversible.
+     */
+    deleteAllData: async (): Promise<void> => {
+        // We delete in reverse order of dependencies to satisfy FK constraints
+        // Though most tables have onDelete: 'cascade', it's safer to be explicit
+        await db.delete(schema.workoutSets);
+        await db.delete(schema.workoutSessions);
+        await db.delete(schema.programDayExercises);
+        await db.delete(schema.programDays);
+        await db.delete(schema.programs);
+        await db.delete(schema.exerciseSettings);
+        await db.delete(schema.exercises);
     }
 };

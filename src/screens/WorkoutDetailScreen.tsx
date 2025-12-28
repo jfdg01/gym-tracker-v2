@@ -8,9 +8,10 @@ import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
-import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon, ClockIcon } from 'lucide-react-native';
+import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon, ClockIcon, TrendingUpIcon, ArrowRightIcon } from 'lucide-react-native';
 import { Button, ButtonText } from '@/components/ui/button';
 import { formatDuration } from '@/src/utils/time';
+import { cn } from '@/src/utils/cn';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
@@ -49,12 +50,10 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString(undefined, {
-            weekday: 'long',
+            weekday: 'short',
             year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            month: 'short',
+            day: 'numeric'
         });
     };
 
@@ -90,8 +89,8 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                         title={isEditing ? "Done" : "Edit"}
                         icon={isEditing ? CheckIcon : PencilIcon}
                         onPress={() => setIsEditing(!isEditing)}
-                        variant={isEditing ? "solid" : "outline"}
-                        action={isEditing ? "primary" : "secondary"}
+                        variant="solid"
+                        action="primary"
                         size="sm"
                         className="rounded-full"
                     />
@@ -102,9 +101,9 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                 <VStack space="lg" className="p-4 pb-20">
                     <AppCard className="p-4">
                         <HStack space="md" className="items-center justify-between">
-                            <HStack space="sm" className="items-center">
+                            <HStack space="sm" className="items-center flex-1">
                                 <Icon as={CalendarIcon} size="sm" className="text-primary-energy" />
-                                <Text className="text-typography-500 font-semibold">
+                                <Text className="text-typography-500 font-semibold" numberOfLines={1} ellipsizeMode="tail">
                                     {session.completedAt ? formatDate(session.completedAt) : 'N/A'}
                                 </Text>
                             </HStack>
@@ -126,10 +125,44 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
 
                         return (
                             <VStack key={ex.programDayExerciseId} space="xs" className="mb-4">
-                                <HStack space="xs" className="items-center px-1">
-                                    <Icon as={DumbbellIcon} size="xs" className="text-primary-energy" />
-                                    <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
+                                <HStack space="xs" className="items-center px-1 justify-between">
+                                    <HStack space="xs" className="items-center">
+                                        <Icon as={DumbbellIcon} size="xs" className="text-primary-energy" />
+                                        <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
+                                    </HStack>
+
+                                    {ex.result && (
+                                        <Box className={cn(
+                                            "px-2 py-0.5 rounded",
+                                            ex.result.progressed ? "bg-success-growth/20" : "bg-white/5"
+                                        )}>
+                                            <Text className={cn(
+                                                "text-[10px] font-black uppercase tracking-tighter",
+                                                ex.result.progressed ? "text-success-growth" : "text-typography-500"
+                                            )}>
+                                                {ex.result.progressed ? "Increased" : "Maintained"}
+                                            </Text>
+                                        </Box>
+                                    )}
                                 </HStack>
+
+                                {ex.result?.progressed && (
+                                    <Box className="mx-1 mb-2 p-2 bg-success-growth/5 rounded-lg border border-success-growth/10">
+                                        <HStack space="sm" className="items-center justify-center">
+                                            <Icon as={TrendingUpIcon} size="xs" className="text-success-growth" />
+                                            <Text className="text-[10px] text-typography-500 uppercase font-bold">Progressed</Text>
+                                            <HStack space="xs" className="items-center">
+                                                <Text className="text-typography-400 font-bold text-xs">
+                                                    {ex.resistanceType === ResistanceType.WEIGHT ? `${ex.suggestedWeight || 0}kg` : ex.suggestedDifficulty || 'None'}
+                                                </Text>
+                                                <Icon as={ArrowRightIcon} size="xs" className="text-success-growth" />
+                                                <Text className="text-success-growth font-black text-sm">
+                                                    {ex.resistanceType === ResistanceType.WEIGHT ? `${ex.result.newWeight}kg` : ex.result.newDifficulty}
+                                                </Text>
+                                            </HStack>
+                                        </HStack>
+                                    </Box>
+                                )}
 
                                 <AppCard className="p-0 overflow-hidden">
                                     <VStack>

@@ -22,6 +22,7 @@ interface AppNumericInputProps {
     max?: number;
     step?: number;
     quickValues?: number[];
+    hideUnitDisplay?: boolean;
     className?: string;
 }
 
@@ -37,6 +38,7 @@ export const AppNumericInput = memo(({
     max = 999,
     step = 1,
     quickValues = DEFAULT_QUICK_VALUES,
+    hideUnitDisplay = false,
     className,
 }: AppNumericInputProps) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -124,7 +126,7 @@ export const AppNumericInput = memo(({
                 <Text size="md" className="text-white font-black" numberOfLines={1}>
                     {value || placeholder}
                 </Text>
-                {unit && (
+                {unit && !hideUnitDisplay && (
                     <Text
                         size="2xs"
                         className="text-typography-500 font-bold uppercase tracking-tighter ml-1"
@@ -221,7 +223,7 @@ export const AppNumericInput = memo(({
                                             collapsable={false}
                                             selectTextOnFocus={true}
                                         />
-                                        {unit && (
+                                        {unit && !hideUnitDisplay && (
                                             <Box className="absolute right-3 h-full justify-center">
                                                 <Text size="xs" className="text-typography-500 font-black uppercase">
                                                     {unit}

@@ -82,12 +82,24 @@ export const WorkoutService = {
                 const exerciseSets = await WorkoutRepository.getSetsBySessionId(setData.workoutSessionId);
                 const currentExerciseSets = exerciseSets.filter(s => s.exerciseId === setData.exerciseId);
 
-                if (currentExerciseSets.length === exerciseSnapshot.sets) {
+                if (currentExerciseSets.length >= exerciseSnapshot.sets) {
                     progressionResult = await ProgressionService.evaluateProgression(
                         setData.exerciseId,
                         exerciseSnapshot,
                         currentExerciseSets
                     );
+
+                    if (progressionResult) {
+                        // Persist result in the snapshot for history
+                        const updatedSnapshot = session.exercisesSnapshot.map(e =>
+                            e.exerciseId === setData.exerciseId
+                                ? { ...e, result: progressionResult }
+                                : e
+                        );
+                        await WorkoutRepository.updateSession(setData.workoutSessionId, {
+                            exercisesSnapshot: updatedSnapshot
+                        });
+                    }
                 }
             }
         }

@@ -10,20 +10,26 @@ import { Icon } from '@/components/ui/icon';
 import { Button, ButtonText } from '@/components/ui/button';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { TrophyIcon, DumbbellIcon, TrendingUpIcon, CheckCircleIcon, ArrowRightIcon } from 'lucide-react-native';
+import { cn } from '@/src/utils/cn';
 
 // We'll define the expected params interface
 export interface WorkoutSummaryParams {
     sessionId: string;
-    // JSON string of Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string }>
+    // JSON string of Record<string, { progressed: boolean, newWeight?: number, newDifficulty?: string, currentWeight?: number, currentDifficulty?: string, exerciseName: string }>
     progressionEvents: string;
     programName: string;
     dayName: string;
     duration: string;
+    totalSets: string;
+    completedSets: string;
 }
 
 interface ProgressionEvent {
+    progressed: boolean;
     newWeight?: number;
     newDifficulty?: string;
+    currentWeight?: number;
+    currentDifficulty?: string;
     exerciseName: string;
 }
 
@@ -52,7 +58,7 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
     return (
         <Box className="flex-1 bg-surface-deep">
             <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
-                <Box className="items-center py-10 px-6 bg-primary-energy/10 mb-6">
+                <Box className="items-center pt-20 pb-10 px-6 bg-primary-energy/10 mb-6">
                     <Box className="w-20 h-20 rounded-full bg-primary-energy/20 items-center justify-center mb-4 border-2 border-primary-energy">
                         <Icon as={TrophyIcon} size="xl" className="text-primary-energy" />
                     </Box>
@@ -63,38 +69,79 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
                         {params.programName} - {params.dayName}
                     </Text>
                     <Text className="text-typography-500 text-center text-sm mt-1">
-                        {params.duration}
+                        {params.duration} • {params.completedSets} / {params.totalSets} sets
                     </Text>
                 </Box>
 
                 <VStack space="xl" className="px-6">
-                    {achievementCount > 0 && (
+                    {Object.keys(achievements).length > 0 && (
                         <VStack space="md">
                             <HStack space="sm" className="items-center">
-                                <Icon as={TrendingUpIcon} className="text-success-growth" />
-                                <Heading size="md" className="text-white font-heading">Level Ups</Heading>
+                                <Icon as={TrendingUpIcon} className="text-typography-400" />
+                                <Heading size="md" className="text-white font-heading">Performance Results</Heading>
                             </HStack>
 
-                            {Object.entries(achievements).map(([id, event]) => (
-                                <Box key={id} className="bg-surface-elevated p-4 rounded-xl border border-success-growth/30 shadow-lg shadow-success-growth/10">
-                                    <HStack className="justify-between items-center mb-2">
-                                        <HStack space="xs" className="items-center">
-                                            <Icon as={DumbbellIcon} size="xs" className="text-typography-500" />
-                                            <Text className="text-white font-bold">{event.exerciseName}</Text>
-                                        </HStack>
-                                        <Box className="bg-success-growth/20 px-2 py-1 rounded">
-                                            <Text className="text-success-growth text-xs font-bold uppercase">Upgrade</Text>
-                                        </Box>
-                                    </HStack>
+                            {Object.entries(achievements).map(([id, event]) => {
+                                const isIncreased = event.progressed;
+                                const isWeight = event.newWeight !== undefined || event.currentWeight !== undefined;
 
-                                    <HStack className="items-end">
-                                        <Text className="text-typography-400 text-sm mr-2">New Milestone:</Text>
-                                        <Text className="text-success-growth font-bold text-xl">
-                                            {event.newWeight ? `${event.newWeight} kg` : event.newDifficulty}
-                                        </Text>
-                                    </HStack>
-                                </Box>
-                            ))}
+                                return (
+                                    <Box
+                                        key={id}
+                                        className={cn(
+                                            "p-4 rounded-xl border shadow-lg",
+                                            isIncreased
+                                                ? "bg-surface-elevated border-success-growth/30 shadow-success-growth/10"
+                                                : "bg-surface-elevated border-white/5 shadow-black/20"
+                                        )}
+                                    >
+                                        <HStack className="justify-between items-center mb-3">
+                                            <HStack space="xs" className="items-center">
+                                                <Icon as={DumbbellIcon} size="xs" className="text-typography-500" />
+                                                <Text className="text-white font-bold">{event.exerciseName}</Text>
+                                            </HStack>
+                                            <Box className={cn(
+                                                "px-2 py-0.5 rounded",
+                                                isIncreased ? "bg-success-growth/20" : "bg-white/5"
+                                            )}>
+                                                <Text className={cn(
+                                                    "text-[10px] font-black uppercase tracking-tighter",
+                                                    isIncreased ? "text-success-growth" : "text-typography-500"
+                                                )}>
+                                                    {isIncreased ? "Increased" : "Maintained"}
+                                                </Text>
+                                            </Box>
+                                        </HStack>
+
+                                        <HStack className="items-center space-x-3">
+                                            {isIncreased ? (
+                                                <HStack space="md" className="items-center">
+                                                    <VStack>
+                                                        <Text className="text-[10px] text-typography-500 uppercase font-bold">From</Text>
+                                                        <Text className="text-typography-400 font-bold text-lg">
+                                                            {isWeight ? `${event.currentWeight || 0}kg` : event.currentDifficulty || 'None'}
+                                                        </Text>
+                                                    </VStack>
+                                                    <Icon as={ArrowRightIcon} size="xs" className="text-success-growth" />
+                                                    <VStack>
+                                                        <Text className="text-[10px] text-success-growth uppercase font-black">To</Text>
+                                                        <Text className="text-success-growth font-black text-2xl">
+                                                            {isWeight ? `${event.newWeight}kg` : event.newDifficulty}
+                                                        </Text>
+                                                    </VStack>
+                                                </HStack>
+                                            ) : (
+                                                <VStack>
+                                                    <Text className="text-[10px] text-typography-500 uppercase font-bold">Current</Text>
+                                                    <Text className="text-typography-400 font-bold text-xl">
+                                                        {isWeight ? `${event.currentWeight || 0}kg` : event.currentDifficulty || 'None'}
+                                                    </Text>
+                                                </VStack>
+                                            )}
+                                        </HStack>
+                                    </Box>
+                                );
+                            })}
                         </VStack>
                     )}
 

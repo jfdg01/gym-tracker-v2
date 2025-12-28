@@ -17,6 +17,7 @@ interface ActiveSetFocusProps {
     exercise: ExerciseSnapshotItem;
     setNumber: number;
     existingSet?: WorkoutSet;
+    previousSet?: WorkoutSet; // The last recorded set for this exercise
     onLog: (data: Partial<WorkoutSet>) => void;
     onSkip: (data: Partial<WorkoutSet>) => void;
     isLogging?: boolean;
@@ -26,23 +27,64 @@ export const ActiveSetFocus = memo(({
     exercise,
     setNumber,
     existingSet,
+    previousSet,
     onLog,
     onSkip,
     isLogging = false
 }: ActiveSetFocusProps) => {
     // Local state for interactive logging
-    const [weight, setWeight] = useState(existingSet?.weight?.toString() || exercise.suggestedWeight?.toString() || '');
-    const [reps, setReps] = useState(existingSet?.reps?.toString() || exercise.targetReps?.toString() || '');
-    const [time, setTime] = useState(existingSet?.timeSeconds?.toString() || exercise.targetTimeSeconds?.toString() || '');
-    const [difficulty, setDifficulty] = useState(existingSet?.difficulty || exercise.suggestedDifficulty || '');
+    const [weight, setWeight] = useState(
+        existingSet?.weight?.toString() ||
+        previousSet?.weight?.toString() ||
+        exercise.suggestedWeight?.toString() ||
+        ''
+    );
+    const [reps, setReps] = useState(
+        existingSet?.reps?.toString() ||
+        previousSet?.reps?.toString() ||
+        exercise.targetReps?.toString() ||
+        ''
+    );
+    const [time, setTime] = useState(
+        existingSet?.timeSeconds?.toString() ||
+        previousSet?.timeSeconds?.toString() ||
+        exercise.targetTimeSeconds?.toString() ||
+        ''
+    );
+    const [difficulty, setDifficulty] = useState(
+        existingSet?.difficulty ||
+        previousSet?.difficulty ||
+        exercise.suggestedDifficulty ||
+        ''
+    );
 
     // Sync state if exercise or setNumber changes (selection from list)
     useEffect(() => {
-        setWeight(existingSet?.weight?.toString() || exercise.suggestedWeight?.toString() || '');
-        setReps(existingSet?.reps?.toString() || exercise.targetReps?.toString() || '');
-        setTime(existingSet?.timeSeconds?.toString() || exercise.targetTimeSeconds?.toString() || '');
-        setDifficulty(existingSet?.difficulty || exercise.suggestedDifficulty || '');
-    }, [exercise.exerciseId, setNumber, existingSet?.id]);
+        setWeight(
+            existingSet?.weight?.toString() ||
+            previousSet?.weight?.toString() ||
+            exercise.suggestedWeight?.toString() ||
+            ''
+        );
+        setReps(
+            existingSet?.reps?.toString() ||
+            previousSet?.reps?.toString() ||
+            exercise.targetReps?.toString() ||
+            ''
+        );
+        setTime(
+            existingSet?.timeSeconds?.toString() ||
+            previousSet?.timeSeconds?.toString() ||
+            exercise.targetTimeSeconds?.toString() ||
+            ''
+        );
+        setDifficulty(
+            existingSet?.difficulty ||
+            previousSet?.difficulty ||
+            exercise.suggestedDifficulty ||
+            ''
+        );
+    }, [exercise.exerciseId, setNumber, existingSet?.id, previousSet?.id]);
 
     const handleLog = () => {
         onLog({
@@ -106,12 +148,13 @@ export const ActiveSetFocus = memo(({
                 <HStack space="md" className="w-full">
                     <Box className="flex-1">
                         <Text size="2xs" className="text-typography-500 font-black uppercase mb-2 ml-1">
-                            {isWeight ? 'Weight' : 'Difficulty'}
+                            {isWeight ? 'Weight (kg)' : 'Level'}
                         </Text>
                         <AppNumericInput
                             value={isWeight ? weight : difficulty}
                             onChange={isWeight ? setWeight : setDifficulty}
                             unit={isWeight ? 'kg' : 'RPE'}
+                            hideUnitDisplay={true}
                             label={isWeight ? 'Weight' : 'Difficulty'}
                             step={isWeight ? 2.5 : 1}
                             max={isWeight ? 1000 : 10}
@@ -121,12 +164,13 @@ export const ActiveSetFocus = memo(({
                     </Box>
                     <Box className="flex-1">
                         <Text size="2xs" className="text-typography-500 font-black uppercase mb-2 ml-1">
-                            {isReps ? 'Reps' : 'Time'}
+                            {isReps ? 'Reps' : 'Time (s)'}
                         </Text>
                         <AppNumericInput
                             value={isReps ? reps : time}
                             onChange={isReps ? setReps : setTime}
-                            unit={isReps ? 'reps' : 's'}
+                            unit={isReps ? undefined : 's'}
+                            hideUnitDisplay={!isReps}
                             label={isReps ? 'Reps' : 'Time'}
                             max={isReps ? 300 : 3600}
                             className="h-14"

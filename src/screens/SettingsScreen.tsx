@@ -17,7 +17,8 @@ import {
     InfoIcon,
     ShieldCheckIcon,
     ChevronRightIcon,
-    LayoutIcon
+    LayoutIcon,
+    Trash2Icon
 } from 'lucide-react-native';
 import { DataPortabilityService } from '@/src/services/DataPortabilityService';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
@@ -36,6 +37,7 @@ export const SettingsScreen = () => {
     const [showImportConfirmAlert, setShowImportConfirmAlert] = useState(false);
     const [showImportErrorAlert, setShowImportErrorAlert] = useState(false);
     const [showImportFailedAlert, setShowImportFailedAlert] = useState(false);
+    const [showDeleteConfirmAlert, setShowDeleteConfirmAlert] = useState(false);
     const [pendingImportData, setPendingImportData] = useState<any>(null);
 
     const handleExport = async () => {
@@ -94,7 +96,7 @@ export const SettingsScreen = () => {
         try {
             await DataPortabilityService.importData(pendingImportData);
             toast.show({
-                id: 'gym-tracker-toast',
+                id: 'gym-tracker-toast-import',
                 placement: 'top',
                 render: ({ id }) => (
                     <Toast nativeID={"toast-" + id} action="success" variant="outline">
@@ -110,6 +112,42 @@ export const SettingsScreen = () => {
             setShowImportErrorAlert(true);
         }
         setPendingImportData(null);
+    };
+
+    const handleDeleteDatabase = async () => {
+        setShowDeleteConfirmAlert(false);
+        setLoading(true);
+        try {
+            await DataPortabilityService.deleteAllData();
+            toast.show({
+                id: 'gym-tracker-toast-delete',
+                placement: 'top',
+                render: ({ id }) => (
+                    <Toast nativeID={"toast-" + id} action="success" variant="outline">
+                        <VStack space="xs">
+                            <ToastTitle>Database Cleared</ToastTitle>
+                            <ToastDescription>All your data has been permanently deleted.</ToastDescription>
+                        </VStack>
+                    </Toast>
+                ),
+            });
+        } catch (e) {
+            console.error(e);
+            toast.show({
+                id: 'gym-tracker-toast-delete-error',
+                placement: 'top',
+                render: ({ id }) => (
+                    <Toast nativeID={"toast-" + id} action="error" variant="outline">
+                        <VStack space="xs">
+                            <ToastTitle>Deletion Failed</ToastTitle>
+                            <ToastDescription>An error occurred while deleting the database.</ToastDescription>
+                        </VStack>
+                    </Toast>
+                ),
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -196,6 +234,26 @@ export const SettingsScreen = () => {
                                 </VStack>
                             </Card>
                         </VStack>
+
+                        <VStack space="sm">
+                            <Text size="xs" className="text-error-500 uppercase tracking-wider font-bold px-1">Danger Zone</Text>
+                            <Card className="bg-surface-elevated border border-error-500/20 p-0 overflow-hidden">
+                                <Pressable onPress={() => setShowDeleteConfirmAlert(true)} disabled={loading} android_ripple={{ color: 'rgba(239, 68, 68, 0.1)' }}>
+                                    <HStack className="p-4 items-center justify-between">
+                                        <HStack space="md" className="items-center">
+                                            <Box className="p-2 bg-error-500/10 rounded-lg">
+                                                <Icon as={Trash2Icon} size="sm" className="text-error-500" />
+                                            </Box>
+                                            <VStack>
+                                                <Text className="text-error-500 font-medium">Delete Database</Text>
+                                                <Text size="xs" className="text-typography-500">Permanently wipe all records</Text>
+                                            </VStack>
+                                        </HStack>
+                                        <Icon as={ChevronRightIcon} size="xs" className="text-error-500/50" />
+                                    </HStack>
+                                </Pressable>
+                            </Card>
+                        </VStack>
                     </VStack>
                 </ScrollView>
             </VStack>
@@ -244,6 +302,17 @@ export const SettingsScreen = () => {
                 title="Import Failed"
                 message="Failed to read the selected file."
                 buttons={[{ text: "OK" }]}
+            />
+
+            <AppAlert
+                isOpen={showDeleteConfirmAlert}
+                onClose={() => setShowDeleteConfirmAlert(false)}
+                title="Delete Everything?"
+                message="This will permanently delete all your exercises, programs, and workout history. This action cannot be undone."
+                buttons={[
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: handleDeleteDatabase }
+                ]}
             />
         </Box>
     );

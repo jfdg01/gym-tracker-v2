@@ -1,5 +1,5 @@
 import * as Crypto from 'expo-crypto';
-import { eq } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 import { db } from '../db/client';
 import { exercises, exerciseSettings, programDayExercises, workoutSets } from '../db/schema';
 import { Exercise, ExerciseSettings, TrackingType, ResistanceType } from '../types/domain';
@@ -29,7 +29,10 @@ const mapSettings = (doc: typeof exerciseSettings.$inferSelect): ExerciseSetting
 
 export const ExerciseRepository = {
     getAll: async (): Promise<Exercise[]> => {
-        const results = await db.select().from(exercises).where(eq(exercises.isArchived, false));
+        const results = await db.select()
+            .from(exercises)
+            .where(eq(exercises.isArchived, false))
+            .orderBy(asc(exercises.name));
         return results.map(mapExercise);
     },
 

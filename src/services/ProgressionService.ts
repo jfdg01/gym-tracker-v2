@@ -10,18 +10,15 @@ export const ProgressionService = {
         snapshot: ExerciseSnapshotItem,
         sets: WorkoutSet[]
     ): Promise<{ progressed: boolean, newWeight?: number, newDifficulty?: string }> => {
-        // 1. Check if all target sets are present and none are skipped
+        // 1. Check if at least target sets are present
         if (sets.length < snapshot.sets) {
             return { progressed: false };
         }
 
-        const anySkipped = sets.some(s => s.skipped);
-        if (anySkipped) {
-            return { progressed: false };
-        }
-
-        // 2. Check if targets (reps or time) were met for ALL sets
+        // 2. Check if targets (reps or time) were met for ALL sets in the session for this exercise
         const allTargetsMet = sets.every(s => {
+            if (s.skipped) return false;
+
             if (snapshot.trackingType === TrackingType.REPS) {
                 return (s.reps || 0) >= (snapshot.targetReps || 0);
             } else {

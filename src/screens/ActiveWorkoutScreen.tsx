@@ -7,11 +7,20 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
 import {
     CheckIcon,
-    XIcon,
+    Settings2Icon,
 } from 'lucide-react-native';
 import { useWorkout } from '@/src/hooks/useWorkout';
 import { useRestTimer } from '@/src/components/RestTimerContext';
 import { WorkoutSet } from '@/src/types/domain';
+import {
+    Actionsheet,
+    ActionsheetBackdrop,
+    ActionsheetContent,
+    ActionsheetDragIndicator,
+    ActionsheetDragIndicatorWrapper,
+    ActionsheetItem,
+    ActionsheetItemText,
+} from '@/components/ui/actionsheet';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppButton } from '@/src/components/ui-library/AppButton';
 import { ActiveExerciseCard } from '@/src/components/ui-library/ActiveExerciseCard';
@@ -35,8 +44,13 @@ export const ActiveWorkoutScreen = () => {
 
     const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
     const [isFinishing, setIsFinishing] = useState(false);
-    const [showFinishAlert, setShowFinishAlert] = useState(false);
-    const [showAbandonAlert, setShowAbandonAlert] = useState(false);
+    const [showActionsheet, setShowActionsheet] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertConfig, setAlertConfig] = useState<{ title: string, message: string, onConfirm: () => void, action?: 'primary' | 'positive' | 'negative' | 'destructive' }>({
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
     const [isLoggingSet, setIsLoggingSet] = useState(false);
     const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string }>>({});
 
@@ -65,6 +79,16 @@ export const ActiveWorkoutScreen = () => {
         }
     }, [activeSession, focusedExerciseId, findNextSet]);
 
+    // Auto-expand the exercise card that is currently in focus
+    useEffect(() => {
+        if (focusedExerciseId && activeSession) {
+            const exercise = activeSession.exercisesSnapshot?.find(e => e.exerciseId === focusedExerciseId);
+            if (exercise) {
+                setExpandedExercise(exercise.programDayExerciseId);
+            }
+        }
+    }, [focusedExerciseId, activeSession]);
+
     const handleLogSet = async (data: Partial<WorkoutSet>) => {
         if (isLoggingSet) return;
         setIsLoggingSet(true);
@@ -86,13 +110,19 @@ export const ActiveWorkoutScreen = () => {
             if (!data.skipped) {
                 startTimer(90);
 
-                if (result && result.progression && result.progression.progressed) {
-                    const exerciseName = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === data.exerciseId)?.exerciseName || 'Exercise';
+                if (result && result.progression) {
+                    const exerciseSnapshot = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === data.exerciseId);
+                    const exerciseName = exerciseSnapshot?.exerciseName || 'Exercise';
+                    const isWeight = exerciseSnapshot?.resistanceType === 'Weight';
+
                     setProgressionEvents(prev => ({
                         ...prev,
                         [data.exerciseId!]: {
+                            progressed: result.progression!.progressed,
                             newWeight: result.progression!.newWeight,
                             newDifficulty: result.progression!.newDifficulty,
+                            currentWeight: isWeight ? exerciseSnapshot?.suggestedWeight : null,
+                            currentDifficulty: !isWeight ? exerciseSnapshot?.suggestedDifficulty : null,
                             exerciseName
                         }
                     }));
@@ -108,13 +138,13 @@ export const ActiveWorkoutScreen = () => {
         }
     };
 
-    const handleFinish = () => setShowFinishAlert(true);
-
     const handleConfirmFinish = async () => {
         if (!activeSession || isFinishing) return;
         const currentSessionId = activeSession.id;
-        setShowFinishAlert(false);
         setIsFinishing(true);
+
+        const totalSets = activeSession.exercisesSnapshot?.reduce((acc, ex) => acc + ex.sets, 0) || 0;
+        const completedSets = sessionSets.filter(s => !s.skipped).length;
 
         try {
             await completeWorkout(currentSessionId);
@@ -125,7 +155,9 @@ export const ActiveWorkoutScreen = () => {
                     progressionEvents: JSON.stringify(progressionEvents),
                     programName: activeSession.programNameSnapshot || 'Workout',
                     dayName: activeSession.dayNameSnapshot || 'Session',
-                    duration: formatDuration(activeSession.startedAt, new Date())
+                    duration: formatDuration(activeSession.startedAt, new Date()),
+                    totalSets: totalSets.toString(),
+                    completedSets: completedSets.toString(),
                 }
             });
         } catch (error) {
@@ -134,18 +166,57 @@ export const ActiveWorkoutScreen = () => {
         }
     };
 
-    const handleAbandon = () => setShowAbandonAlert(true);
-
     const handleConfirmAbandon = async () => {
         if (isFinishing) return;
         setIsFinishing(true);
-        setShowAbandonAlert(false);
         try {
             await abandonWorkout();
             router.replace('/(tabs)');
         } catch (error) {
             console.error("Failed to abandon workout:", error);
             setIsFinishing(false);
+        }
+    };
+
+    const handlePressFinish = () => {
+        setShowActionsheet(false);
+        const completedSetsCount = sessionSets.filter(s => !s.skipped).length;
+        const totalSetsRequired = activeSession?.exercisesSnapshot?.reduce((acc, ex) => acc + ex.sets, 0) || 0;
+        const totalLoggedCount = sessionSets.length;
+
+        if (completedSetsCount === 0) {
+            setAlertConfig({
+                title: "Finish Workout",
+                message: "Are you sure? There's not sets done.",
+                onConfirm: handleConfirmFinish
+            });
+            setShowAlert(true);
+        } else if (totalLoggedCount < totalSetsRequired) {
+            setAlertConfig({
+                title: "Finish Workout",
+                message: "Are you sure? You are missing some sets.",
+                onConfirm: handleConfirmFinish
+            });
+            setShowAlert(true);
+        } else {
+            handleConfirmFinish();
+        }
+    };
+
+    const handlePressAbandon = () => {
+        setShowActionsheet(false);
+        const completedSetsCount = sessionSets.filter(s => !s.skipped).length;
+
+        if (completedSetsCount > 0) {
+            setAlertConfig({
+                title: "Abandon Workout",
+                message: "Are you sure? You will miss your current progress.",
+                onConfirm: handleConfirmAbandon,
+                action: 'destructive'
+            });
+            setShowAlert(true);
+        } else {
+            handleConfirmAbandon();
         }
     };
 
@@ -165,28 +236,22 @@ export const ActiveWorkoutScreen = () => {
     );
 
     const rightHeaderElement = (
-        <HStack space="sm">
-            <AppButton
-                title=""
-                icon={XIcon}
-                variant="outline"
-                action="negative"
-                onPress={handleAbandon}
-                size="sm"
-                className="w-10 h-10 p-0 rounded-full border-white/10"
-            />
-            <AppButton
-                title="FINISH"
-                action="positive"
-                onPress={handleFinish}
-                size="sm"
-                className="px-4"
-            />
-        </HStack>
+        <AppButton
+            title=""
+            icon={Settings2Icon}
+            variant="outline"
+            onPress={() => setShowActionsheet(true)}
+            size="sm"
+            className="w-10 h-10 p-0 rounded-full border-white/10"
+        />
     );
 
     const focusedExercise = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === focusedExerciseId);
     const focusedExistingSet = sessionSets.find(s => s.exerciseId === focusedExerciseId && s.setNumber === focusedSetNumber);
+
+    // Find the last completed set for this specific exercise to use as default values
+    const exerciseSets = sessionSets.filter(s => s.exerciseId === focusedExerciseId).sort((a, b) => a.setNumber - b.setNumber);
+    const previousCompletedSet = [...exerciseSets].reverse().find(s => !s.skipped);
 
     const totalSetsRequired = activeSession?.exercisesSnapshot?.reduce((acc, ex) => acc + ex.sets, 0) || 0;
     const isWorkoutComplete = sessionSets.length >= totalSetsRequired && totalSetsRequired > 0;
@@ -196,7 +261,7 @@ export const ActiveWorkoutScreen = () => {
             <AppHeader
                 title={activeSession!.dayNameSnapshot || 'Workout'}
                 subTitle={activeSession!.programNameSnapshot || ''}
-                rightElement={rightHeaderElement}
+                rightElement={!isWorkoutComplete ? rightHeaderElement : null}
             />
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -210,6 +275,7 @@ export const ActiveWorkoutScreen = () => {
                                 exercise={focusedExercise}
                                 setNumber={focusedSetNumber}
                                 existingSet={focusedExistingSet}
+                                previousSet={previousCompletedSet}
                                 onLog={handleLogSet}
                                 onSkip={handleLogSet} // skip is same as log with skipped:true
                                 isLogging={isLoggingSet}
@@ -263,25 +329,51 @@ export const ActiveWorkoutScreen = () => {
                 />
             )}
 
-            <AppAlert
-                isOpen={showFinishAlert}
-                onClose={() => setShowFinishAlert(false)}
-                title="Finish Workout"
-                message="Are you sure you want to complete this session?"
-                buttons={[
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Finish", onPress: handleConfirmFinish }
-                ]}
-            />
+
+            <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)}>
+                <ActionsheetBackdrop />
+                <ActionsheetContent className="pb-8">
+                    <ActionsheetDragIndicatorWrapper>
+                        <ActionsheetDragIndicator />
+                    </ActionsheetDragIndicatorWrapper>
+
+                    <ActionsheetItem
+                        onPress={handlePressFinish}
+                        className="flex-col items-start p-4"
+                    >
+                        <ActionsheetItemText className="font-bold text-xl">Finish Workout</ActionsheetItemText>
+                        <Text size="sm" className="text-typography-500 mt-1">
+                            Only the sets you've actually completed will be logged. Progression is not calculated for workouts finished early.
+                        </Text>
+                    </ActionsheetItem>
+
+                    <ActionsheetItem
+                        onPress={handlePressAbandon}
+                        className="flex-col items-start p-4"
+                    >
+                        <ActionsheetItemText className="text-error-600 font-bold text-xl">Abandon Workout</ActionsheetItemText>
+                        <Text size="sm" className="text-typography-500 mt-1">
+                            The workout will not be logged at all and all progress will be lost.
+                        </Text>
+                    </ActionsheetItem>
+                </ActionsheetContent>
+            </Actionsheet>
 
             <AppAlert
-                isOpen={showAbandonAlert}
-                onClose={() => setShowAbandonAlert(false)}
-                title="Abandon Workout"
-                message="This will clear your current progress. Are you sure?"
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
                 buttons={[
-                    { text: "Keep Going", style: "cancel" },
-                    { text: "Abandon", style: "destructive", onPress: handleConfirmAbandon }
+                    { text: "Cancel", style: "cancel" },
+                    {
+                        text: "Confirm",
+                        onPress: () => {
+                            setShowAlert(false);
+                            alertConfig.onConfirm();
+                        },
+                        style: alertConfig.action === 'destructive' ? 'destructive' : 'default'
+                    }
                 ]}
             />
         </Box>

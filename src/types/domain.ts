@@ -96,6 +96,11 @@ export interface ExerciseSnapshotItem {
     orderIndex: number;           // Captures order at snapshot time (including swaps)
     suggestedWeight?: number | null;
     suggestedDifficulty?: string | null;
+    result?: {
+        progressed: boolean;
+        newWeight?: number;
+        newDifficulty?: string;
+    };
 }
 
 export interface WorkoutSet {
