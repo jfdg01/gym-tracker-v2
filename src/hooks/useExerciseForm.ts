@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Exercise, ExerciseSettings, TrackingType, ResistanceType } from '@/src/types/domain';
 
@@ -31,7 +32,9 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
     const restTimeRef = useRef('90');
     const currentWeightRef = useRef('0');
     const weightFactorRef = useRef('2.5');
-    const difficultyLevelsRef = useRef('');
+
+    // Changed from Ref to State for list management
+    const [difficultyLevels, setDifficultyLevels] = useState<string[]>([]);
 
     useEffect(() => {
         if (isOpen) {
@@ -55,12 +58,12 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 restTimeRef.current = initialSettings.restTimeSeconds?.toString() || '90';
                 currentWeightRef.current = initialSettings.currentWeight?.toString() || '';
                 weightFactorRef.current = initialSettings.weightIncreaseFactor?.toString() || '2.5';
-                difficultyLevelsRef.current = initialSettings.difficultyLevels?.join(', ') || '';
+                setDifficultyLevels(initialSettings.difficultyLevels || []);
             } else {
                 restTimeRef.current = '90';
                 currentWeightRef.current = '0';
                 weightFactorRef.current = '2.5';
-                difficultyLevelsRef.current = '';
+                setDifficultyLevels([]);
             }
 
             // Reset flags and errors
@@ -123,7 +126,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 restTimeSeconds: isNaN(restTimeVal) ? 90 : restTimeVal,
                 currentWeight: parseFloat(currentWeightRef.current) || 0,
                 weightIncreaseFactor: parseFloat(weightFactorRef.current) || null,
-                difficultyLevels: difficultyLevelsRef.current.split(',').map(s => s.trim()).filter(Boolean),
+                difficultyLevels: difficultyLevels.filter(Boolean),
             });
             return true;
         } catch (e) {
@@ -144,7 +147,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
         const initRest = initialSettings?.restTimeSeconds?.toString() || '90';
         const initWeight = initialSettings?.currentWeight?.toString() || '0';
         const initFactor = initialSettings?.weightIncreaseFactor?.toString() || '2.5';
-        const initDiff = initialSettings?.difficultyLevels?.join(', ') || '';
+        const initDiff = initialSettings?.difficultyLevels?.join(',') || '';
 
         const currName = nameRef.current;
         const currDesc = descriptionRef.current;
@@ -154,7 +157,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
         const currRest = restTimeRef.current;
         const currWeight = currentWeightRef.current;
         const currFactor = weightFactorRef.current;
-        const currDiff = difficultyLevelsRef.current;
+        const currDiff = difficultyLevels.join(',');
 
         if (currName !== initName) return true;
         if (currDesc !== initDesc) return true;
@@ -201,6 +204,16 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
         onClose();
     };
 
+    const addDifficulty = (level: string) => {
+        if (level.trim()) {
+            setDifficultyLevels(prev => [...prev, level.trim()]);
+        }
+    };
+
+    const removeDifficulty = (index: number) => {
+        setDifficultyLevels(prev => prev.filter((_, i) => i !== index));
+    };
+
     return {
         formState: {
             loading,
@@ -210,6 +223,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
             resistanceType,
             formKey,
             showDiscardAlert,
+            difficultyLevels,
         },
         actions: {
             setCategory,
@@ -220,7 +234,9 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
             handleSheetClose,
             handleDiscardPress,
             confirmDiscard,
-            setErrors, // needed for clearing errors on type
+            setErrors,
+            addDifficulty,
+            removeDifficulty,
         },
         refs: {
             nameRef,
@@ -228,7 +244,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
             restTimeRef,
             currentWeightRef,
             weightFactorRef,
-            difficultyLevelsRef,
         }
     };
 };

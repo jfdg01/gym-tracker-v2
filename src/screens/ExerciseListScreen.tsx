@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { Pressable, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -23,6 +24,7 @@ import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
 import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
 
 export const ExerciseListScreen = () => {
+    const router = useRouter();
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -189,7 +191,7 @@ export const ExerciseListScreen = () => {
                             filteredExercises.map((ex) => (
                                 <Pressable
                                     key={ex.id}
-                                    onPress={() => openEdit(ex)}
+                                    onPress={() => router.push(`/exercises/${ex.id}`)}
                                     android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}
                                     className="active:opacity-80"
                                 >

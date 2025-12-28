@@ -1,4 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { Pressable } from 'react-native';
+import { Icon } from '@/components/ui/icon';
+import { XIcon } from 'lucide-react-native';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { AppCard } from './ui-library/AppCard';
 import { HStack } from '@/components/ui/hstack';
 import { Exercise, ExerciseSettings, TrackingType, ResistanceType } from '@/src/types/domain';
 import { useExerciseForm } from '@/src/hooks/useExerciseForm';
@@ -30,6 +36,7 @@ const CATEGORIES = [
 
 export const ExerciseForm = (props: ExerciseFormProps) => {
     const { isOpen, initialData } = props;
+    const [newDifficulty, setNewDifficulty] = useState('');
     const {
         formState: {
             loading,
@@ -39,6 +46,7 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
             resistanceType,
             formKey,
             showDiscardAlert,
+            difficultyLevels,
         },
         actions: {
             setCategory,
@@ -50,6 +58,8 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
             handleDiscardPress,
             confirmDiscard,
             setErrors,
+            addDifficulty,
+            removeDifficulty,
         },
         refs: {
             nameRef,
@@ -57,7 +67,6 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
             restTimeRef,
             currentWeightRef,
             weightFactorRef,
-            difficultyLevelsRef,
         }
     } = useExerciseForm(props);
 
@@ -82,9 +91,7 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
         if (errors.weightFactor) setErrors({ ...errors, weightFactor: '' });
     }, [errors.weightFactor, setErrors]);
 
-    const onDifficultyChange = useCallback((t: string) => {
-        difficultyLevelsRef.current = t;
-    }, []);
+
 
     const onDescriptionChange = useCallback((t: string) => {
         descriptionRef.current = t;
@@ -181,13 +188,51 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
                 )}
 
                 {resistanceType === ResistanceType.DIFFICULTY && (
-                    <AppFormField label="Difficulty Levels (comma separated)">
-                        <AppInput
-                            value={difficultyLevelsRef.current}
-                            onChangeText={onDifficultyChange}
-                            placeholder="e.g. Beginner, Intermediate, Advanced"
-                            key={`${formKey}-diff`}
-                        />
+                    <AppFormField label="Difficulty Levels">
+                        <AppCard className="p-4">
+                            <VStack space="md">
+                                <VStack space="xs" className="divide-y divide-white/5">
+                                    {difficultyLevels.map((level, index) => (
+                                        <HStack key={index} className="justify-between items-center py-2">
+                                            <Text className="text-typography-900 font-medium">{level}</Text>
+                                            <Pressable
+                                                onPress={() => removeDifficulty(index)}
+                                                className="p-2 opacity-70 active:opacity-100"
+                                            >
+                                                <Icon as={XIcon} size="xs" className="text-error-500" />
+                                            </Pressable>
+                                        </HStack>
+                                    ))}
+                                    {difficultyLevels.length === 0 && (
+                                        <Text className="text-typography-500 italic py-2">No levels defined</Text>
+                                    )}
+                                </VStack>
+
+                                <HStack space="sm" className="items-center mt-2">
+                                    <AppInput
+                                        value={newDifficulty}
+                                        onChangeText={setNewDifficulty}
+                                        placeholder="Add difficulty (e.g. Red)"
+                                        className="flex-1 h-10"
+                                        inputClassName="text-sm"
+                                    />
+                                    <AppButton
+                                        title="Add"
+                                        onPress={() => {
+                                            if (newDifficulty.trim()) {
+                                                addDifficulty(newDifficulty);
+                                                setNewDifficulty('');
+                                            }
+                                        }}
+                                        size="sm"
+                                        variant="outline"
+                                        action="primary"
+                                        className="h-10"
+                                        disabled={!newDifficulty.trim()}
+                                    />
+                                </HStack>
+                            </VStack>
+                        </AppCard>
                     </AppFormField>
                 )}
 
@@ -208,7 +253,7 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
                     className="mt-6 mb-12 h-14 rounded-xl"
                     textClassName="text-lg"
                 />
-            </AppFormSheet>
+            </AppFormSheet >
 
             <AppDiscardDialog
                 isOpen={showDiscardAlert}
