@@ -25,7 +25,6 @@ import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppButton } from '@/src/components/ui-library/AppButton';
 import { ActiveExerciseCard } from '@/src/components/ui-library/ActiveExerciseCard';
 import { WorkoutSetRow } from '@/src/components/ui-library/WorkoutSetRow';
-import { RestTimerOverlay } from '@/src/components/ui-library/RestTimerOverlay';
 import { AppAlert } from '@/src/components/ui-library/AppAlert';
 
 
@@ -282,6 +281,10 @@ export const ActiveWorkoutScreen = () => {
                                 onLog={handleLogSet}
                                 onSkip={handleLogSet} // skip is same as log with skipped:true
                                 isLogging={isLoggingSet}
+                                timerActive={isActive}
+                                timeLeft={timeLeft}
+                                onSkipTimer={() => startTimer(0)}
+                                onAddMoreTimer={() => startTimer(timeLeft + 30)}
                             />
                         )
                     )}
@@ -323,14 +326,6 @@ export const ActiveWorkoutScreen = () => {
                     </VStack>
                 </VStack>
             </ScrollView>
-
-            {isActive && (
-                <RestTimerOverlay
-                    timeLeft={timeLeft}
-                    onSkip={() => startTimer(0)}
-                    onAddMore={() => startTimer(timeLeft + 30)}
-                />
-            )}
 
 
             <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)}>
