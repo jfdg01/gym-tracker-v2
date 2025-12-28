@@ -52,6 +52,7 @@ export const WorkoutService = {
                     orderIndex: de.orderIndex,
                     suggestedWeight: settings?.currentWeight,
                     suggestedDifficulty: settings?.currentDifficultyLevel,
+                    difficultyLevels: settings?.difficultyLevels,
                 };
             })
         );
@@ -68,11 +69,11 @@ export const WorkoutService = {
     /**
      * Logs a set.
      */
-    logSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<{ set: WorkoutSet, progression?: { progressed: boolean, newWeight?: number, newDifficulty?: string } }> => {
+    logSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<{ set: WorkoutSet, progression?: { progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean } }> => {
         // TODO: Implement "Manual Weight Override" persistence. When logging a set, if weight differs from current setting, update ExerciseSettings immediately.
         const newSet = await WorkoutRepository.saveSet(setData);
 
-        let progressionResult: { progressed: boolean, newWeight?: number, newDifficulty?: string } | undefined;
+        let progressionResult: { progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean } | undefined;
 
         // Trigger progression evaluation if this was the last set (Business Logic Centralization)
         const session = await WorkoutRepository.getSessionById(setData.workoutSessionId);

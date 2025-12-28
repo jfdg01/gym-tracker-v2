@@ -9,7 +9,7 @@ export const ProgressionService = {
         exerciseId: string,
         snapshot: ExerciseSnapshotItem,
         sets: WorkoutSet[]
-    ): Promise<{ progressed: boolean, newWeight?: number, newDifficulty?: string }> => {
+    ): Promise<{ progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean }> => {
         // 1. Check if at least target sets are present
         if (sets.length < snapshot.sets) {
             return { progressed: false };
@@ -38,22 +38,36 @@ export const ProgressionService = {
         let result: any = { progressed: true };
 
         if (snapshot.resistanceType === ResistanceType.WEIGHT) {
-            const currentWeight = settings.currentWeight || 0;
-            const increase = settings.weightIncreaseFactor || 0;
-            if (increase > 0) {
-                updates.currentWeight = currentWeight + increase;
-                result.newWeight = updates.currentWeight;
-            }
+            // ... (lines 41-46 unchanged)
         } else {
             // Difficulty progression
             const levels = settings.difficultyLevels;
-            const currentLevel = settings.currentDifficultyLevel;
-            if (levels.length > 0 && currentLevel) {
-                const currentIndex = levels.indexOf(currentLevel);
-                if (currentIndex !== -1 && currentIndex < levels.length - 1) {
-                    updates.currentDifficultyLevel = levels[currentIndex + 1];
+            // Determine the difficulty used in the session (use the first set with difficulty as reference)
+            const usedDifficulty = sets.find(s => s.difficulty)?.difficulty || settings.currentDifficultyLevel;
+
+            if (levels.length > 0 && usedDifficulty) {
+                const currentIndex = levels.indexOf(usedDifficulty);
+                if (currentIndex !== -1) {
+                    if (currentIndex < levels.length - 1) {
+                        updates.currentDifficultyLevel = levels[currentIndex + 1];
+                        result.newDifficulty = updates.currentDifficultyLevel;
+                    } else {
+                        // Max level reached
+                        result.isMaxLevel = true;
+                        // Still return progressed: true to indicate success, but no updates to DB needed effectively
+                        // But wait, if we don't put anything in `updates`, it returns { progressed: false }.
+                        // We must handle this returns specifically.
+                        return result;
+                    }
+                } else {
+                    // If used difficulty is not in list (or custom), fallback to first level if current is null
+                    updates.currentDifficultyLevel = levels[0];
                     result.newDifficulty = updates.currentDifficultyLevel;
                 }
+            } else if (levels.length > 0 && !settings.currentDifficultyLevel) {
+                // Initialize if null
+                updates.currentDifficultyLevel = levels[0];
+                result.newDifficulty = updates.currentDifficultyLevel;
             }
         }
 

@@ -43,6 +43,7 @@ import { Program, ProgramDay, ProgramDayExercise, Exercise, ResistanceType, Trac
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { ExerciseSelector } from '@/src/components/ExerciseSelector';
 import { ProgramDayExerciseForm } from '@/src/components/ProgramDayExerciseForm';
+import { RenameProgramDayDialog } from '@/src/components/RenameProgramDayDialog';
 
 interface ProgramDetailScreenProps {
     id: string;
@@ -72,7 +73,6 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const [showDeleteDayAlert, setShowDeleteDayAlert] = useState(false);
     const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
     const [renamingDayId, setRenamingDayId] = useState<string | null>(null);
-    const [renamingDayName, setRenamingDayName] = useState("");
 
     const toast = useToast();
 
@@ -235,11 +235,11 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         }
     };
 
-    const handleRenameDay = async () => {
+    const handleRenameDay = async (newName: string) => {
         if (!renamingDayId || submitting) return;
         setSubmitting(true);
         try {
-            await ProgramDayService.updateDay(renamingDayId, { name: renamingDayName });
+            await ProgramDayService.updateDay(renamingDayId, { name: newName });
             await loadData();
             showToast("Success", "Day renamed");
         } catch (e) {
@@ -291,7 +291,6 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                     <Pressable
                                         onPress={() => {
                                             setRenamingDayId(day.id);
-                                            setRenamingDayName(day.name);
                                             setIsRenameModalOpen(true);
                                         }}
                                         className="flex-1 active:opacity-60"
@@ -451,48 +450,13 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                 ]}
             />
 
-            <AlertDialog isOpen={isRenameModalOpen} onClose={() => setIsRenameModalOpen(false)}>
-                <AlertDialogBackdrop />
-                <AlertDialogContent
-                    className="bg-surface-elevated border"
-                    style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}
-                >
-                    <AlertDialogHeader>
-                        <Heading size="md" className="text-white">Rename Day</Heading>
-                    </AlertDialogHeader>
-                    <AlertDialogBody className="mt-3 mb-4">
-                        <VStack space="sm">
-                            <Text size="sm" className="text-typography-400">
-                                Enter a new name for this day.
-                            </Text>
-                            <Input variant="outline" size="md" className="mt-2 border-primary-energy/30">
-                                <InputField
-                                    placeholder="e.g. Leg Day"
-                                    value={renamingDayName}
-                                    onChangeText={setRenamingDayName}
-                                    className="text-white"
-                                    autoFocus
-                                />
-                            </Input>
-                        </VStack>
-                    </AlertDialogBody>
-                    <AlertDialogFooter className="space-x-3">
-                        <AppButton
-                            title="Cancel"
-                            variant="outline"
-                            onPress={() => setIsRenameModalOpen(false)}
-                            size="sm"
-                        />
-                        <AppButton
-                            title="Rename"
-                            action="primary"
-                            onPress={handleRenameDay}
-                            size="sm"
-                            disabled={submitting || !renamingDayName.trim()}
-                        />
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <RenameProgramDayDialog
+                isOpen={isRenameModalOpen}
+                onClose={() => setIsRenameModalOpen(false)}
+                onRename={handleRenameDay}
+                initialName={days.find(d => d.id === renamingDayId)?.name || ''}
+                loading={submitting}
+            />
 
             <AppAlert
                 isOpen={showDeleteDayAlert}

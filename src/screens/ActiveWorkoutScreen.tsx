@@ -52,7 +52,7 @@ export const ActiveWorkoutScreen = () => {
         onConfirm: () => { }
     });
     const [isLoggingSet, setIsLoggingSet] = useState(false);
-    const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string }>>({});
+    const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string, isMaxLevel?: boolean }>>({});
 
     // Auto-advance to next unlogged set
     const findNextSet = useCallback((setsOverride?: WorkoutSet[]) => {
@@ -121,8 +121,9 @@ export const ActiveWorkoutScreen = () => {
                             progressed: result.progression!.progressed,
                             newWeight: result.progression!.newWeight,
                             newDifficulty: result.progression!.newDifficulty,
-                            currentWeight: isWeight ? exerciseSnapshot?.suggestedWeight : null,
-                            currentDifficulty: !isWeight ? exerciseSnapshot?.suggestedDifficulty : null,
+                            currentWeight: isWeight ? exerciseSnapshot?.suggestedWeight : undefined,
+                            currentDifficulty: !isWeight ? (exerciseSnapshot?.suggestedDifficulty || exerciseSnapshot?.difficultyLevels?.[0]) : undefined,
+                            isMaxLevel: result.progression!.isMaxLevel,
                             exerciseName
                         }
                     }));

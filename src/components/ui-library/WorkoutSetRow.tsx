@@ -82,10 +82,10 @@ export const WorkoutSetRow = memo(({
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.05)' }}
                 >
                     <Text size="sm" className="font-bold text-white">
-                        {existingSet?.weight || exercise.suggestedWeight || '0'}
+                        {existingSet?.weight || existingSet?.difficulty || exercise.suggestedWeight || exercise.suggestedDifficulty || (exercise.difficultyLevels?.[0]) || '0'}
                     </Text>
                     <Text size="2xs" className="text-typography-500 font-bold uppercase ml-1">
-                        {isWeight ? 'kg' : 'rpe'}
+                        {isWeight ? 'kg' : (exercise.difficultyLevels?.length ? '' : 'rpe')}
                     </Text>
                 </Box>
 

@@ -47,7 +47,7 @@ export const ActiveExerciseCard = ({
                                 {exercise.exerciseName}
                             </Heading>
                             <Text size="xs" className="text-typography-500 font-medium">
-                                {completedSets} / {exercise.sets} sets • {exercise.resistanceType === ResistanceType.WEIGHT ? (exercise.suggestedWeight ? `${exercise.suggestedWeight}kg` : '0kg') : exercise.suggestedDifficulty || 'No diff'} • {exercise.trackingType === TrackingType.REPS ? `${exercise.targetReps || 0} reps` : `${exercise.targetTimeSeconds || 0}s`}
+                                {completedSets} / {exercise.sets} sets • {exercise.resistanceType === ResistanceType.WEIGHT ? (exercise.suggestedWeight ? `${exercise.suggestedWeight}kg` : '0kg') : (exercise.suggestedDifficulty || 'Level')} • {exercise.trackingType === TrackingType.REPS ? `${exercise.targetReps || 0} reps` : `${exercise.targetTimeSeconds || 0}s`}
                             </Text>
                         </VStack>
                     </HStack>

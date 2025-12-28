@@ -9,6 +9,7 @@ import { Icon } from '@/components/ui/icon';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { CheckIcon, SkipForwardIcon, DumbbellIcon } from 'lucide-react-native';
 import { AppNumericInput } from './AppNumericInput';
+import { AppSelect } from './AppSelect';
 import { AppCard } from './AppCard';
 import { ExerciseSnapshotItem, WorkoutSet, TrackingType, ResistanceType } from '@/src/types/domain';
 import { cn } from '@/src/utils/cn';
@@ -55,7 +56,7 @@ export const ActiveSetFocus = memo(({
         existingSet?.difficulty ||
         previousSet?.difficulty ||
         exercise.suggestedDifficulty ||
-        ''
+        (exercise.difficultyLevels && exercise.difficultyLevels.length > 0 ? exercise.difficultyLevels[0] : '')
     );
 
     // Sync state if exercise or setNumber changes (selection from list)
@@ -82,7 +83,7 @@ export const ActiveSetFocus = memo(({
             existingSet?.difficulty ||
             previousSet?.difficulty ||
             exercise.suggestedDifficulty ||
-            ''
+            (exercise.difficultyLevels && exercise.difficultyLevels.length > 0 ? exercise.difficultyLevels[0] : '')
         );
     }, [exercise.exerciseId, setNumber, existingSet?.id, previousSet?.id]);
 
@@ -141,6 +142,7 @@ export const ActiveSetFocus = memo(({
                     <Text size="md" className="text-white font-bold">
                         {exercise.targetReps || exercise.targetTimeSeconds} {isReps ? 'reps' : 's'}
                         {exercise.suggestedWeight ? ` @ ${exercise.suggestedWeight}kg` : ''}
+                        {exercise.suggestedDifficulty ? ` @ ${exercise.suggestedDifficulty}` : ''}
                     </Text>
                 </Box>
 
@@ -150,17 +152,27 @@ export const ActiveSetFocus = memo(({
                         <Text size="2xs" className="text-typography-500 font-black uppercase mb-2 ml-1">
                             {isWeight ? 'Weight (kg)' : 'Level'}
                         </Text>
-                        <AppNumericInput
-                            value={isWeight ? weight : difficulty}
-                            onChange={isWeight ? setWeight : setDifficulty}
-                            unit={isWeight ? 'kg' : 'RPE'}
-                            hideUnitDisplay={true}
-                            label={isWeight ? 'Weight' : 'Difficulty'}
-                            step={isWeight ? 2.5 : 1}
-                            max={isWeight ? 1000 : 10}
-                            quickValues={isWeight ? [20, 40, 60, 80, 100, 120, 140, 160] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-                            className="h-14"
-                        />
+                        {exercise.difficultyLevels && exercise.difficultyLevels.length > 0 && !isWeight ? (
+                            <AppSelect
+                                value={difficulty}
+                                onValueChange={setDifficulty}
+                                options={exercise.difficultyLevels.map(l => ({ label: l, value: l }))}
+                                placeholder="Select Difficulty"
+                                className="h-14"
+                            />
+                        ) : (
+                            <AppNumericInput
+                                value={isWeight ? weight : difficulty}
+                                onChange={isWeight ? setWeight : setDifficulty}
+                                unit={isWeight ? 'kg' : 'RPE'}
+                                hideUnitDisplay={true}
+                                label={isWeight ? 'Weight' : 'Difficulty'}
+                                step={isWeight ? 2.5 : 1}
+                                max={isWeight ? 1000 : 10}
+                                quickValues={isWeight ? [20, 40, 60, 80, 100, 120, 140, 160] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+                                className="h-14"
+                            />
+                        )}
                     </Box>
                     <Box className="flex-1">
                         <Text size="2xs" className="text-typography-500 font-black uppercase mb-2 ml-1">
@@ -210,6 +222,6 @@ export const ActiveSetFocus = memo(({
                     </Button>
                 </HStack>
             </VStack>
-        </AppCard>
+        </AppCard >
     );
 });

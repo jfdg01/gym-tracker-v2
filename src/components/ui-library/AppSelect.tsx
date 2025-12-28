@@ -12,6 +12,7 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 import { ChevronDown } from 'lucide-react-native';
+import { cn } from '@/src/utils/cn';
 
 interface AppSelectProps {
     value: string;
@@ -26,15 +27,16 @@ export const AppSelect = ({
     onValueChange,
     placeholder = "Select option",
     options,
-    disabled
-}: AppSelectProps) => {
+    disabled,
+    className
+}: AppSelectProps & { className?: string }) => {
     return (
         <Select
             selectedValue={value}
             onValueChange={onValueChange}
             isDisabled={disabled}
         >
-            <SelectTrigger className="bg-background-dark/30 border-outline-dark/20 h-12">
+            <SelectTrigger className={cn("bg-background-dark/30 border-outline-dark/20 h-12", className)}>
                 <SelectInput
                     placeholder={placeholder}
                     className="text-typography-900"

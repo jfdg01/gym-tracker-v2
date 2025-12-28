@@ -31,6 +31,7 @@ interface ProgressionEvent {
     currentWeight?: number;
     currentDifficulty?: string;
     exerciseName: string;
+    isMaxLevel?: boolean;
 }
 
 interface WorkoutSummaryScreenProps {
@@ -83,7 +84,7 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
 
                             {Object.entries(achievements).map(([id, event]) => {
                                 const isIncreased = event.progressed;
-                                const isWeight = event.newWeight !== undefined || event.currentWeight !== undefined;
+                                const isWeight = (event.newWeight !== undefined && event.newWeight !== null) || (event.currentWeight !== undefined && event.currentWeight !== null);
 
                                 return (
                                     <Box
@@ -119,22 +120,28 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
                                                     <VStack>
                                                         <Text className="text-[10px] text-typography-500 uppercase font-bold">From</Text>
                                                         <Text className="text-typography-400 font-bold text-lg">
-                                                            {isWeight ? `${event.currentWeight || 0}kg` : event.currentDifficulty || 'None'}
+                                                            {isWeight ? `${+(event.currentWeight || 0).toFixed(2)}kg` : event.currentDifficulty || 'None'}
                                                         </Text>
                                                     </VStack>
                                                     <Icon as={ArrowRightIcon} size="xs" className="text-success-growth" />
                                                     <VStack>
                                                         <Text className="text-[10px] text-success-growth uppercase font-black">To</Text>
-                                                        <Text className="text-success-growth font-black text-2xl">
-                                                            {isWeight ? `${event.newWeight}kg` : event.newDifficulty}
-                                                        </Text>
+                                                        {event.isMaxLevel ? (
+                                                            <Text className="text-success-growth font-black text-lg uppercase tracking-tight">
+                                                                Max Level
+                                                            </Text>
+                                                        ) : (
+                                                            <Text className="text-success-growth font-black text-2xl">
+                                                                {isWeight ? `${+(event.newWeight || 0).toFixed(2)}kg` : event.newDifficulty}
+                                                            </Text>
+                                                        )}
                                                     </VStack>
                                                 </HStack>
                                             ) : (
                                                 <VStack>
                                                     <Text className="text-[10px] text-typography-500 uppercase font-bold">Current</Text>
                                                     <Text className="text-typography-400 font-bold text-xl">
-                                                        {isWeight ? `${event.currentWeight || 0}kg` : event.currentDifficulty || 'None'}
+                                                        {isWeight ? `${+(event.currentWeight || 0).toFixed(2)}kg` : event.currentDifficulty || 'None'}
                                                     </Text>
                                                 </VStack>
                                             )}

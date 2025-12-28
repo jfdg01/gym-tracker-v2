@@ -10,7 +10,9 @@ export default function WorkoutSummaryRoute() {
         progressionEvents: params.progressionEvents as string,
         programName: params.programName as string,
         dayName: params.dayName as string,
-        duration: params.duration as string
+        duration: params.duration as string,
+        totalSets: params.totalSets as string,
+        completedSets: params.completedSets as string
     };
 
     return <WorkoutSummaryScreen params={summaryParams} />;
