@@ -333,16 +333,19 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                                     )}
 
                                     {exercise.defaultResistanceType === ResistanceType.DIFFICULTY && (
-                                        <VStack className="p-4 space-md bg-surface-deep/30">
+                                        <VStack className="p-4 bg-surface-deep/30" space="md">
                                             <Text className="text-typography-700 ml-7">Difficulty Levels</Text>
-                                            <HStack space="sm" className="flex-wrap ml-7">
+                                            <VStack space="sm" className="ml-7">
                                                 {settings?.difficultyLevels?.map((level, i) => (
-                                                    <StatusBadge key={i} label={level} variant="neutral" />
+                                                    <HStack key={i} space="sm" className="items-center">
+                                                        <Box className="w-1.5 h-1.5 rounded-full bg-typography-400" />
+                                                        <Text className="text-typography-900 font-medium">{level}</Text>
+                                                    </HStack>
                                                 ))}
                                                 {(!settings?.difficultyLevels || settings.difficultyLevels.length === 0) && (
                                                     <Text className="text-typography-500 italic">None defined</Text>
                                                 )}
-                                            </HStack>
+                                            </VStack>
                                         </VStack>
                                     )}
                                 </VStack>

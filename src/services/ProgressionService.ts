@@ -57,11 +57,8 @@ export const ProgressionService = {
                         updates.currentDifficultyLevel = levels[currentIndex + 1];
                         result.newDifficulty = updates.currentDifficultyLevel;
                     } else {
-                        // Max level reached
-                        result.isMaxLevel = true;
-                        // Still return progressed: true to indicate success, but no updates to DB needed effectively
-                        // But wait, if we don't put anything in `updates`, it returns { progressed: false }.
-                        // We must handle this returns specifically.
+                        // Max level reached.
+                        // We return result to indicate success (progressed: true), but no next level updates are applied.
                         return result;
                     }
                 } else {

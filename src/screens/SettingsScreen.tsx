@@ -38,6 +38,7 @@ export const SettingsScreen = () => {
     const [showImportErrorAlert, setShowImportErrorAlert] = useState(false);
     const [showImportFailedAlert, setShowImportFailedAlert] = useState(false);
     const [showDeleteConfirmAlert, setShowDeleteConfirmAlert] = useState(false);
+    const [showActiveWorkoutAlert, setShowActiveWorkoutAlert] = useState(false);
     const [pendingImportData, setPendingImportData] = useState<any>(null);
 
     const handleExport = async () => {
@@ -107,9 +108,19 @@ export const SettingsScreen = () => {
                     </Toast>
                 ),
             });
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            setShowImportErrorAlert(true);
+            if (err.message === 'Cannot import data while a workout is in progress.') {
+                // Show specific alert for active workout
+                setShowImportErrorAlert(true);
+                // We'll reuse the error alert state but customize the message dynamically if we want,
+                // or just create a new state. Let's create a new state for clarity or just update the message.
+                // For simplicity given the state constraints, let's just use a new Alert state or update the existing one's message dynamically?
+                // Actually, let's just make a new state for this specific error to be clean.
+                setShowActiveWorkoutAlert(true);
+            } else {
+                setShowImportErrorAlert(true);
+            }
         }
         setPendingImportData(null);
     };
@@ -293,6 +304,15 @@ export const SettingsScreen = () => {
                 onClose={() => setShowImportErrorAlert(false)}
                 title="Import Error"
                 message="The file format might be invalid."
+                buttons={[{ text: "OK" }]}
+            />
+
+
+            <AppAlert
+                isOpen={showActiveWorkoutAlert}
+                onClose={() => setShowActiveWorkoutAlert(false)}
+                title="Cannot Import Data"
+                message="You have an active workout in progress. Please finish or abandon your current workout before importing data."
                 buttons={[{ text: "OK" }]}
             />
 

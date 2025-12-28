@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
-import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon, ClockIcon, TrendingUpIcon, ArrowRightIcon } from 'lucide-react-native';
+import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon, ClockIcon, TrendingUpIcon, ArrowRightIcon, ChevronRightIcon } from 'lucide-react-native';
 import { Button, ButtonText } from '@/components/ui/button';
 import { formatDuration } from '@/src/utils/time';
 import { cn } from '@/src/utils/cn';
@@ -49,11 +49,14 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString(undefined, {
+        return date.toLocaleString(undefined, {
             weekday: 'short',
             year: 'numeric',
             month: 'short',
-            day: 'numeric'
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
         });
     };
 
@@ -126,10 +129,13 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                         return (
                             <VStack key={ex.programDayExerciseId} space="xs" className="mb-4">
                                 <HStack space="xs" className="items-center px-1 justify-between">
-                                    <HStack space="xs" className="items-center">
-                                        <Icon as={DumbbellIcon} size="xs" className="text-primary-energy" />
-                                        <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
-                                    </HStack>
+                                    <Pressable onPress={() => router.push(`/exercises/${ex.exerciseId}`)}>
+                                        <HStack space="xs" className="items-center">
+                                            <Icon as={DumbbellIcon} size="xs" className="text-primary-energy" />
+                                            <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
+                                            <Icon as={ChevronRightIcon} size="2xs" className="text-typography-400 ml-1" />
+                                        </HStack>
+                                    </Pressable>
 
                                     {ex.result && (
                                         <Box className={cn(

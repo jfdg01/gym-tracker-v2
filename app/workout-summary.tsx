@@ -4,7 +4,6 @@ import { WorkoutSummaryScreen, WorkoutSummaryParams } from '@/src/screens/Workou
 export default function WorkoutSummaryRoute() {
     const params = useLocalSearchParams();
 
-    // Ensure params match the expected type
     const summaryParams: WorkoutSummaryParams = {
         sessionId: params.sessionId as string,
         progressionEvents: params.progressionEvents as string,
