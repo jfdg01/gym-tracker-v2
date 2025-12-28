@@ -78,6 +78,7 @@ const TextareaInput = React.forwardRef<
       ref={ref}
       {...props}
       textAlignVertical="top"
+      selectTextOnFocus={true}
       className={textareaInputStyle({
         parentVariants: {
           size: parentSize,

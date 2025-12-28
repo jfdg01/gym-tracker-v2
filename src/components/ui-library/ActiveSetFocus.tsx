@@ -19,6 +19,7 @@ interface ActiveSetFocusProps {
     existingSet?: WorkoutSet;
     onLog: (data: Partial<WorkoutSet>) => void;
     onSkip: (data: Partial<WorkoutSet>) => void;
+    isLogging?: boolean;
 }
 
 export const ActiveSetFocus = memo(({
@@ -26,7 +27,8 @@ export const ActiveSetFocus = memo(({
     setNumber,
     existingSet,
     onLog,
-    onSkip
+    onSkip,
+    isLogging = false
 }: ActiveSetFocusProps) => {
     // Local state for interactive logging
     const [weight, setWeight] = useState(existingSet?.weight?.toString() || exercise.suggestedWeight?.toString() || '');
@@ -138,8 +140,9 @@ export const ActiveSetFocus = memo(({
                         size="xl"
                         variant="outline"
                         action="secondary"
-                        className="flex-1 h-14 rounded-2xl border-white/10"
+                        className={cn("flex-1 h-14 rounded-2xl border-white/10", isLogging && "opacity-50")}
                         onPress={handleSkip}
+                        disabled={isLogging}
                     >
                         <ButtonIcon as={SkipForwardIcon} className="text-typography-400 mr-2" />
                         <ButtonText className="text-typography-400 font-bold">SKIP</ButtonText>
@@ -147,12 +150,19 @@ export const ActiveSetFocus = memo(({
                     <Button
                         size="xl"
                         action="positive"
-                        className="flex-[1.5] h-14 rounded-2xl bg-success-growth"
+                        className={cn("flex-[1.5] h-14 rounded-2xl bg-success-growth", isLogging && "opacity-80")}
                         style={{ shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 }}
                         onPress={handleLog}
+                        disabled={isLogging}
                     >
-                        <ButtonIcon as={CheckIcon} className="text-white mr-2" />
-                        <ButtonText className="text-white font-black text-lg">LOG SET</ButtonText>
+                        {isLogging ? (
+                            <ButtonText className="text-white font-black text-lg">LOGGING...</ButtonText>
+                        ) : (
+                            <>
+                                <ButtonIcon as={CheckIcon} className="text-white mr-2" />
+                                <ButtonText className="text-white font-black text-lg">LOG SET</ButtonText>
+                            </>
+                        )}
                     </Button>
                 </HStack>
             </VStack>

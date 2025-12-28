@@ -9,8 +9,9 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
-import { CalendarIcon, ChevronRightIcon, TrendingUpIcon } from 'lucide-react-native';
+import { CalendarIcon, ChevronRightIcon, TrendingUpIcon, ClockIcon } from 'lucide-react-native';
 import { WorkoutService } from '@/src/services/WorkoutService';
+import { formatDuration } from '@/src/utils/time';
 import { WorkoutSession } from '@/src/types/domain';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
@@ -87,6 +88,15 @@ export const HistoryScreen = () => {
                                                         label={session.status === 'COMPLETED' ? 'Success' : session.status === 'ABANDONED' ? 'Abandoned' : 'Active'}
                                                         variant={session.status === 'COMPLETED' ? 'success' : session.status === 'ABANDONED' ? 'error' : 'primary'}
                                                     />
+
+                                                    {session.completedAt && (
+                                                        <HStack space="xs" className="items-center">
+                                                            <Icon as={ClockIcon} size="xs" className="text-typography-500" />
+                                                            <Text className="text-typography-500 text-xs font-medium">
+                                                                {formatDuration(session.startedAt, session.completedAt)}
+                                                            </Text>
+                                                        </HStack>
+                                                    )}
                                                 </HStack>
                                                 <Text className="text-white font-bold text-lg">{session.dayNameSnapshot}</Text>
                                                 <Text className="text-typography-500 text-sm font-medium">{session.programNameSnapshot}</Text>

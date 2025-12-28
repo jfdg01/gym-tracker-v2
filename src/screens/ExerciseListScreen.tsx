@@ -30,6 +30,7 @@ export const ExerciseListScreen = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
     const [editingSettings, setEditingSettings] = useState<ExerciseSettings | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
     const toast = useToast();
 
     const showToast = (title: string, description: string, action: 'success' | 'error' = 'success') => {
@@ -89,6 +90,8 @@ export const ExerciseListScreen = () => {
     }, [searchQuery, exercises]);
 
     const handleCreateOrUpdate = async (data: Partial<Exercise>, settings: Partial<ExerciseSettings>) => {
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             let targetId = editingExercise?.id;
             let isUpdate = !!editingExercise;
@@ -130,6 +133,8 @@ export const ExerciseListScreen = () => {
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to save exercise", "error");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -229,6 +234,7 @@ export const ExerciseListScreen = () => {
                 placement="bottom right"
                 onPress={openCreate}
                 className="bg-primary-energy shadow-xl"
+                disabled={isSaving}
             >
                 <FabIcon as={PlusIcon} />
             </Fab>

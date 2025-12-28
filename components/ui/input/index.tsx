@@ -198,6 +198,7 @@ const InputField = React.forwardRef<
     <UIInput.Input
       ref={ref}
       {...props}
+      selectTextOnFocus={true}
       className={inputFieldStyle({
         parentVariants: {
           variant: parentVariant,

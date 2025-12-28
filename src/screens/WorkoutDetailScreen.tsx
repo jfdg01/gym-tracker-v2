@@ -8,8 +8,9 @@ import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
-import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon } from 'lucide-react-native';
+import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon, ClockIcon } from 'lucide-react-native';
 import { Button, ButtonText } from '@/components/ui/button';
+import { formatDuration } from '@/src/utils/time';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
@@ -100,11 +101,21 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="lg" className="p-4 pb-20">
                     <AppCard className="p-4">
-                        <HStack space="md" className="items-center">
-                            <Icon as={CalendarIcon} size="sm" className="text-primary-energy" />
-                            <Text className="text-typography-500 font-semibold">
-                                {session.completedAt ? formatDate(session.completedAt) : 'N/A'}
-                            </Text>
+                        <HStack space="md" className="items-center justify-between">
+                            <HStack space="sm" className="items-center">
+                                <Icon as={CalendarIcon} size="sm" className="text-primary-energy" />
+                                <Text className="text-typography-500 font-semibold">
+                                    {session.completedAt ? formatDate(session.completedAt) : 'N/A'}
+                                </Text>
+                            </HStack>
+                            {session.completedAt && (
+                                <HStack space="xs" className="items-center">
+                                    <Icon as={ClockIcon} size="xs" className="text-typography-500" />
+                                    <Text className="text-typography-500 text-sm font-medium">
+                                        {formatDuration(session.startedAt, session.completedAt)}
+                                    </Text>
+                                </HStack>
+                            )}
                         </HStack>
                     </AppCard>
 

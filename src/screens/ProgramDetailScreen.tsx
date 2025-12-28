@@ -48,6 +48,7 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const [program, setProgram] = useState<Program | null>(null);
     const [days, setDays] = useState<DayWithExercises[]>([]);
     const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     // Exercise Management State
     const [selectorOpen, setSelectorOpen] = useState(false);
@@ -117,6 +118,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     }, [loadData]);
 
     const handleAddDay = async () => {
+        if (submitting) return;
+        setSubmitting(true);
         try {
             const nextDayNumber = days.length + 1;
             await ProgramDayService.createDay(id, `Day ${nextDayNumber}`);
@@ -125,6 +128,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to add day", "error");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -134,7 +139,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     };
 
     const confirmDeleteDay = async () => {
-        if (!dayToDeleteId) return;
+        if (!dayToDeleteId || submitting) return;
+        setSubmitting(true);
         try {
             await ProgramDayService.deleteDay(dayToDeleteId);
             await loadData();
@@ -143,6 +149,7 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
             console.error(e);
             showToast("Error", "Failed to delete day", "error");
         } finally {
+            setSubmitting(false);
             setShowDeleteDayAlert(false);
             setDayToDeleteId(null);
         }
@@ -167,6 +174,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     };
 
     const handleExerciseFormSubmit = async (data: Partial<ProgramDayExercise>) => {
+        if (submitting) return;
+        setSubmitting(true);
         try {
             if (editingDayEx) {
                 await ProgramDayExerciseService.updateExerciseInDay(editingDayEx.id, data);
@@ -187,6 +196,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to save exercise", "error");
+        } finally {
+            setSubmitting(false);
         }
     };
 

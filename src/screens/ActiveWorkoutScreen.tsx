@@ -21,6 +21,8 @@ import { AppAlert } from '@/src/components/ui-library/AppAlert';
 
 
 import { ActiveSetFocus } from '@/src/components/ui-library/ActiveSetFocus';
+import { WorkoutCompleteCard } from '@/src/components/ui-library/WorkoutCompleteCard';
+import { formatDuration } from '../utils/time';
 
 export const ActiveWorkoutScreen = () => {
     const router = useRouter();
@@ -35,20 +37,21 @@ export const ActiveWorkoutScreen = () => {
     const [isFinishing, setIsFinishing] = useState(false);
     const [showFinishAlert, setShowFinishAlert] = useState(false);
     const [showAbandonAlert, setShowAbandonAlert] = useState(false);
+    const [isLoggingSet, setIsLoggingSet] = useState(false);
     const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string }>>({});
 
     // Auto-advance to next unlogged set
-    const findNextSet = useCallback(() => {
+    const findNextSet = useCallback((setsOverride?: WorkoutSet[]) => {
         if (!activeSession) return;
+
+        const currentSets = setsOverride || sessionSets;
 
         for (const ex of activeSession.exercisesSnapshot || []) {
             for (let i = 1; i <= ex.sets; i++) {
-                const isLogged = sessionSets.some(s => s.exerciseId === ex.exerciseId && s.setNumber === i);
+                const isLogged = currentSets.some(s => s.exerciseId === ex.exerciseId && s.setNumber === i);
                 if (!isLogged) {
                     setFocusedExerciseId(ex.exerciseId);
                     setFocusedSetNumber(i);
-                    // Also expand the exercise in the list for visibility
-                    setExpandedExercise(ex.programDayExerciseId);
                     return;
                 }
             }
@@ -63,31 +66,52 @@ export const ActiveWorkoutScreen = () => {
     }, [activeSession, focusedExerciseId, findNextSet]);
 
     const handleLogSet = async (data: Partial<WorkoutSet>) => {
-        const result = await logSet(data as any);
-        if (!data.skipped) {
-            startTimer(90);
+        if (isLoggingSet) return;
+        setIsLoggingSet(true);
 
-            if (result && result.progression && result.progression.progressed) {
-                const exerciseName = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === data.exerciseId)?.exerciseName || 'Exercise';
-                setProgressionEvents(prev => ({
-                    ...prev,
-                    [data.exerciseId!]: {
-                        newWeight: result.progression!.newWeight,
-                        newDifficulty: result.progression!.newDifficulty,
-                        exerciseName
-                    }
-                }));
+        try {
+            const result = await logSet(data as any);
+
+            // Calculate optimistic/new sets state to avoid race conditions with findNextSet
+            let nextSets = [...sessionSets];
+            if (result && result.set) {
+                const index = nextSets.findIndex(s => s.exerciseId === data.exerciseId && s.setNumber === data.setNumber);
+                if (index !== -1) {
+                    nextSets[index] = result.set;
+                } else {
+                    nextSets = [...nextSets, result.set].sort((a, b) => a.setNumber - b.setNumber);
+                }
             }
-        }
 
-        // Auto-advance
-        findNextSet();
+            if (!data.skipped) {
+                startTimer(90);
+
+                if (result && result.progression && result.progression.progressed) {
+                    const exerciseName = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === data.exerciseId)?.exerciseName || 'Exercise';
+                    setProgressionEvents(prev => ({
+                        ...prev,
+                        [data.exerciseId!]: {
+                            newWeight: result.progression!.newWeight,
+                            newDifficulty: result.progression!.newDifficulty,
+                            exerciseName
+                        }
+                    }));
+                }
+            }
+
+            // Auto-advance using the NEW sets state
+            findNextSet(nextSets);
+        } catch (error) {
+            console.error("Failed to log set:", error);
+        } finally {
+            setIsLoggingSet(false);
+        }
     };
 
     const handleFinish = () => setShowFinishAlert(true);
 
     const handleConfirmFinish = async () => {
-        if (!activeSession) return;
+        if (!activeSession || isFinishing) return;
         const currentSessionId = activeSession.id;
         setShowFinishAlert(false);
         setIsFinishing(true);
@@ -101,7 +125,7 @@ export const ActiveWorkoutScreen = () => {
                     progressionEvents: JSON.stringify(progressionEvents),
                     programName: activeSession.programNameSnapshot || 'Workout',
                     dayName: activeSession.dayNameSnapshot || 'Session',
-                    duration: '45m'
+                    duration: formatDuration(activeSession.startedAt, new Date())
                 }
             });
         } catch (error) {
@@ -113,9 +137,16 @@ export const ActiveWorkoutScreen = () => {
     const handleAbandon = () => setShowAbandonAlert(true);
 
     const handleConfirmAbandon = async () => {
+        if (isFinishing) return;
+        setIsFinishing(true);
         setShowAbandonAlert(false);
-        await abandonWorkout();
-        router.replace('/(tabs)');
+        try {
+            await abandonWorkout();
+            router.replace('/(tabs)');
+        } catch (error) {
+            console.error("Failed to abandon workout:", error);
+            setIsFinishing(false);
+        }
     };
 
     if (loading || (isFinishing && !activeSession)) return (
@@ -157,6 +188,9 @@ export const ActiveWorkoutScreen = () => {
     const focusedExercise = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === focusedExerciseId);
     const focusedExistingSet = sessionSets.find(s => s.exerciseId === focusedExerciseId && s.setNumber === focusedSetNumber);
 
+    const totalSetsRequired = activeSession?.exercisesSnapshot?.reduce((acc, ex) => acc + ex.sets, 0) || 0;
+    const isWorkoutComplete = sessionSets.length >= totalSetsRequired && totalSetsRequired > 0;
+
     return (
         <Box className="flex-1 bg-surface-deep">
             <AppHeader
@@ -167,15 +201,20 @@ export const ActiveWorkoutScreen = () => {
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="xl" className="p-4 pb-48">
-                    {/* Focus Card */}
-                    {focusedExercise && (
-                        <ActiveSetFocus
-                            exercise={focusedExercise}
-                            setNumber={focusedSetNumber}
-                            existingSet={focusedExistingSet}
-                            onLog={handleLogSet}
-                            onSkip={handleLogSet} // skip is same as log with skipped:true
-                        />
+                    {/* Focus Card or Completion Card */}
+                    {isWorkoutComplete ? (
+                        <WorkoutCompleteCard onFinish={handleConfirmFinish} />
+                    ) : (
+                        focusedExercise && (
+                            <ActiveSetFocus
+                                exercise={focusedExercise}
+                                setNumber={focusedSetNumber}
+                                existingSet={focusedExistingSet}
+                                onLog={handleLogSet}
+                                onSkip={handleLogSet} // skip is same as log with skipped:true
+                                isLogging={isLoggingSet}
+                            />
+                        )
                     )}
 
                     {/* Exercise List */}

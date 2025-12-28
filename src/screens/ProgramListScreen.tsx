@@ -28,6 +28,7 @@ export const ProgramListScreen = () => {
     const [loading, setLoading] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
     const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const toast = useToast();
 
@@ -90,22 +91,30 @@ export const ProgramListScreen = () => {
     };
 
     const handleFormSubmit = async (data: Partial<Program>) => {
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             if (editingProgram) {
                 await ProgramService.updateProgram(editingProgram.id, data);
                 showToast("Updated", "Program updated successfully");
             } else {
-                await ProgramService.createProgram(data as any);
+                const newProgram = await ProgramService.createProgram(data as any);
                 showToast("Created", "Program created successfully");
+                // Route to detail of the new program
+                router.push(`/program/${newProgram.id}`);
             }
             await loadPrograms();
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to save program", "error");
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             await ProgramService.deleteProgram(id);
             await loadPrograms();
@@ -113,6 +122,8 @@ export const ProgramListScreen = () => {
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to delete program", "error");
+        } finally {
+            setIsSaving(false);
         }
     };
 

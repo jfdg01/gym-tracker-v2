@@ -24,7 +24,7 @@ export const useProgramDayExerciseForm = ({
     const ignoreSaveRef = useRef(false);
 
     const setsRef = useRef('3');
-    const targetRepsRef = useRef('0');
+    const targetRepsRef = useRef('12');
     const targetTimeRef = useRef('0');
 
     useEffect(() => {
@@ -39,7 +39,7 @@ export const useProgramDayExerciseForm = ({
                 setTrackingType(selectedExercise.defaultTrackingType);
                 setResistanceType(selectedExercise.defaultResistanceType);
                 setsRef.current = '3';
-                targetRepsRef.current = '0';
+                targetRepsRef.current = '12';
                 targetTimeRef.current = '0';
             }
             ignoreSaveRef.current = false;

@@ -28,7 +28,16 @@ export const ProgramService = {
     createProgram: async (
         program: Omit<Program, 'id' | 'createdAt' | 'updatedAt' | 'lastCompletedDayId'>
     ): Promise<Program> => {
-        return await ProgramRepository.create(program);
+        const newProgram = await ProgramRepository.create(program);
+
+        // Ensure every program has at least one day
+        await ProgramDayRepository.create({
+            programId: newProgram.id,
+            name: 'Day 1',
+            isRestDay: false,
+        });
+
+        return newProgram;
     },
 
     /**
