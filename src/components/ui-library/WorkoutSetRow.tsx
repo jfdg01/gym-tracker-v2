@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Vibration } from 'react-native';
+import React, { memo } from 'react';
+import { Vibration, TouchableOpacity } from 'react-native';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -9,136 +9,111 @@ import { Icon } from '@/components/ui/icon';
 import { CheckIcon, SkipForwardIcon } from 'lucide-react-native';
 import { ExerciseSnapshotItem, WorkoutSet, TrackingType, ResistanceType } from '@/src/types/domain';
 import { cn } from '@/src/utils/cn';
+import { AppNumericInput } from './AppNumericInput';
+
 
 interface WorkoutSetRowProps {
     setNumber: number;
     exercise: ExerciseSnapshotItem;
     existingSet?: WorkoutSet;
-    onLog: (data: Partial<WorkoutSet>) => void;
+    isFocused: boolean;
+    onFocus: (setNumber: number) => void;
 }
 
-export const WorkoutSetRow = React.memo(({
+export const WorkoutSetRow = memo(({
     setNumber,
     exercise,
     existingSet,
-    onLog
+    isFocused,
+    onFocus
 }: WorkoutSetRowProps) => {
-    // Local state for interactive editing
-    const [weight, setWeight] = useState(existingSet?.weight?.toString() || exercise.suggestedWeight?.toString() || '');
-    const [reps, setReps] = useState(existingSet?.reps?.toString() || exercise.targetReps?.toString() || '');
-    const [time, setTime] = useState(existingSet?.timeSeconds?.toString() || exercise.targetTimeSeconds?.toString() || '');
-    const [difficulty, setDifficulty] = useState(existingSet?.difficulty || exercise.suggestedDifficulty || '');
-    const [logged, setLogged] = useState(!!existingSet && !existingSet.skipped);
-    const [skipped, setSkipped] = useState(existingSet?.skipped || false);
-
-    // TODO: Implement "One-Tap Logging" interaction (tap target to copy to actual).
-
-    const handleLog = () => {
-        if (skipped) return;
-        onLog({
-            setNumber,
-            exerciseId: exercise.exerciseId,
-            weight: exercise.resistanceType === ResistanceType.WEIGHT ? (parseFloat(weight) || 0) : null,
-            reps: exercise.trackingType === TrackingType.REPS ? (parseInt(reps) || 0) : null,
-            timeSeconds: exercise.trackingType === TrackingType.TIME ? (parseInt(time) || 0) : null,
-            difficulty: exercise.resistanceType === ResistanceType.DIFFICULTY ? difficulty : null,
-            skipped: false
-        });
-        Vibration.vibrate(12);
-        setLogged(true);
-    };
-
-    const handleSkip = () => {
-        onLog({
-            setNumber,
-            exerciseId: exercise.exerciseId,
-            skipped: true
-        });
-        setSkipped(true);
-        setLogged(false);
-    };
-
-    const isReps = exercise.trackingType === TrackingType.REPS;
     const isWeight = exercise.resistanceType === ResistanceType.WEIGHT;
+    const isReps = exercise.trackingType === TrackingType.REPS;
+
+    const isLogged = !!existingSet && !existingSet.skipped;
+    const isSkipped = existingSet?.skipped;
 
     return (
-        <HStack
-            space="md"
+        <TouchableOpacity
+            onPress={() => onFocus(setNumber)}
+            activeOpacity={0.7}
             className={cn(
-                "items-center py-3 px-3 rounded-xl mb-1 border border-transparent",
-                logged ? "bg-success-growth/10 border-success-growth/20" :
-                    skipped ? "bg-background-dark/30 opacity-40" :
-                        "bg-background-dark/20"
+                "flex-row items-center h-14 px-4 rounded-2xl mb-2 border",
+                isFocused
+                    ? "border-primary-energy/30"
+                    : isLogged
+                        ? "border-success-growth/20"
+                        : "border-white/5"
             )}
+            style={{
+                backgroundColor: isFocused
+                    ? 'rgba(79, 70, 229, 0.1)'
+                    : isLogged
+                        ? 'rgba(16, 185, 129, 0.1)'
+                        : 'rgba(255, 255, 255, 0.05)'
+            }}
         >
-            <Box className="w-8 items-center">
-                <Text size="sm" className="font-bold text-typography-500">{setNumber}</Text>
+            {/* Status Indicator / Set Number */}
+            <Box
+                className={cn(
+                    "w-8 h-8 rounded-full items-center justify-center mr-4",
+                    isLogged ? "bg-success-growth" :
+                        isFocused ? "bg-primary-energy" : ""
+                )}
+                style={(!isLogged && !isFocused) ? { backgroundColor: isSkipped ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)' } : {}}
+            >
+                {isLogged ? (
+                    <Icon as={CheckIcon} size="xs" className="text-white" />
+                ) : (
+                    <Text size="xs" className={cn(
+                        "font-black",
+                        isFocused ? "text-background-dark" : "text-typography-500"
+                    )}>
+                        {setNumber}
+                    </Text>
+                )}
             </Box>
 
-            <HStack space="xs" className="flex-[1.5]">
-                <Box className="bg-white/5 rounded items-center justify-center h-10 px-3">
-                    <Text size="xs" className="text-typography-500 font-bold leading-none">{isWeight ? 'kg' : 'RPE'}</Text>
+            {/* Values Display */}
+            <HStack space="md" className="flex-1">
+                {/* Weight/Difficulty Pill */}
+                <Box
+                    className="flex-1 h-10 rounded-xl border flex-row items-center justify-center px-2"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.05)' }}
+                >
+                    <Text size="sm" className="font-bold text-white">
+                        {existingSet?.weight || exercise.suggestedWeight || '0'}
+                    </Text>
+                    <Text size="2xs" className="text-typography-500 font-bold uppercase ml-1">
+                        {isWeight ? 'kg' : 'rpe'}
+                    </Text>
                 </Box>
-                <Input size="md" variant="underlined" className="flex-1 h-10 border-0 bg-white/5 rounded px-2">
-                    <InputField
-                        placeholder={isWeight ? (exercise.suggestedWeight?.toString() || "0") : "RPE"}
-                        keyboardType={isWeight ? "numeric" : "default"}
-                        value={isWeight ? weight : difficulty}
-                        onChangeText={isWeight ? setWeight : setDifficulty}
-                        className="text-white font-medium text-center h-full p-0"
-                    />
-                </Input>
+
+                {/* Reps/Time Pill */}
+                <Box
+                    className="flex-1 h-10 rounded-xl border flex-row items-center justify-center px-2"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.05)' }}
+                >
+                    <Text size="sm" className="font-bold text-white">
+                        {existingSet?.reps || existingSet?.timeSeconds || exercise.targetReps || exercise.targetTimeSeconds || '0'}
+                    </Text>
+                    <Text size="2xs" className="text-typography-500 font-bold uppercase ml-1">
+                        {isReps ? 'reps' : 's'}
+                    </Text>
+                </Box>
             </HStack>
 
-            <HStack space="xs" className="flex-[1.5]">
-                <Box className="bg-white/5 rounded items-center justify-center h-10 px-3">
-                    <Text size="xs" className="text-typography-500 font-bold leading-none">{isReps ? 'reps' : 's'}</Text>
-                </Box>
-                <Input size="md" variant="underlined" className="flex-1 h-10 border-0 bg-white/5 rounded px-2">
-                    <InputField
-                        placeholder={isReps ? (exercise.targetReps?.toString() || "0") : (exercise.targetTimeSeconds?.toString() || "0")}
-                        keyboardType="numeric"
-                        value={isReps ? reps : time}
-                        onChangeText={isReps ? setReps : setTime}
-                        className="text-white font-medium text-center h-full p-0"
-                    />
-                </Input>
-            </HStack>
-
-            <HStack space="xs" className="ml-2">
-                {skipped ? (
-                    <Button size="xs" variant="link" onPress={() => setSkipped(false)} className="px-2">
-                        <ButtonText size="xs" className="text-primary-energy font-bold">UNSKIP</ButtonText>
-                    </Button>
-                ) : (
-                    <>
-                        <Button
-                            size="sm"
-                            variant="link"
-                            onPress={handleSkip}
-                            className="w-10 h-10 items-center justify-center p-0"
-                        >
-                            <Icon as={SkipForwardIcon} size="sm" className="text-typography-500" />
-                        </Button>
-                        <Button
-                            size="md"
-                            action={logged ? "positive" : "primary"}
-                            variant={logged ? "solid" : "outline"}
-                            className={cn(
-                                "w-11 h-11 rounded-full p-0 flex items-center justify-center border-2",
-                                logged ? "bg-success-growth border-success-growth" : "border-primary-energy/30"
-                            )}
-                            onPress={handleLog}
-                        >
-                            <Icon as={CheckIcon} size="md" className={logged ? "text-white" : "text-primary-energy"} />
-                        </Button>
-                    </>
-                )}
-            </HStack>
-        </HStack>
+            {/* Selection Indicator (Right Side) */}
+            {isFocused && (
+                <Box className="ml-2 w-1.5 h-6 bg-primary-energy rounded-full" />
+            )}
+        </TouchableOpacity>
     );
-}, (prev, next) => (
+}, (prev: WorkoutSetRowProps, next: WorkoutSetRowProps) => (
     prev.existingSet?.id === next.existingSet?.id &&
+    prev.existingSet?.skipped === next.existingSet?.skipped &&
     prev.setNumber === next.setNumber &&
+    prev.isFocused === next.isFocused &&
     prev.exercise.exerciseId === next.exercise.exerciseId
 ));
+

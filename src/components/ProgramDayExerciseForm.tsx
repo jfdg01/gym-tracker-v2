@@ -25,8 +25,6 @@ export const ProgramDayExerciseForm = (props: ProgramDayExerciseFormProps) => {
             resistanceType,
         },
         actions: {
-            setTrackingType,
-            setResistanceType,
             handleManualSave,
             handleSheetClose,
         },
@@ -42,16 +40,6 @@ export const ProgramDayExerciseForm = (props: ProgramDayExerciseFormProps) => {
     const onRepsChange = useCallback((t: string) => { targetRepsRef.current = t; }, []);
     const onTimeChange = useCallback((t: string) => { targetTimeRef.current = t; }, []);
 
-    const trackingOptions = [
-        { label: 'Reps', value: TrackingType.REPS },
-        { label: 'Time', value: TrackingType.TIME },
-    ];
-
-    const resistanceOptions = [
-        { label: 'Weight', value: ResistanceType.WEIGHT },
-        { label: 'Difficulty', value: ResistanceType.DIFFICULTY },
-    ];
-
     return (
         <AppFormSheet
             isOpen={isOpen}
@@ -59,52 +47,36 @@ export const ProgramDayExerciseForm = (props: ProgramDayExerciseFormProps) => {
             title={initialData ? 'Edit Exercise' : 'Add Exercise'}
             subTitle={selectedExercise?.name || ''}
         >
-            <AppFormField label="Sets">
-                <AppInput
-                    value={setsRef.current}
-                    onChangeText={onSetsChange}
-                    placeholder="Number of sets"
-                    keyboardType="numeric"
-                />
-            </AppFormField>
-
             <HStack space="md" className="w-full">
-                <AppFormField label="Tracking" className="flex-1">
-                    <AppSelect
-                        value={trackingType}
-                        onValueChange={(v) => setTrackingType(v as TrackingType)}
-                        options={trackingOptions}
+                <AppFormField label="Sets" className="flex-1">
+                    <AppInput
+                        value={setsRef.current}
+                        onChangeText={onSetsChange}
+                        placeholder="Number of sets"
+                        keyboardType="numeric"
                     />
                 </AppFormField>
 
-                <AppFormField label="Resistance" className="flex-1">
-                    <AppSelect
-                        value={resistanceType}
-                        onValueChange={(v) => setResistanceType(v as ResistanceType)}
-                        options={resistanceOptions}
-                    />
-                </AppFormField>
+                {trackingType === TrackingType.REPS ? (
+                    <AppFormField label="Target Reps" className="flex-1">
+                        <AppInput
+                            value={targetRepsRef.current}
+                            onChangeText={onRepsChange}
+                            placeholder="e.g. 10"
+                            keyboardType="numeric"
+                        />
+                    </AppFormField>
+                ) : (
+                    <AppFormField label="Target Time (s)" className="flex-1">
+                        <AppInput
+                            value={targetTimeRef.current}
+                            onChangeText={onTimeChange}
+                            placeholder="e.g. 60"
+                            keyboardType="numeric"
+                        />
+                    </AppFormField>
+                )}
             </HStack>
-
-            {trackingType === TrackingType.REPS ? (
-                <AppFormField label="Target Reps">
-                    <AppInput
-                        value={targetRepsRef.current}
-                        onChangeText={onRepsChange}
-                        placeholder="e.g. 10"
-                        keyboardType="numeric"
-                    />
-                </AppFormField>
-            ) : (
-                <AppFormField label="Target Time (Seconds)">
-                    <AppInput
-                        value={targetTimeRef.current}
-                        onChangeText={onTimeChange}
-                        placeholder="e.g. 60"
-                        keyboardType="numeric"
-                    />
-                </AppFormField>
-            )}
 
             <AppButton
                 title={loading ? 'Saving...' : (initialData ? 'Update Exercise' : 'Confirm Exercise')}

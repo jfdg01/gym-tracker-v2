@@ -7,6 +7,8 @@ import { Icon } from '@/components/ui/icon';
 import { CheckIcon, XIcon } from 'lucide-react-native';
 import { ExerciseSnapshotItem, WorkoutSet, TrackingType, ResistanceType } from '@/src/types/domain';
 import { useToast, Toast, ToastTitle } from '@/components/ui/toast';
+import { AppNumericInput } from './AppNumericInput';
+import { useDebounce } from '@/src/hooks/useDebounce';
 
 interface EditWorkoutSetRowProps {
     setNumber: number;
@@ -26,6 +28,8 @@ export const EditWorkoutSetRow = ({
     const [time, setTime] = useState(set.timeSeconds?.toString() || '');
     const [difficulty, setDifficulty] = useState(set.difficulty || '');
     const [saving, setSaving] = useState(false);
+    const isReps = exercise.trackingType === TrackingType.REPS;
+    const isWeight = exercise.resistanceType === ResistanceType.WEIGHT;
     const toast = useToast();
 
     useEffect(() => {
@@ -35,6 +39,29 @@ export const EditWorkoutSetRow = ({
         setTime(set.timeSeconds?.toString() || '');
         setDifficulty(set.difficulty || '');
     }, [set]);
+
+    // Auto-save when values change with a small debounce to avoid spamming
+    const debouncedWeight = useDebounce(weight, 500);
+    const debouncedReps = useDebounce(reps, 500);
+    const debouncedTime = useDebounce(time, 500);
+    const debouncedDifficulty = useDebounce(difficulty, 500);
+
+    useEffect(() => {
+        const currentWeight = parseFloat(debouncedWeight || '0');
+        const currentReps = parseInt(debouncedReps || '0');
+        const currentTime = parseInt(debouncedTime || '0');
+
+        const hasChanges =
+            (isWeight && currentWeight !== (set.weight || 0)) ||
+            (isReps && currentReps !== (set.reps || 0)) ||
+            (!isReps && currentTime !== (set.timeSeconds || 0)) ||
+            (!isWeight && debouncedDifficulty !== (set.difficulty || ''));
+
+        if (hasChanges) {
+            handleSave();
+        }
+    }, [debouncedWeight, debouncedReps, debouncedTime, debouncedDifficulty]);
+
 
     const handleSave = async () => {
         setSaving(true);
@@ -88,30 +115,9 @@ export const EditWorkoutSetRow = ({
         }
     };
 
-    const isReps = exercise.trackingType === TrackingType.REPS;
-    const isWeight = exercise.resistanceType === ResistanceType.WEIGHT;
 
-    const handleBlur = async () => {
-        // Validation: ensure we have valid numbers (for numeric fields)
-        const currentWeight = parseFloat(weight || '0');
-        const currentReps = parseInt(reps || '0');
-        const currentTime = parseInt(time || '0');
 
-        if (isWeight && isNaN(currentWeight)) return;
-        if (isReps && isNaN(currentReps)) return;
-        if (!isReps && isNaN(currentTime)) return;
 
-        // Check if values are different from initial props
-        const hasChanges =
-            (isWeight && currentWeight !== (set.weight || 0)) ||
-            (isReps && currentReps !== (set.reps || 0)) ||
-            (!isReps && currentTime !== (set.timeSeconds || 0)) ||
-            (!isWeight && difficulty !== (set.difficulty || ''));
-
-        if (!hasChanges) return;
-
-        await handleSave();
-    };
 
     return (
         <HStack
@@ -122,37 +128,31 @@ export const EditWorkoutSetRow = ({
                 <Text size="sm" className="font-bold text-typography-500">{setNumber}</Text>
             </Box>
 
-            <HStack space="xs" className="flex-[1.5]">
-                <Box className="bg-white/5 rounded items-center justify-center h-10 px-3">
-                    <Text size="xs" className="text-typography-500 font-bold leading-none">{isWeight ? 'kg' : 'RPE'}</Text>
-                </Box>
-                <Input size="md" variant="underlined" className="flex-1 h-10 border-0 bg-white/5 rounded px-2">
-                    <InputField
-                        placeholder={isWeight ? (exercise.suggestedWeight?.toString() || "0") : "RPE"}
-                        keyboardType={isWeight ? "numeric" : "default"}
-                        value={isWeight ? weight : difficulty}
-                        onChangeText={(t) => isWeight ? setWeight(t) : setDifficulty(t)}
-                        onBlur={handleBlur}
-                        className="text-white font-medium text-center h-full p-0"
-                    />
-                </Input>
-            </HStack>
+            <Box className="flex-[2]">
+                <AppNumericInput
+                    value={isWeight ? weight : difficulty}
+                    onChange={isWeight ? setWeight : setDifficulty}
+                    unit={isWeight ? 'kg' : 'RPE'}
+                    label={isWeight ? 'Weight' : 'Difficulty'}
+                    placeholder={isWeight ? (exercise.suggestedWeight?.toString() || "0") : "0"}
+                    step={isWeight ? 2.5 : 1}
+                    max={isWeight ? 1000 : 10}
+                    quickValues={isWeight ? [20, 40, 60, 80, 100, 120, 140, 160] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+                />
+            </Box>
 
-            <HStack space="xs" className="flex-[1.5]">
-                <Box className="bg-white/5 rounded items-center justify-center h-10 px-3">
-                    <Text size="xs" className="text-typography-500 font-bold leading-none">{isReps ? 'reps' : 's'}</Text>
-                </Box>
-                <Input size="md" variant="underlined" className="flex-1 h-10 border-0 bg-white/5 rounded px-2">
-                    <InputField
-                        placeholder={isReps ? (exercise.targetReps?.toString() || "0") : (exercise.targetTimeSeconds?.toString() || "0")}
-                        keyboardType="numeric"
-                        value={isReps ? reps : time}
-                        onChangeText={(t) => isReps ? setReps(t) : setTime(t)}
-                        onBlur={handleBlur}
-                        className="text-white font-medium text-center h-full p-0"
-                    />
-                </Input>
-            </HStack>
+
+            <Box className="flex-[2]">
+                <AppNumericInput
+                    value={isReps ? reps : time}
+                    onChange={isReps ? setReps : setTime}
+                    unit={isReps ? 'reps' : 's'}
+                    label={isReps ? 'Reps' : 'Time'}
+                    max={isReps ? 300 : 3600}
+                    placeholder={isReps ? (exercise.targetReps?.toString() || "0") : (exercise.targetTimeSeconds?.toString() || "0")}
+                />
+            </Box>
+
         </HStack>
     );
 };

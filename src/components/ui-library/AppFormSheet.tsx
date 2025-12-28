@@ -28,7 +28,7 @@ export const AppFormSheet = ({ isOpen, onClose, title, subTitle, children }: App
             <ActionsheetBackdrop />
             <ActionsheetContent className="max-h-[85%] bg-surface-deep border-t border-outline-dark/10">
                 <ActionsheetDragIndicatorWrapper>
-                    <ActionsheetDragIndicator className="bg-outline-dark/30" />
+                    <ActionsheetDragIndicator className="bg-typography-400" />
                 </ActionsheetDragIndicatorWrapper>
 
                 <ActionsheetScrollView className="w-full">

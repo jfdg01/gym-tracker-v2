@@ -88,8 +88,6 @@ export const useProgramDayExerciseForm = ({
             showDiscardAlert,
         },
         actions: {
-            setTrackingType,
-            setResistanceType,
             setShowDiscardAlert,
             handleManualSave,
             handleSheetClose,

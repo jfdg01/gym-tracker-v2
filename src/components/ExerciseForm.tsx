@@ -205,7 +205,7 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
                     onPress={handleManualSave}
                     loading={loading}
                     action="primary"
-                    className="mt-6 mb-8 h-14 rounded-xl"
+                    className="mt-6 mb-12 h-14 rounded-xl"
                     textClassName="text-lg"
                 />
             </AppFormSheet>

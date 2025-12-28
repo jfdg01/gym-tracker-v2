@@ -27,7 +27,7 @@ export const AppTextarea = memo(({
     autoCorrect = false,
     disabled = false,
     isInvalid = false,
-    h = 32,
+    h = 120,
 }: AppTextareaProps) => {
     // Local state for immediate UI feedback
     const [localValue, setLocalValue] = useState(value);

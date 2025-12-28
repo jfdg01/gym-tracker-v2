@@ -30,7 +30,7 @@ import { ProgramService } from '@/src/services/ProgramService';
 import { ProgramDayService } from '@/src/services/ProgramDayService';
 import { ProgramDayExerciseService } from '@/src/services/ProgramDayExerciseService';
 import { ExerciseService } from '@/src/services/ExerciseService';
-import { Program, ProgramDay, ProgramDayExercise, Exercise } from '@/src/types/domain';
+import { Program, ProgramDay, ProgramDayExercise, Exercise, ResistanceType, TrackingType } from '@/src/types/domain';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { ExerciseSelector } from '@/src/components/ExerciseSelector';
 import { ProgramDayExerciseForm } from '@/src/components/ProgramDayExerciseForm';
@@ -307,26 +307,23 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                                         style={idx !== day.exercises.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
                                                     >
                                                         <HStack className="justify-between items-center space-x-4">
-                                                            <VStack space="sm" className="flex-1">
-                                                                <HStack space="xs" className="items-center">
-                                                                    <Icon as={DumbbellIcon} size="sm" className="text-primary-energy" />
-                                                                    <Text size="lg" className="font-bold text-typography-950">
-                                                                        {de.exercise?.name || 'Unknown Exercise'}
+                                                            <Pressable
+                                                                className="flex-1 active:opacity-60"
+                                                                onPress={() => handleEditExercise(de, de.exercise)}
+                                                            >
+                                                                <VStack space="sm">
+                                                                    <HStack space="xs" className="items-center">
+                                                                        <Icon as={DumbbellIcon} size="sm" className="text-primary-energy" />
+                                                                        <Text size="lg" className="font-bold text-typography-950">
+                                                                            {de.exercise?.name || 'Unknown Exercise'}
+                                                                        </Text>
+                                                                    </HStack>
+                                                                    <Text size="sm" className="text-typography-500 font-medium">
+                                                                        {de.sets} sets • {de.trackingType === TrackingType.REPS ? `${de.targetReps || 0} reps` : `${de.targetTimeSeconds || 0}s`} • {de.resistanceType}
                                                                     </Text>
-                                                                </HStack>
-                                                                <Text size="sm" className="text-typography-500 font-medium">
-                                                                    {de.sets} sets • {de.trackingType === 'REPS' ? `${de.targetReps} reps` : `${de.targetTimeSeconds}s`} • {de.resistanceType}
-                                                                </Text>
-                                                            </VStack>
+                                                                </VStack>
+                                                            </Pressable>
                                                             <VStack space="sm">
-                                                                <AppButton
-                                                                    title="Edit"
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    icon={EditIcon}
-                                                                    onPress={() => handleEditExercise(de, de.exercise)}
-                                                                    className="w-24 h-9"
-                                                                />
                                                                 <AppButton
                                                                     title="Delete"
                                                                     size="sm"
