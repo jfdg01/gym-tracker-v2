@@ -12,8 +12,28 @@ export const WorkoutService = {
      * Checks if there's an active session.
      */
     getActiveSession: async (): Promise<WorkoutSession | null> => {
-        // TODO: Implement "Auto-Abandon" logic (check for sessions > 20h old).
-        return await WorkoutRepository.getActiveSession();
+        const active = await WorkoutRepository.getActiveSession();
+
+        if (active) {
+            const startedAt = new Date(active.startedAt).getTime();
+            const now = Date.now();
+            const hoursSinceStart = (now - startedAt) / (1000 * 60 * 60);
+            const AUTO_ABANDON_THRESHOLD_HOURS = 20;
+
+            if (hoursSinceStart > AUTO_ABANDON_THRESHOLD_HOURS) {
+                const sets = await WorkoutRepository.getSetsBySessionId(active.id);
+                if (sets.length > 0) {
+                    // Stale but has data -> Save as Completed (History), but don't advance Program
+                    await WorkoutRepository.completeSession(active.id);
+                } else {
+                    // Stale and empty -> Ghost session, just clean it up
+                    await WorkoutRepository.abandonSession(active.id);
+                }
+                return null;
+            }
+        }
+
+        return active;
     },
 
     /**
@@ -70,7 +90,16 @@ export const WorkoutService = {
      * Logs a set.
      */
     logSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<{ set: WorkoutSet, progression?: { progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean } }> => {
-        // TODO: Implement "Manual Weight Override" persistence. When logging a set, if weight differs from current setting, update ExerciseSettings immediately.
+        // Manual Weight Override: Update settings if user logs a different weight
+        if (setData.weight !== undefined && setData.weight !== null && setData.weight > 0) {
+            const currentSettings = await ExerciseRepository.getSettings(setData.exerciseId);
+            if (currentSettings && currentSettings.currentWeight !== setData.weight) {
+                await ExerciseRepository.updateSettings(setData.exerciseId, {
+                    currentWeight: setData.weight
+                });
+            }
+        }
+
         const newSet = await WorkoutRepository.saveSet(setData);
 
         let progressionResult: { progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean } | undefined;
