@@ -47,16 +47,13 @@ export const RestTimerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const playSound = async () => {
         try {
             const { sound } = await Audio.Sound.createAsync(
-                require('../../assets/sounds/bell.mp3')
-                // TODO: Add 'bell.mp3' asset to project.
-                // NOTE: Currently fails gracefully if file missing; relies on notification sound.
+                require('../../assets/bell.mp3')
             ).catch(() => ({ sound: null }));
 
             if (sound) {
                 await sound.playAsync();
             }
         } catch (error) {
-            // TODO: Add robust error logging.
             console.log("Error playing sound", error);
         }
     };
@@ -81,6 +78,7 @@ export const RestTimerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const handleTimerComplete = async () => {
         stopTimer();
         Vibration.vibrate([0, 500, 200, 500]);
+        await playSound();
 
         await Notifications.scheduleNotificationAsync({
             content: {

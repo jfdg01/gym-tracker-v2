@@ -73,6 +73,7 @@ export const WorkoutService = {
                     suggestedWeight: settings?.currentWeight,
                     suggestedDifficulty: settings?.currentDifficultyLevel,
                     difficultyLevels: settings?.difficultyLevels,
+                    restTimeSeconds: settings?.restTimeSeconds,
                 };
             })
         );

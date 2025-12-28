@@ -108,7 +108,9 @@ export const ActiveWorkoutScreen = () => {
             }
 
             if (!data.skipped) {
-                startTimer(90);
+                const exerciseSnapshot = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === data.exerciseId);
+                const restDuration = exerciseSnapshot?.restTimeSeconds || 90;
+                startTimer(restDuration);
 
                 if (result && result.progression) {
                     const exerciseSnapshot = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === data.exerciseId);

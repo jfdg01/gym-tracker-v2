@@ -97,6 +97,7 @@ export interface ExerciseSnapshotItem {
     suggestedWeight?: number | null;
     suggestedDifficulty?: string | null;
     difficultyLevels?: string[] | null;
+    restTimeSeconds?: number | null;
     result?: {
         progressed: boolean;
         newWeight?: number;
