@@ -59,11 +59,7 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            // TODO: Ensure ExerciseService.getById(id) exists and use it to avoid fetching all exercises.
-            // Current implementation optimistically fetches all and finds the specific one.
-
-            const allExercises = await ExerciseService.getAllExercises();
-            const found = allExercises.find(e => e.id === id);
+            const found = await ExerciseService.getExerciseById(id);
 
             if (found) {
                 setExercise(found);
@@ -106,7 +102,7 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
 
             await ExerciseService.updateExerciseSettings(exercise.id, newSettings);
 
-            await loadData(); // Reload to get fresh data
+            await loadData();
 
             toast.show({
                 placement: 'top',
@@ -132,7 +128,7 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                     </Toast>
                 )
             });
-            throw e; // NOTE: Throwing error for hook handling
+            throw e;
         }
     };
 
@@ -342,7 +338,6 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                     </VStack>
                 ) : (
                     <VStack space="md" className="pb-20">
-                        {/* Edit Form Replicated from ExerciseForm but inline */}
                         <AppFormField label="Name" required error={errors.name}>
                             <AppInput
                                 value={nameRef.current}

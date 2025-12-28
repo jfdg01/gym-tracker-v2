@@ -1,6 +1,6 @@
 # Refactor Comments and TODOs
 
-for the .tsx files int the app folder, please analyze the comments in the specified files (or the entire codebase if not specified) and refactor them according to the following rules:
+Please analyze the comments and refactor them according to the following rules:
 
 ## 1. Standardize Action Items
 

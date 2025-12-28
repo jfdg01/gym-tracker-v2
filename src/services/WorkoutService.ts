@@ -148,7 +148,6 @@ export const WorkoutService = {
      * Updates session data (e.g., rest timer).
      */
     updateSession: async (sessionId: string, updates: Partial<WorkoutSession>): Promise<void> => {
-        // TODO: Verify exercise swapping support invocation.
         await WorkoutRepository.updateSession(sessionId, updates);
     },
 

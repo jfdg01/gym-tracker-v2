@@ -31,34 +31,30 @@ export const DataPortabilityService = {
             throw new Error('Cannot import data while a workout is in progress.');
         }
 
-        // TODO: Implement transaction support for the entire import operation if supported.
+        await db.transaction(async (tx) => {
+            const tables = [
+                { name: 'exercises', schema: schema.exercises },
+                { name: 'exerciseSettings', schema: schema.exerciseSettings },
+                { name: 'programs', schema: schema.programs },
+                { name: 'programDays', schema: schema.programDays },
+                { name: 'programDayExercises', schema: schema.programDayExercises },
+                { name: 'workoutSessions', schema: schema.workoutSessions },
+                { name: 'workoutSets', schema: schema.workoutSets },
+            ];
 
-        const tables = [
-            { name: 'exercises', schema: schema.exercises },
-            { name: 'exerciseSettings', schema: schema.exerciseSettings },
-            { name: 'programs', schema: schema.programs },
-            { name: 'programDays', schema: schema.programDays },
-            { name: 'programDayExercises', schema: schema.programDayExercises },
-            { name: 'workoutSessions', schema: schema.workoutSessions },
-            { name: 'workoutSets', schema: schema.workoutSets },
-        ];
-
-        for (const table of tables) {
-            const records = data[table.name];
-            if (records && Array.isArray(records)) {
-                for (const record of records) {
-                    try {
+            for (const table of tables) {
+                const records = data[table.name];
+                if (records && Array.isArray(records)) {
+                    for (const record of records) {
                         const { id, ...updateValues } = record;
-                        await db.insert(table.schema).values(record).onConflictDoUpdate({
+                        await tx.insert(table.schema).values(record).onConflictDoUpdate({
                             target: (table.schema as any).id,
                             set: updateValues
                         });
-                    } catch (e) {
-                        console.error(`Failed to import record into ${table.name}`, e);
                     }
                 }
             }
-        }
+        });
     },
 
     /**
@@ -66,8 +62,6 @@ export const DataPortabilityService = {
      * DANGER: This is irreversible.
      */
     deleteAllData: async (): Promise<void> => {
-        // We delete in reverse order of dependencies to satisfy FK constraints
-        // Though most tables have onDelete: 'cascade', it's safer to be explicit
         await db.delete(schema.workoutSets);
         await db.delete(schema.workoutSessions);
         await db.delete(schema.programDayExercises);

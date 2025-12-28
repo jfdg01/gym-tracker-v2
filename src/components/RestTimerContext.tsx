@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { Vibration } from 'react-native';
+import { Vibration, Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import { Audio } from 'expo-av';
+
+// Configure notifications to show even when app is in foreground
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+    }),
+});
 
 interface RestTimerContextType {
     timeLeft: number;
@@ -14,6 +25,41 @@ export const RestTimerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const [timeLeft, setTimeLeft] = useState(0);
     const [isActive, setIsActive] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const soundRef = useRef<Audio.Sound | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            const { status } = await Notifications.getPermissionsAsync();
+            if (status !== 'granted') {
+                await Notifications.requestPermissionsAsync();
+            }
+        })();
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (soundRef.current) {
+                soundRef.current.unloadAsync();
+            }
+        };
+    }, []);
+
+    const playSound = async () => {
+        try {
+            const { sound } = await Audio.Sound.createAsync(
+                require('../../assets/sounds/bell.mp3')
+                // TODO: Add 'bell.mp3' asset to project.
+                // NOTE: Currently fails gracefully if file missing; relies on notification sound.
+            ).catch(() => ({ sound: null }));
+
+            if (sound) {
+                await sound.playAsync();
+            }
+        } catch (error) {
+            // TODO: Add robust error logging.
+            console.log("Error playing sound", error);
+        }
+    };
 
     const stopTimer = useCallback(() => {
         setIsActive(false);
@@ -32,20 +78,34 @@ export const RestTimerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsActive(true);
     }, []);
 
+    const handleTimerComplete = async () => {
+        stopTimer();
+        Vibration.vibrate([0, 500, 200, 500]);
+
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: "Rest Finished!",
+                body: "Time to start your next set.",
+                sound: true,
+                priority: Notifications.AndroidNotificationPriority.HIGH,
+            },
+            trigger: null, // null means show immediately
+        });
+    };
+
     useEffect(() => {
         if (isActive && timeLeft > 0) {
             intervalRef.current = setInterval(() => {
                 setTimeLeft((prev) => {
                     if (prev <= 1) {
-                        stopTimer();
-                        // TODO: Implement Expo Notifications and sound feedback for timer completion.
-                        Vibration.vibrate([0, 500, 200, 500]);
+                        handleTimerComplete();
                         return 0;
                     }
                     return prev - 1;
                 });
             }, 1000);
-        } else if (timeLeft === 0) {
+        } else if (isActive && timeLeft === 0) {
+            // Should already be stopped but just in case
             stopTimer();
         }
 

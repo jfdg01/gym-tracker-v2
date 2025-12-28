@@ -5,6 +5,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
 import { XIcon } from 'lucide-react-native';
+import { Motion } from '@legendapp/motion';
 import { AppButton } from './AppButton';
 
 interface RestTimerOverlayProps {
@@ -28,9 +29,15 @@ export const RestTimerOverlay = ({ timeLeft, onSkip, onAddMore }: RestTimerOverl
                 </VStack>
 
                 <Box className="w-64 h-64 rounded-full border-[12px] border-accent-warning/20 items-center justify-center relative">
-                    {/* TODO: Add inner pulse circle animation. */}
-                    <Box
-                        className="absolute inset-2 rounded-full border-4 border-accent-warning opacity-20"
+                    <Motion.View
+                        initial={{ scale: 0.9, opacity: 0.1 }}
+                        animate={{ scale: 1.1, opacity: 0.3 }}
+                        transition={{
+                            type: 'timing',
+                            duration: 1500,
+                            loop: true,
+                        }}
+                        className="absolute inset-0 rounded-full border-4 border-accent-warning"
                     />
                     <VStack className="items-center">
                         <Text className="text-accent-warning font-bold text-7xl font-space-mono tracking-tighter">
