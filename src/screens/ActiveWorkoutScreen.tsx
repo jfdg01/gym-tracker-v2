@@ -97,6 +97,10 @@ export const ActiveWorkoutScreen = () => {
                 rightElement={rightHeaderElement}
             />
 
+            {
+                /* // TODO: Add "Swap Exercise" UI (reorder/replace). */
+            }
+
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="lg" className="p-4 pb-48">
                     {activeSession.exercisesSnapshot?.map((ex, idx) => {
@@ -134,6 +138,8 @@ export const ActiveWorkoutScreen = () => {
                     onAddMore={() => startTimer(timeLeft + 30)}
                 />
             )}
+
+            {/* TODO: Add "Progression Alert" modal (Level Up!). */}
 
             <AppAlert
                 isOpen={showFinishAlert}

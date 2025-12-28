@@ -31,6 +31,8 @@ export const WorkoutSetRow = React.memo(({
     const [logged, setLogged] = useState(!!existingSet && !existingSet.skipped);
     const [skipped, setSkipped] = useState(existingSet?.skipped || false);
 
+    // TODO: Implement "One-Tap Logging" interaction (tap target to copy to actual).
+
     const handleLog = () => {
         if (skipped) return;
         onLog({

@@ -12,6 +12,7 @@ export const WorkoutService = {
      * Checks if there's an active session.
      */
     getActiveSession: async (): Promise<WorkoutSession | null> => {
+        // TODO: Implement "Auto-Abandon" logic (check for sessions > 20h old).
         return await WorkoutRepository.getActiveSession();
     },
 
@@ -65,6 +66,7 @@ export const WorkoutService = {
      * Logs a set.
      */
     logSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<WorkoutSet> => {
+        // TODO: Implement "Manual Weight Override" persistence. When logging a set, if weight differs from current setting, update ExerciseSettings immediately.
         const newSet = await WorkoutRepository.saveSet(setData);
 
         // Trigger progression evaluation if this was the last set (Business Logic Centralization)
@@ -99,6 +101,7 @@ export const WorkoutService = {
      * Updates session data (e.g., rest timer).
      */
     updateSession: async (sessionId: string, updates: Partial<WorkoutSession>): Promise<void> => {
+        // TODO: Verify "Exercise Swapping" logic is supported in updateSession or a new method.
         await WorkoutRepository.updateSession(sessionId, updates);
     },
 

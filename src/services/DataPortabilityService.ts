@@ -25,6 +25,7 @@ export const DataPortabilityService = {
      * WARNING: This implementation overwrites/merges based on IDs.
      */
     importData: async (data: any): Promise<void> => {
+        // TODO: Add validation to refuse Import if an IN_PROGRESS session exists.
         // Use a transaction for the entire import if possible, 
         // however drizzle-orm with expo-sqlite might have limitations on complex transactions via db tool.
         // For simplicity, we'll do sequential inserts with try-catch.
