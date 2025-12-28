@@ -18,6 +18,7 @@ import { WorkoutSetRow } from '@/src/components/ui-library/WorkoutSetRow';
 import { RestTimerOverlay } from '@/src/components/ui-library/RestTimerOverlay';
 import { AppAlert } from '@/src/components/ui-library/AppAlert';
 
+
 export const ActiveWorkoutScreen = () => {
     const router = useRouter();
     const { activeSession, sessionSets, logSet, completeWorkout, abandonWorkout, loading } = useWorkout();
@@ -25,11 +26,26 @@ export const ActiveWorkoutScreen = () => {
     const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
     const [showFinishAlert, setShowFinishAlert] = useState(false);
     const [showAbandonAlert, setShowAbandonAlert] = useState(false);
+    const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string }>>({});
 
     const handleLogSet = async (data: Partial<WorkoutSet>) => {
-        await logSet(data as any);
+        const result = await logSet(data as any);
         if (!data.skipped) {
             startTimer(90); // Default rest time
+
+            // Check for progression
+            // Check for progression
+            if (result && result.progression && result.progression.progressed) {
+                const exerciseName = activeSession?.exercisesSnapshot?.find(e => e.exerciseId === data.exerciseId)?.exerciseName || 'Exercise';
+                setProgressionEvents(prev => ({
+                    ...prev,
+                    [data.exerciseId!]: {
+                        newWeight: result.progression!.newWeight,
+                        newDifficulty: result.progression!.newDifficulty,
+                        exerciseName
+                    }
+                }));
+            }
         }
     };
 
@@ -40,7 +56,20 @@ export const ActiveWorkoutScreen = () => {
     const handleConfirmFinish = async () => {
         setShowFinishAlert(false);
         await completeWorkout();
-        router.replace('/(tabs)/history');
+        if (activeSession) {
+            router.replace({
+                pathname: '/workout-summary',
+                params: {
+                    sessionId: activeSession.id,
+                    progressionEvents: JSON.stringify(progressionEvents),
+                    programName: activeSession.programNameSnapshot || 'Workout',
+                    dayName: activeSession.dayNameSnapshot || 'Session',
+                    duration: '45m' // Placeholder for now
+                }
+            });
+        } else {
+            router.replace('/(tabs)/history');
+        }
     };
 
     const handleAbandon = () => {
@@ -139,7 +168,7 @@ export const ActiveWorkoutScreen = () => {
                 />
             )}
 
-            {/* TODO: Add "Progression Alert" modal (Level Up!). */}
+
 
             <AppAlert
                 isOpen={showFinishAlert}

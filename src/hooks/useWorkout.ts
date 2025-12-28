@@ -40,7 +40,7 @@ export const useWorkout = () => {
     const logSet = async (setData: Omit<WorkoutSet, 'id' | 'createdAt' | 'workoutSessionId'>) => {
         if (!activeSession) return;
 
-        const newSet = await WorkoutService.logSet({
+        const { set: newSet, progression } = await WorkoutService.logSet({
             ...setData,
             workoutSessionId: activeSession.id,
         });
@@ -55,7 +55,7 @@ export const useWorkout = () => {
             return [...prev, newSet].sort((a, b) => a.setNumber - b.setNumber);
         });
 
-        return newSet;
+        return { set: newSet, progression };
     };
 
     const completeWorkout = async () => {
