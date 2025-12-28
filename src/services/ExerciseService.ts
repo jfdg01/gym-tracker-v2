@@ -29,12 +29,7 @@ export const ExerciseService = {
     },
 
     archiveExercise: async (id: string): Promise<void> => {
-        const isUsed = await ExerciseRepository.checkUsage(id);
-        if (isUsed) {
-            return await ExerciseRepository.archive(id);
-        } else {
-            return await ExerciseRepository.delete(id);
-        }
+        return await ExerciseRepository.delete(id);
     },
 
     getExerciseSettings: async (exerciseId: string): Promise<ExerciseSettings | null> => {

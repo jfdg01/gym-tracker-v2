@@ -101,7 +101,13 @@ export const ExerciseRepository = {
     },
 
     delete: async (id: string): Promise<void> => {
-        // TODO: Implement "Safe Delete" logic. Check for usage in programs/history before hard deleting. If used, soft-delete (archive) instead.
-        await db.delete(exercises).where(eq(exercises.id, id));
+        const isUsed = await ExerciseRepository.checkUsage(id);
+        if (isUsed) {
+            await ExerciseRepository.archive(id);
+        } else {
+            // Hard delete: Clean up settings first, then the exercise
+            await db.delete(exerciseSettings).where(eq(exerciseSettings.exerciseId, id));
+            await db.delete(exercises).where(eq(exercises.id, id));
+        }
     }
 };
