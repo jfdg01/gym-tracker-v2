@@ -4,7 +4,7 @@ import { LucideIcon } from 'lucide-react-native';
 import { cn } from '@/src/utils/cn';
 
 type AppButtonProps = {
-    title: string;
+    title?: string;
     onPress?: () => void;
     variant?: 'solid' | 'outline' | 'link';
     action?: 'primary' | 'secondary' | 'negative' | 'positive' | 'default';
@@ -71,11 +71,13 @@ export const AppButton = ({
             ) : (
                 <>
                     {IconComponent && (
-                        <ButtonIcon as={IconComponent} className={cn(textColorClasses)} />
+                        <ButtonIcon as={IconComponent} className={cn(textColorClasses, title ? "mr-2" : "")} />
                     )}
-                    <ButtonText className={textColorClasses}>
-                        {title}
-                    </ButtonText>
+                    {title && (
+                        <ButtonText className={textColorClasses}>
+                            {title}
+                        </ButtonText>
+                    )}
                 </>
             )}
         </Button>

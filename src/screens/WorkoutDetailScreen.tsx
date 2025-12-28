@@ -8,10 +8,12 @@ import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
-import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, InfoIcon } from 'lucide-react-native';
+import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon } from 'lucide-react-native';
 import { Button, ButtonText } from '@/components/ui/button';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppCard } from '@/src/components/ui-library/AppCard';
+import { AppButton } from '@/src/components/ui-library/AppButton';
+import { EditWorkoutSetRow } from '@/src/components/ui-library/EditWorkoutSetRow';
 import { WorkoutService } from '@/src/services/WorkoutService';
 import { WorkoutSession, WorkoutSet, ResistanceType, TrackingType } from '@/src/types/domain';
 
@@ -24,6 +26,7 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
     const [session, setSession] = useState<WorkoutSession | null>(null);
     const [sets, setSets] = useState<WorkoutSet[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -54,6 +57,12 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
         });
     };
 
+    const handleUpdateSet = async (updatedData: Partial<WorkoutSet>) => {
+        // Optimistic update logic or wait for server return
+        const updatedSet = await WorkoutService.logSet(updatedData as any);
+        setSets(prevSets => prevSets.map(s => s.id === updatedSet.id ? updatedSet : s));
+    };
+
     if (loading) return (
         <Box className="flex-1 bg-surface-deep justify-center items-center">
             <Text className="text-typography-500 font-medium">Loading details...</Text>
@@ -75,6 +84,17 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                 title={session.dayNameSnapshot || 'Unknown Day'}
                 subTitle={session.programNameSnapshot || undefined}
                 showBack={true}
+                rightElement={
+                    <AppButton
+                        title={isEditing ? "Done" : "Edit"}
+                        icon={isEditing ? CheckIcon : PencilIcon}
+                        onPress={() => setIsEditing(!isEditing)}
+                        variant={isEditing ? "solid" : "outline"}
+                        action={isEditing ? "primary" : "secondary"}
+                        size="sm"
+                        className="rounded-full"
+                    />
+                }
             />
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -117,29 +137,39 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                                             </Box>
                                         ) : (
                                             exerciseSets.map((s, idx) => (
-                                                <HStack
-                                                    key={s.id}
-                                                    className="py-3 px-3"
-                                                    style={idx < exerciseSets.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
-                                                >
-                                                    <Text size="sm" className="w-10 text-typography-400 font-bold">{s.setNumber}</Text>
-                                                    <Box className="flex-1">
-                                                        {s.skipped ? (
-                                                            <Text size="sm" className="text-typography-600 italic">Skipped</Text>
-                                                        ) : (
-                                                            <Text size="sm" className="text-white">
-                                                                {ex.resistanceType === ResistanceType.WEIGHT ? `${s.weight} kg` : s.difficulty || 'N/A'}
-                                                            </Text>
-                                                        )}
-                                                    </Box>
-                                                    <Box className="flex-1">
-                                                        {!s.skipped && (
-                                                            <Text size="sm" className="text-white font-medium">
-                                                                {ex.trackingType === TrackingType.REPS ? `${s.reps} reps` : `${s.timeSeconds}s`}
-                                                            </Text>
-                                                        )}
-                                                    </Box>
-                                                </HStack>
+                                                isEditing ? (
+                                                    <EditWorkoutSetRow
+                                                        key={s.id}
+                                                        setNumber={s.setNumber}
+                                                        exercise={ex}
+                                                        set={s}
+                                                        onUpdate={handleUpdateSet}
+                                                    />
+                                                ) : (
+                                                    <HStack
+                                                        key={s.id}
+                                                        className="py-3 px-3"
+                                                        style={idx < exerciseSets.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
+                                                    >
+                                                        <Text size="sm" className="w-10 text-typography-400 font-bold">{s.setNumber}</Text>
+                                                        <Box className="flex-1">
+                                                            {s.skipped ? (
+                                                                <Text size="sm" className="text-typography-600 italic">Skipped</Text>
+                                                            ) : (
+                                                                <Text size="sm" className="text-white">
+                                                                    {ex.resistanceType === ResistanceType.WEIGHT ? `${s.weight} kg` : s.difficulty || 'N/A'}
+                                                                </Text>
+                                                            )}
+                                                        </Box>
+                                                        <Box className="flex-1">
+                                                            {!s.skipped && (
+                                                                <Text size="sm" className="text-white font-medium">
+                                                                    {ex.trackingType === TrackingType.REPS ? `${s.reps} reps` : `${s.timeSeconds}s`}
+                                                                </Text>
+                                                            )}
+                                                        </Box>
+                                                    </HStack>
+                                                )
                                             ))
                                         )}
                                     </VStack>

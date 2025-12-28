@@ -170,7 +170,7 @@ setShowAlert(true);
 ### Button Styles
 
 | Style | Appearance |
-|-------|------------|
+| ------- | ------------ |
 | `default` | Primary solid button |
 | `cancel` | Outline button (closes dialog) |
 | `destructive` | Red/negative action button |
