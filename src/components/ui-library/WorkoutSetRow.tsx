@@ -24,10 +24,10 @@ export const WorkoutSetRow = React.memo(({
     onLog
 }: WorkoutSetRowProps) => {
     // Local state for interactive editing
-    const [weight, setWeight] = useState(existingSet?.weight?.toString() || '');
-    const [reps, setReps] = useState(existingSet?.reps?.toString() || '');
-    const [time, setTime] = useState(existingSet?.timeSeconds?.toString() || '');
-    const [difficulty, setDifficulty] = useState(existingSet?.difficulty || '');
+    const [weight, setWeight] = useState(existingSet?.weight?.toString() || exercise.suggestedWeight?.toString() || '');
+    const [reps, setReps] = useState(existingSet?.reps?.toString() || exercise.targetReps?.toString() || '');
+    const [time, setTime] = useState(existingSet?.timeSeconds?.toString() || exercise.targetTimeSeconds?.toString() || '');
+    const [difficulty, setDifficulty] = useState(existingSet?.difficulty || exercise.suggestedDifficulty || '');
     const [logged, setLogged] = useState(!!existingSet && !existingSet.skipped);
     const [skipped, setSkipped] = useState(existingSet?.skipped || false);
 
@@ -75,42 +75,35 @@ export const WorkoutSetRow = React.memo(({
                 <Text size="sm" className="font-bold text-typography-500">{setNumber}</Text>
             </Box>
 
-            {isWeight ? (
-                <Box className="flex-[1.2]">
-                    <Input size="sm" variant="underlined" className="border-0 bg-white/5 rounded px-2">
-                        <InputField
-                            placeholder="kg"
-                            keyboardType="numeric"
-                            value={weight}
-                            onChangeText={setWeight}
-                            className="text-white font-medium text-center"
-                        />
-                    </Input>
+            <HStack space="xs" className="flex-[1.5]">
+                <Box className="bg-white/5 rounded items-center justify-center h-10 px-3">
+                    <Text size="xs" className="text-typography-500 font-bold leading-none">{isWeight ? 'kg' : 'RPE'}</Text>
                 </Box>
-            ) : (
-                <Box className="flex-[1.2]">
-                    <Input size="sm" variant="underlined" className="border-0 bg-white/5 rounded px-2">
-                        <InputField
-                            placeholder="RPE"
-                            value={difficulty}
-                            onChangeText={setDifficulty}
-                            className="text-white font-medium text-center"
-                        />
-                    </Input>
-                </Box>
-            )}
-
-            <Box className="flex-1">
-                <Input size="sm" variant="underlined" className="border-0 bg-white/5 rounded px-2">
+                <Input size="md" variant="underlined" className="flex-1 h-10 border-0 bg-white/5 rounded px-2">
                     <InputField
-                        placeholder={isReps ? "reps" : "secs"}
+                        placeholder={isWeight ? (exercise.suggestedWeight?.toString() || "0") : "RPE"}
+                        keyboardType={isWeight ? "numeric" : "default"}
+                        value={isWeight ? weight : difficulty}
+                        onChangeText={isWeight ? setWeight : setDifficulty}
+                        className="text-white font-medium text-center h-full p-0"
+                    />
+                </Input>
+            </HStack>
+
+            <HStack space="xs" className="flex-[1.5]">
+                <Box className="bg-white/5 rounded items-center justify-center h-10 px-3">
+                    <Text size="xs" className="text-typography-500 font-bold leading-none">{isReps ? 'reps' : 's'}</Text>
+                </Box>
+                <Input size="md" variant="underlined" className="flex-1 h-10 border-0 bg-white/5 rounded px-2">
+                    <InputField
+                        placeholder={isReps ? (exercise.targetReps?.toString() || "0") : (exercise.targetTimeSeconds?.toString() || "0")}
                         keyboardType="numeric"
                         value={isReps ? reps : time}
                         onChangeText={isReps ? setReps : setTime}
-                        className="text-white font-medium text-center"
+                        className="text-white font-medium text-center h-full p-0"
                     />
                 </Input>
-            </Box>
+            </HStack>
 
             <HStack space="xs" className="ml-2">
                 {skipped ? (

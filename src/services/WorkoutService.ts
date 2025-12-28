@@ -37,6 +37,7 @@ export const WorkoutService = {
         const exercisesSnapshot: ExerciseSnapshotItem[] = await Promise.all(
             dayExercises.map(async (de) => {
                 const ex = await ExerciseRepository.getById(de.exerciseId);
+                const settings = await ExerciseRepository.getSettings(de.exerciseId);
                 return {
                     programDayExerciseId: de.id,
                     exerciseId: de.exerciseId,
@@ -49,6 +50,8 @@ export const WorkoutService = {
                     targetReps: de.targetReps,
                     targetTimeSeconds: de.targetTimeSeconds,
                     orderIndex: de.orderIndex,
+                    suggestedWeight: settings?.currentWeight,
+                    suggestedDifficulty: settings?.currentDifficultyLevel,
                 };
             })
         );

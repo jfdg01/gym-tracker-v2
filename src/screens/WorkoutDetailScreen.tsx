@@ -126,9 +126,9 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                                             className="py-2 px-3"
                                             style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                                         >
-                                            <Text size="xs" className="w-10 text-typography-500 font-bold uppercase tracking-wider">SET</Text>
-                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">RESISTANCE</Text>
-                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">RESULT</Text>
+                                            <Text size="xs" className="w-10 text-typography-500 font-bold uppercase tracking-wider">Set</Text>
+                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">Resistance</Text>
+                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">Result</Text>
                                         </HStack>
 
                                         {exerciseSets.length === 0 ? (

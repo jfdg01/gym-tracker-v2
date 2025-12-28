@@ -24,6 +24,7 @@ export const ActiveWorkoutScreen = () => {
     const { activeSession, sessionSets, logSet, completeWorkout, abandonWorkout, loading } = useWorkout();
     const { timeLeft, isActive, startTimer } = useRestTimer();
     const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
+    const [isFinishing, setIsFinishing] = useState(false);
     const [showFinishAlert, setShowFinishAlert] = useState(false);
     const [showAbandonAlert, setShowAbandonAlert] = useState(false);
     const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string }>>({});
@@ -54,21 +55,28 @@ export const ActiveWorkoutScreen = () => {
     };
 
     const handleConfirmFinish = async () => {
+        if (!activeSession) return;
+        const currentSessionId = activeSession.id;
+
         setShowFinishAlert(false);
-        await completeWorkout();
-        if (activeSession) {
+        setIsFinishing(true);
+
+        try {
+            await completeWorkout(currentSessionId);
+
             router.replace({
                 pathname: '/workout-summary',
                 params: {
-                    sessionId: activeSession.id,
+                    sessionId: currentSessionId,
                     progressionEvents: JSON.stringify(progressionEvents),
                     programName: activeSession.programNameSnapshot || 'Workout',
                     dayName: activeSession.dayNameSnapshot || 'Session',
                     duration: '45m' // Placeholder for now
                 }
             });
-        } else {
-            router.replace('/(tabs)/history');
+        } catch (error) {
+            console.error("Failed to complete workout:", error);
+            setIsFinishing(false);
         }
     };
 
@@ -82,13 +90,13 @@ export const ActiveWorkoutScreen = () => {
         router.replace('/(tabs)');
     };
 
-    if (loading) return (
+    if (loading || (isFinishing && !activeSession)) return (
         <Box className="flex-1 bg-surface-deep justify-center items-center">
-            <Text className="text-typography-500">Loading session...</Text>
+            <Text className="text-typography-500">{isFinishing ? "Finishing workout..." : "Loading session..."}</Text>
         </Box>
     );
 
-    if (!activeSession) return (
+    if (!activeSession && !isFinishing) return (
         <Box className="flex-1 bg-surface-deep justify-center items-center p-6">
             <VStack space="md" className="items-center">
                 <Text className="text-typography-400 text-center">No active session found.</Text>
@@ -121,18 +129,16 @@ export const ActiveWorkoutScreen = () => {
     return (
         <Box className="flex-1 bg-surface-deep">
             <AppHeader
-                title={activeSession.dayNameSnapshot || 'Workout'}
-                subTitle={activeSession.programNameSnapshot || ''}
+                title={activeSession!.dayNameSnapshot || 'Workout'}
+                subTitle={activeSession!.programNameSnapshot || ''}
                 rightElement={rightHeaderElement}
             />
 
-            {
-                /* // TODO: Add "Swap Exercise" UI (reorder/replace). */
-            }
+            {/* // TODO: Add "Swap Exercise" UI (reorder/replace). */}
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="lg" className="p-4 pb-48">
-                    {activeSession.exercisesSnapshot?.map((ex, idx) => {
+                    {activeSession!.exercisesSnapshot?.map((ex, idx) => {
                         const isExpanded = expandedExercise === ex.programDayExerciseId || (expandedExercise === null && idx === 0);
                         const exerciseSets = sessionSets.filter(s => s.exerciseId === ex.exerciseId);
                         const completedCount = exerciseSets.filter(s => !s.skipped).length;

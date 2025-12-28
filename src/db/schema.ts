@@ -6,8 +6,8 @@ export const exercises = sqliteTable('exercises', {
     name: text('name').notNull(),
     description: text('description'),
     category: text('category'),
-    defaultTrackingType: text('default_tracking_type').notNull(), // 'REPS', 'TIME'
-    defaultResistanceType: text('default_resistance_type').notNull(), // 'WEIGHT', 'DIFFICULTY'
+    defaultTrackingType: text('default_tracking_type').notNull(), // 'Reps', 'Time'
+    defaultResistanceType: text('default_resistance_type').notNull(), // 'Weight', 'Difficulty'
     isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
@@ -16,7 +16,7 @@ export const exercises = sqliteTable('exercises', {
 export const exerciseSettings = sqliteTable('exercise_settings', {
     id: text('id').primaryKey(),
     exerciseId: text('exercise_id').notNull().references(() => exercises.id),
-    currentWeight: integer('current_weight'), // Decimals handled as scaled integers or float
+    currentWeight: integer('current_weight').notNull().default(0), // Decimals handled as scaled integers or float
     weightIncreaseFactor: integer('weight_increase_factor'),
     difficultyLevels: text('difficulty_levels'), // JSON array
     currentDifficultyLevel: text('current_difficulty_level'),
@@ -45,8 +45,8 @@ export const programDayExercises = sqliteTable('program_day_exercises', {
     id: text('id').primaryKey(),
     programDayId: text('program_day_id').notNull().references(() => programDays.id, { onDelete: 'cascade' }),
     exerciseId: text('exercise_id').notNull().references(() => exercises.id),
-    trackingType: text('tracking_type').notNull(), // 'REPS', 'TIME'
-    resistanceType: text('resistance_type').notNull(), // 'WEIGHT', 'DIFFICULTY'
+    trackingType: text('tracking_type').notNull(), // 'Reps', 'Time'
+    resistanceType: text('resistance_type').notNull(), // 'Weight', 'Difficulty'
     sets: integer('sets').notNull(),
     targetReps: integer('target_reps'),
     targetTimeSeconds: integer('target_time_seconds'),

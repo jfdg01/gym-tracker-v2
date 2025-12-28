@@ -12,7 +12,7 @@ import {
     ChevronUpIcon
 } from 'lucide-react-native';
 import { AppCard } from './AppCard';
-import { ExerciseSnapshotItem } from '@/src/types/domain';
+import { ExerciseSnapshotItem, ResistanceType, TrackingType } from '@/src/types/domain';
 
 interface ActiveExerciseCardProps {
     exercise: ExerciseSnapshotItem;
@@ -47,7 +47,7 @@ export const ActiveExerciseCard = ({
                                 {exercise.exerciseName}
                             </Heading>
                             <Text size="xs" className="text-typography-500 font-medium">
-                                {completedSets} / {exercise.sets} sets • {exercise.resistanceType}
+                                {completedSets} / {exercise.sets} sets • {exercise.resistanceType === ResistanceType.WEIGHT ? (exercise.suggestedWeight ? `${exercise.suggestedWeight}kg` : '0kg') : exercise.suggestedDifficulty || 'No diff'} • {exercise.trackingType === TrackingType.REPS ? `${exercise.targetReps} reps` : `${exercise.targetTimeSeconds}s`}
                             </Text>
                         </VStack>
                     </HStack>

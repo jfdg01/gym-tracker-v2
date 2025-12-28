@@ -58,13 +58,16 @@ export const useWorkout = () => {
         return { set: newSet, progression };
     };
 
-    const completeWorkout = async () => {
-        if (!activeSession) return;
+    const completeWorkout = async (sessionId?: string) => {
+        const idToComplete = sessionId || activeSession?.id;
+        if (!idToComplete) return;
 
-        await WorkoutService.completeWorkout(activeSession.id);
+        await WorkoutService.completeWorkout(idToComplete);
 
-        setActiveSession(null);
-        setSessionSets([]);
+        if (activeSession?.id === idToComplete) {
+            setActiveSession(null);
+            setSessionSets([]);
+        }
     };
 
     const abandonWorkout = async () => {

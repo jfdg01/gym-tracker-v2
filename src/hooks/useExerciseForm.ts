@@ -29,7 +29,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
     const [category, setCategory] = useState('');
 
     const restTimeRef = useRef('90');
-    const currentWeightRef = useRef('');
+    const currentWeightRef = useRef('0');
     const weightFactorRef = useRef('2.5');
     const difficultyLevelsRef = useRef('');
 
@@ -58,7 +58,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 difficultyLevelsRef.current = initialSettings.difficultyLevels?.join(', ') || '';
             } else {
                 restTimeRef.current = '90';
-                currentWeightRef.current = '';
+                currentWeightRef.current = '0';
                 weightFactorRef.current = '2.5';
                 difficultyLevelsRef.current = '';
             }
@@ -121,7 +121,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 defaultResistanceType: resistanceType,
             }, {
                 restTimeSeconds: isNaN(restTimeVal) ? 90 : restTimeVal,
-                currentWeight: parseFloat(currentWeightRef.current) || null,
+                currentWeight: parseFloat(currentWeightRef.current) || 0,
                 weightIncreaseFactor: parseFloat(weightFactorRef.current) || null,
                 difficultyLevels: difficultyLevelsRef.current.split(',').map(s => s.trim()).filter(Boolean),
             });
@@ -142,7 +142,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
         const initResist = initialData?.defaultResistanceType || ResistanceType.WEIGHT;
 
         const initRest = initialSettings?.restTimeSeconds?.toString() || '90';
-        const initWeight = initialSettings?.currentWeight?.toString() || '';
+        const initWeight = initialSettings?.currentWeight?.toString() || '0';
         const initFactor = initialSettings?.weightIncreaseFactor?.toString() || '2.5';
         const initDiff = initialSettings?.difficultyLevels?.join(', ') || '';
 

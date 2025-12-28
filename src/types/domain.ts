@@ -1,11 +1,11 @@
 export enum TrackingType {
-    REPS = 'REPS',
-    TIME = 'TIME',
+    REPS = 'Reps',
+    TIME = 'Time',
 }
 
 export enum ResistanceType {
-    WEIGHT = 'WEIGHT',
-    DIFFICULTY = 'DIFFICULTY',
+    WEIGHT = 'Weight',
+    DIFFICULTY = 'Difficulty',
 }
 
 export enum WorkoutStatus {
@@ -94,6 +94,8 @@ export interface ExerciseSnapshotItem {
     targetReps: number | null;
     targetTimeSeconds: number | null;
     orderIndex: number;           // Captures order at snapshot time (including swaps)
+    suggestedWeight?: number | null;
+    suggestedDifficulty?: string | null;
 }
 
 export interface WorkoutSet {

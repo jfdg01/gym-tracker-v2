@@ -21,7 +21,7 @@ import { ProgramCard } from '@/src/components/ui-library/ProgramCard';
 
 export function HomeScreen() {
     const router = useRouter();
-    const { activeSession, startWorkout, loading: workoutLoading } = useWorkout();
+    const { activeSession, startWorkout, loading: workoutLoading, refresh: refreshActiveSession } = useWorkout();
     const [programs, setPrograms] = useState<Program[]>([]);
     const [suggestedDays, setSuggestedDays] = useState<Record<string, ProgramDay | null>>({});
     const [loading, setLoading] = useState(false);
@@ -49,6 +49,7 @@ export function HomeScreen() {
     useFocusEffect(
         useCallback(() => {
             loadData();
+            refreshActiveSession();
         }, [])
     );
 

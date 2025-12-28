@@ -52,6 +52,7 @@ export const ExerciseRepository = {
         await db.insert(exerciseSettings).values({
             id: settingsId,
             exerciseId: exercise.id,
+            currentWeight: 0,
             updatedAt: new Date().toISOString(),
         });
 
