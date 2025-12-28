@@ -31,7 +31,7 @@ export const DataPortabilityService = {
             throw new Error('Cannot import data while a workout is in progress.');
         }
 
-        // TODO: Use a transaction for the entire import if support allows it.
+        // TODO: Implement transaction support for the entire import operation if supported.
 
         const tables = [
             { name: 'exercises', schema: schema.exercises },

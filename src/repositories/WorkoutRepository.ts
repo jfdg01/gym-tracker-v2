@@ -84,7 +84,6 @@ export const WorkoutRepository = {
      * Logs or updates a set within a session.
      */
     saveSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<WorkoutSet> => {
-        // Check if set already exists for this session/exercise/number
         const existing = await db.select()
             .from(workoutSets)
             .where(and(

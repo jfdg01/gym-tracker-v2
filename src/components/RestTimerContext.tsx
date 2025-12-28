@@ -38,9 +38,8 @@ export const RestTimerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 setTimeLeft((prev) => {
                     if (prev <= 1) {
                         stopTimer();
-                        // TODO: Implement Expo Notifications for background timer alerts.
-                        // TODO: Implement Sound feedback (in addition to vibration).
-                        Vibration.vibrate([0, 500, 200, 500]); // Alert vibration
+                        // TODO: Implement Expo Notifications and sound feedback for timer completion.
+                        Vibration.vibrate([0, 500, 200, 500]);
                         return 0;
                     }
                     return prev - 1;

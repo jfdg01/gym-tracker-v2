@@ -88,7 +88,7 @@ export function HomeScreen() {
 
                 <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                     <VStack space="lg" className="pb-8">
-                        {/* Active Session Card */}
+
                         {activeSession ? (
                             <AppCard className="bg-primary-energy p-6 border-0">
                                 <VStack space="md">
@@ -136,7 +136,7 @@ export function HomeScreen() {
                             </AppCard>
                         )}
 
-                        {/* Program Selection */}
+
                         <VStack space="md" className="mt-4">
                             <Heading size="md" className="text-white">Quick Start</Heading>
                             {programs.length === 0 ? (

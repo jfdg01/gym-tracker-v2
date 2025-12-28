@@ -90,7 +90,7 @@ export const WorkoutService = {
      * Logs a set.
      */
     logSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<{ set: WorkoutSet, progression?: { progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean } }> => {
-        // Manual Weight Override: Update settings if user logs a different weight
+        // Update settings if user logs a different weight
         if (setData.weight !== undefined && setData.weight !== null && setData.weight > 0) {
             const currentSettings = await ExerciseRepository.getSettings(setData.exerciseId);
             if (currentSettings && currentSettings.currentWeight !== setData.weight) {
@@ -104,7 +104,7 @@ export const WorkoutService = {
 
         let progressionResult: { progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean } | undefined;
 
-        // Trigger progression evaluation if this was the last set (Business Logic Centralization)
+        // Trigger progression evaluation if this was the last set
         const session = await WorkoutRepository.getSessionById(setData.workoutSessionId);
         if (session && session.exercisesSnapshot) {
             const exerciseSnapshot = session.exercisesSnapshot.find(e => e.exerciseId === setData.exerciseId);
@@ -148,7 +148,7 @@ export const WorkoutService = {
      * Updates session data (e.g., rest timer).
      */
     updateSession: async (sessionId: string, updates: Partial<WorkoutSession>): Promise<void> => {
-        // TODO: Verify "Exercise Swapping" logic is supported in updateSession or a new method.
+        // TODO: Verify exercise swapping support invocation.
         await WorkoutRepository.updateSession(sessionId, updates);
     },
 

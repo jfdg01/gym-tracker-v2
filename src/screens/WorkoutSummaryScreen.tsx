@@ -12,7 +12,6 @@ import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { TrophyIcon, DumbbellIcon, TrendingUpIcon, CheckCircleIcon, ArrowRightIcon } from 'lucide-react-native';
 import { cn } from '@/src/utils/cn';
 
-// We'll define the expected params interface
 export interface WorkoutSummaryParams {
     sessionId: string;
     // JSON string of Record<string, { progressed: boolean, newWeight?: number, newDifficulty?: string, currentWeight?: number, currentDifficulty?: string, exerciseName: string }>
@@ -41,7 +40,7 @@ interface WorkoutSummaryScreenProps {
 export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
     const router = useRouter();
 
-    // Parse progression events
+    /** Parses progression events from JSON parameters. */
     let achievements: Record<string, ProgressionEvent> = {};
     try {
         achievements = params.progressionEvents ? JSON.parse(params.progressionEvents) : {};

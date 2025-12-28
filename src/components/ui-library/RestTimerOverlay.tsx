@@ -28,7 +28,7 @@ export const RestTimerOverlay = ({ timeLeft, onSkip, onAddMore }: RestTimerOverl
                 </VStack>
 
                 <Box className="w-64 h-64 rounded-full border-[12px] border-accent-warning/20 items-center justify-center relative">
-                    {/* Inner pulse circle or similar could go here */}
+                    {/* TODO: Add inner pulse circle animation. */}
                     <Box
                         className="absolute inset-2 rounded-full border-4 border-accent-warning opacity-20"
                     />

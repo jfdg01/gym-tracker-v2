@@ -10,12 +10,12 @@ export const ProgressionService = {
         snapshot: ExerciseSnapshotItem,
         sets: WorkoutSet[]
     ): Promise<{ progressed: boolean, newWeight?: number, newDifficulty?: string, isMaxLevel?: boolean }> => {
-        // 1. Check if at least target sets are present
+        // Check if at least target sets are present
         if (sets.length < snapshot.sets) {
             return { progressed: false };
         }
 
-        // 2. Check if targets (reps or time) were met for ALL sets in the session for this exercise
+        // Verify targets were met for all sets
         const allTargetsMet = sets.every(s => {
             if (s.skipped) return false;
 
@@ -30,7 +30,7 @@ export const ProgressionService = {
             return { progressed: false };
         }
 
-        // 3. Apply progression
+        // Apply progression settings
         const settings = await ExerciseRepository.getSettings(exerciseId);
         if (!settings) return { progressed: false };
 
@@ -57,8 +57,7 @@ export const ProgressionService = {
                         updates.currentDifficultyLevel = levels[currentIndex + 1];
                         result.newDifficulty = updates.currentDifficultyLevel;
                     } else {
-                        // Max level reached.
-                        // We return result to indicate success (progressed: true), but no next level updates are applied.
+                        // Max level reached. Return success without updates.
                         return result;
                     }
                 } else {
@@ -67,7 +66,7 @@ export const ProgressionService = {
                     result.newDifficulty = updates.currentDifficultyLevel;
                 }
             } else if (levels.length > 0 && !settings.currentDifficultyLevel) {
-                // Initialize if null
+                // Initialize default difficulty level if currently null
                 updates.currentDifficultyLevel = levels[0];
                 result.newDifficulty = updates.currentDifficultyLevel;
             }

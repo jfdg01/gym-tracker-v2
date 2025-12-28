@@ -99,7 +99,7 @@ export const ExerciseListScreen = () => {
             let isUpdate = !!editingExercise;
 
             if (editingExercise) {
-                // Update
+
                 await ExerciseService.updateExercise(editingExercise.id, {
                     name: data.name,
                     description: data.description,
@@ -108,7 +108,7 @@ export const ExerciseListScreen = () => {
                     defaultResistanceType: data.defaultResistanceType,
                 });
             } else {
-                // Create
+
                 const newEx = await ExerciseService.createExercise({
                     name: data.name!,
                     description: data.description || null,
@@ -119,7 +119,7 @@ export const ExerciseListScreen = () => {
                 targetId = newEx.id;
             }
 
-            // Save Settings (for both Create and Update)
+
             if (targetId) {
                 await ExerciseService.updateExerciseSettings(targetId, settings);
             }

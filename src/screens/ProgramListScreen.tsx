@@ -56,7 +56,7 @@ export const ProgramListScreen = () => {
             const data = await ProgramService.getAllPrograms();
             setPrograms(data);
 
-            // Load day counts for each program
+            /** Loads day counts for each program. */
             const counts: Record<string, { total: number, workout: number }> = {};
             for (const program of data) {
                 const days = await ProgramDayService.getDaysByProgramId(program.id);
@@ -100,7 +100,7 @@ export const ProgramListScreen = () => {
             } else {
                 const newProgram = await ProgramService.createProgram(data as any);
                 showToast("Created", "Program created successfully");
-                // Route to detail of the new program
+
                 router.push(`/program/${newProgram.id}`);
             }
             await loadPrograms();

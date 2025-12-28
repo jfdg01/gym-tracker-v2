@@ -30,7 +30,6 @@ export const SettingsScreen = () => {
     const router = useRouter();
     const toast = useToast();
 
-    // Alert states
     const [showExportSuccessAlert, setShowExportSuccessAlert] = useState(false);
     const [exportFilePath, setExportFilePath] = useState('');
     const [showExportErrorAlert, setShowExportErrorAlert] = useState(false);
@@ -111,12 +110,6 @@ export const SettingsScreen = () => {
         } catch (err: any) {
             console.error(err);
             if (err.message === 'Cannot import data while a workout is in progress.') {
-                // Show specific alert for active workout
-                setShowImportErrorAlert(true);
-                // We'll reuse the error alert state but customize the message dynamically if we want,
-                // or just create a new state. Let's create a new state for clarity or just update the message.
-                // For simplicity given the state constraints, let's just use a new Alert state or update the existing one's message dynamically?
-                // Actually, let's just make a new state for this specific error to be clean.
                 setShowActiveWorkoutAlert(true);
             } else {
                 setShowImportErrorAlert(true);

@@ -33,12 +33,10 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
     const currentWeightRef = useRef('0');
     const weightFactorRef = useRef('2.5');
 
-    // Changed from Ref to State for list management
     const [difficultyLevels, setDifficultyLevels] = useState<string[]>([]);
 
     useEffect(() => {
         if (isOpen) {
-            // Reset Refs based on initialData
             if (initialData) {
                 nameRef.current = initialData.name;
                 descriptionRef.current = initialData.description || '';
@@ -53,7 +51,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 setResistanceType(ResistanceType.WEIGHT);
             }
 
-            // Settings Refs
             if (initialSettings) {
                 restTimeRef.current = initialSettings.restTimeSeconds?.toString() || '90';
                 currentWeightRef.current = initialSettings.currentWeight?.toString() || '';
@@ -66,7 +63,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 setDifficultyLevels([]);
             }
 
-            // Reset flags and errors
             ignoreSaveRef.current = false;
             setErrors({});
 

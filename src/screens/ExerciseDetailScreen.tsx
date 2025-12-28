@@ -59,19 +59,8 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            // We need to fetch exercise by ID. 
-            // ExerciseService.getAllExercises() returns all, we can filter or maybe add getById.
-            // Looking at ExerciseService, let's see if getById exists.
-            // If not, we might need to implement it or find from list. 
-            // For now, assuming we might need to fetch all and find, or hopefully getById exists.
-            // Actually, based on previous file reads, I didn't verify getById exist.
-            // Let's assume we can fetch all and find for now if getById is missing, or add it.
-            // BUT, for safety, I'll check ExerciseService first.
-            // Wait, I am writing the file now. I'll include a helper to fetch.
-
-            // To function correctly without checking the service file again (to save tokens/steps), 
-            // I will optimistically check if I can fetch specific exercise.
-            // If not, I'll filter.
+            // TODO: Ensure ExerciseService.getById(id) exists and use it to avoid fetching all exercises.
+            // Current implementation optimistically fetches all and finds the specific one.
 
             const allExercises = await ExerciseService.getAllExercises();
             const found = allExercises.find(e => e.id === id);
@@ -118,7 +107,7 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
             await ExerciseService.updateExerciseSettings(exercise.id, newSettings);
 
             await loadData(); // Reload to get fresh data
-            // isEditing is handled by onClose in 'useExerciseForm' which we map to setIsEditing(false)
+
             toast.show({
                 placement: 'top',
                 render: ({ id }) => (
@@ -143,11 +132,11 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                     </Toast>
                 )
             });
-            throw e; // throw so hook typically knows it failed, though hook catches it internally
+            throw e; // NOTE: Throwing error for hook handling
         }
     };
 
-    // Use the hook for form logic
+
     const {
         formState: {
             loading: saving,
@@ -186,7 +175,7 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
         initialSettings: settings,
     });
 
-    // Stable callbacks for input changes (to avoid re-renders on every keystroke)
+    /** Stable callbacks for input changes to optimize performance. */
     const onNameChange = useCallback((t: string) => {
         nameRef.current = t;
         if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
@@ -206,8 +195,6 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
         weightFactorRef.current = t;
         if (errors.weightFactor) setErrors(prev => ({ ...prev, weightFactor: '' }));
     }, [errors.weightFactor, setErrors]);
-
-
 
     const onDescriptionChange = useCallback((t: string) => {
         descriptionRef.current = t;

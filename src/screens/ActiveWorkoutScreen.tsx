@@ -38,7 +38,7 @@ export const ActiveWorkoutScreen = () => {
     const { activeSession, sessionSets, logSet, completeWorkout, abandonWorkout, loading } = useWorkout();
     const { timeLeft, isActive, startTimer } = useRestTimer();
 
-    // UI State for focused tracking
+
     const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
     const [focusedSetNumber, setFocusedSetNumber] = useState<number>(1);
 
@@ -54,7 +54,7 @@ export const ActiveWorkoutScreen = () => {
     const [isLoggingSet, setIsLoggingSet] = useState(false);
     const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string, isMaxLevel?: boolean }>>({});
 
-    // Auto-advance to next unlogged set
+    /** Auto-advances focus to the next unlogged set. */
     const findNextSet = useCallback((setsOverride?: WorkoutSet[]) => {
         if (!activeSession) return;
 
@@ -72,14 +72,14 @@ export const ActiveWorkoutScreen = () => {
         }
     }, [activeSession, sessionSets]);
 
-    // Initialize focus on mount or session load
+    /** Initializes focus on mount or session load. */
     useEffect(() => {
         if (activeSession && !focusedExerciseId) {
             findNextSet();
         }
     }, [activeSession, focusedExerciseId, findNextSet]);
 
-    // Auto-expand the exercise card that is currently in focus
+    /** Auto-expands the exercise card that is currently in focus. */
     useEffect(() => {
         if (focusedExerciseId && activeSession) {
             const exercise = activeSession.exercisesSnapshot?.find(e => e.exerciseId === focusedExerciseId);
@@ -130,7 +130,7 @@ export const ActiveWorkoutScreen = () => {
                 }
             }
 
-            // Auto-advance using the NEW sets state
+
             findNextSet(nextSets);
         } catch (error) {
             console.error("Failed to log set:", error);
@@ -267,7 +267,7 @@ export const ActiveWorkoutScreen = () => {
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="xl" className="p-4 pb-48">
-                    {/* Focus Card or Completion Card */}
+
                     {isWorkoutComplete ? (
                         <WorkoutCompleteCard onFinish={handleConfirmFinish} />
                     ) : (
@@ -284,7 +284,7 @@ export const ActiveWorkoutScreen = () => {
                         )
                     )}
 
-                    {/* Exercise List */}
+
                     <VStack space="md">
                         <Text size="xs" className="text-typography-500 font-bold uppercase tracking-widest ml-1">
                             Workout Details

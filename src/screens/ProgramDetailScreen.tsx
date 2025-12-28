@@ -60,7 +60,6 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    // Exercise Management State
     const [selectorOpen, setSelectorOpen] = useState(false);
     const [exerciseFormOpen, setExerciseFormOpen] = useState(false);
     const [activeDayId, setActiveDayId] = useState<string | null>(null);

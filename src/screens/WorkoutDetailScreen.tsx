@@ -61,7 +61,7 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
     };
 
     const handleUpdateSet = async (updatedData: Partial<WorkoutSet>) => {
-        // Optimistic update logic or wait for server return
+        /** Handles optimistic updates for edited sets. */
         const { set: updatedSet } = await WorkoutService.logSet(updatedData as any);
         setSets(prevSets => prevSets.map(s => s.id === updatedSet.id ? updatedSet : s));
     };

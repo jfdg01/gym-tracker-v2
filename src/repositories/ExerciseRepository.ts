@@ -50,7 +50,6 @@ export const ExerciseRepository = {
         };
         await db.insert(exercises).values(newExercise);
 
-        // Create default settings
         const settingsId = Crypto.randomUUID();
         await db.insert(exerciseSettings).values({
             id: settingsId,

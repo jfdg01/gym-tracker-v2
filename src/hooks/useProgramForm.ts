@@ -26,7 +26,6 @@ export const useProgramForm = ({ isOpen, onClose, onSubmit, initialData }: UsePr
 
     useEffect(() => {
         if (isOpen) {
-            // Reset Refs based on initialData
             if (initialData) {
                 nameRef.current = initialData.name;
                 descriptionRef.current = initialData.description || '';
@@ -35,7 +34,6 @@ export const useProgramForm = ({ isOpen, onClose, onSubmit, initialData }: UsePr
                 descriptionRef.current = '';
             }
 
-            // Reset flags and errors
             ignoreSaveRef.current = false;
             setErrors({});
 
