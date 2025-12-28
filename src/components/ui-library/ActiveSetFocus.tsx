@@ -35,9 +35,9 @@ export const ActiveSetFocus = memo(({
 }: ActiveSetFocusProps) => {
     // Local state for interactive logging
     const [weight, setWeight] = useState(
-        existingSet?.weight?.toString() ||
-        previousSet?.weight?.toString() ||
-        exercise.suggestedWeight?.toString() ||
+        (existingSet?.weight ? (+existingSet.weight.toFixed(2)).toString() : undefined) ||
+        (previousSet?.weight ? (+previousSet.weight.toFixed(2)).toString() : undefined) ||
+        (exercise.suggestedWeight ? (+exercise.suggestedWeight.toFixed(2)).toString() : undefined) ||
         ''
     );
     const [reps, setReps] = useState(
@@ -62,9 +62,9 @@ export const ActiveSetFocus = memo(({
     // Sync state if exercise or setNumber changes (selection from list)
     useEffect(() => {
         setWeight(
-            existingSet?.weight?.toString() ||
-            previousSet?.weight?.toString() ||
-            exercise.suggestedWeight?.toString() ||
+            (existingSet?.weight ? (+existingSet.weight.toFixed(2)).toString() : undefined) ||
+            (previousSet?.weight ? (+previousSet.weight.toFixed(2)).toString() : undefined) ||
+            (exercise.suggestedWeight ? (+exercise.suggestedWeight.toFixed(2)).toString() : undefined) ||
             ''
         );
         setReps(
@@ -141,7 +141,7 @@ export const ActiveSetFocus = memo(({
                     <Text size="xs" className="text-typography-500 font-bold uppercase mb-1">Target</Text>
                     <Text size="md" className="text-white font-bold">
                         {exercise.targetReps || exercise.targetTimeSeconds} {isReps ? 'reps' : 's'}
-                        {exercise.suggestedWeight ? ` @ ${exercise.suggestedWeight}kg` : ''}
+                        {exercise.suggestedWeight ? ` @ ${+(exercise.suggestedWeight || 0).toFixed(2)}kg` : ''}
                         {exercise.suggestedDifficulty ? ` @ ${exercise.suggestedDifficulty}` : ''}
                     </Text>
                 </Box>

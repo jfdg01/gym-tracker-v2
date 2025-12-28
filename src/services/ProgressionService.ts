@@ -38,7 +38,12 @@ export const ProgressionService = {
         let result: any = { progressed: true };
 
         if (snapshot.resistanceType === ResistanceType.WEIGHT) {
-            // ... (lines 41-46 unchanged)
+            const currentWeight = settings.currentWeight || 0;
+            const increase = settings.weightIncreaseFactor || 0;
+            if (increase > 0) {
+                updates.currentWeight = Math.round((currentWeight + increase) * 100) / 100;
+                result.newWeight = updates.currentWeight;
+            }
         } else {
             // Difficulty progression
             const levels = settings.difficultyLevels;
