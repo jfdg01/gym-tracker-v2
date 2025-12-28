@@ -4,6 +4,8 @@ import { ProgramDayRepository } from '../repositories/ProgramDayRepository';
 import { ProgramDayExerciseRepository } from '../repositories/ProgramDayExerciseRepository';
 import { ExerciseRepository } from '../repositories/ExerciseRepository';
 import { WorkoutSession, WorkoutSet, ExerciseSnapshotItem } from '../types/domain';
+import { ProgressionService } from './ProgressionService';
+import { ProgramService } from './ProgramService';
 
 export const WorkoutService = {
     /**
@@ -63,7 +65,27 @@ export const WorkoutService = {
      * Logs a set.
      */
     logSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<WorkoutSet> => {
-        return await WorkoutRepository.saveSet(setData);
+        const newSet = await WorkoutRepository.saveSet(setData);
+
+        // Trigger progression evaluation if this was the last set (Business Logic Centralization)
+        const session = await WorkoutRepository.getSessionById(setData.workoutSessionId);
+        if (session && session.exercisesSnapshot) {
+            const exerciseSnapshot = session.exercisesSnapshot.find(e => e.exerciseId === setData.exerciseId);
+            if (exerciseSnapshot) {
+                const exerciseSets = await WorkoutRepository.getSetsBySessionId(setData.workoutSessionId);
+                const currentExerciseSets = exerciseSets.filter(s => s.exerciseId === setData.exerciseId);
+
+                if (currentExerciseSets.length === exerciseSnapshot.sets) {
+                    await ProgressionService.evaluateProgression(
+                        setData.exerciseId,
+                        exerciseSnapshot,
+                        currentExerciseSets
+                    );
+                }
+            }
+        }
+
+        return newSet;
     },
 
     /**
@@ -84,8 +106,22 @@ export const WorkoutService = {
      * Completes the session.
      */
     completeWorkout: async (sessionId: string): Promise<void> => {
-        // TODO: Refactor: Move progression evaluation logic here (currently in useWorkout) to centralize business logic
+        const session = await WorkoutRepository.getSessionById(sessionId);
+        if (!session) throw new Error('Session not found');
+
         await WorkoutRepository.completeSession(sessionId);
+
+        // Update program progression
+        if (session.programDayId) {
+            try {
+                const day = await ProgramDayRepository.getById(session.programDayId);
+                if (day) {
+                    await ProgramService.updateProgression(day.programId, day.id);
+                }
+            } catch (error) {
+                console.warn('Failed to update progression (program might have been deleted):', error);
+            }
+        }
     },
 
     /**

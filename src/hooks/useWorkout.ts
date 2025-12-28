@@ -1,8 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { WorkoutService } from '../services/WorkoutService';
-import { ProgressionService } from '../services/ProgressionService';
-import { ProgramService } from '../services/ProgramService';
-import { ProgramDayRepository } from '../repositories/ProgramDayRepository';
 import { WorkoutSession, WorkoutSet, ExerciseSnapshotItem, WorkoutStatus } from '../types/domain';
 
 export const useWorkout = () => {
@@ -58,19 +55,6 @@ export const useWorkout = () => {
             return [...prev, newSet].sort((a, b) => a.setNumber - b.setNumber);
         });
 
-        // Trigger progression evaluation if this was the last set
-        const exerciseSnapshot = activeSession.exercisesSnapshot?.find(e => e.exerciseId === setData.exerciseId);
-        if (exerciseSnapshot) {
-            const exerciseSets = [...sessionSets, newSet].filter(s => s.exerciseId === setData.exerciseId);
-            if (exerciseSets.length === exerciseSnapshot.sets) {
-                await ProgressionService.evaluateProgression(
-                    setData.exerciseId,
-                    exerciseSnapshot,
-                    exerciseSets
-                );
-            }
-        }
-
         return newSet;
     };
 
@@ -78,19 +62,6 @@ export const useWorkout = () => {
         if (!activeSession) return;
 
         await WorkoutService.completeWorkout(activeSession.id);
-
-        // Update program progression
-        if (activeSession.programDayId) {
-            try {
-                const day = await ProgramDayRepository.getById(activeSession.programDayId);
-                if (day) {
-                    await ProgramService.updateProgression(day.programId, day.id);
-                }
-            } catch (error) {
-                console.warn('Failed to update progression (program might have been deleted):', error);
-                // Continue with completion - do not block user
-            }
-        }
 
         setActiveSession(null);
         setSessionSets([]);
