@@ -45,7 +45,13 @@ export const SettingsScreen = () => {
         try {
             const data = await DataPortabilityService.exportAllData();
             const jsonString = JSON.stringify(data, null, 2);
-            const filename = `gym_tracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+            const now = new Date();
+            const YYYY = now.getFullYear();
+            const MM = String(now.getMonth() + 1).padStart(2, '0');
+            const DD = String(now.getDate()).padStart(2, '0');
+            const HH = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const filename = `gym_tracker_backup_${YYYY}-${MM}-${DD}_${HH}-${mm}.json`;
             const fileUri = FileSystem.documentDirectory + filename;
 
             await FileSystem.writeAsStringAsync(fileUri, jsonString, {

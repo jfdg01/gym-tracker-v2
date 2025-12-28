@@ -71,9 +71,13 @@ export const RestTimerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
         }
+        if (seconds <= 0) {
+            stopTimer();
+            return;
+        }
         setTimeLeft(seconds);
         setIsActive(true);
-    }, []);
+    }, [stopTimer]);
 
     const handleTimerComplete = async () => {
         stopTimer();
