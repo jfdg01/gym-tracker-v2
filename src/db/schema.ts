@@ -37,6 +37,7 @@ export const programDays = sqliteTable('program_days', {
     id: text('id').primaryKey(),
     programId: text('program_id').notNull().references(() => programs.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    previousName: text('previous_name'),
     orderIndex: integer('order_index').notNull(),
     isRestDay: integer('is_rest_day', { mode: 'boolean' }).notNull().default(false),
 });

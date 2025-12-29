@@ -296,7 +296,7 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                     >
                                         <HStack space="xs" className="items-center">
                                             <Heading size="lg" className={`${day.isRestDay ? 'text-typography-400' : 'text-primary-energy'} italic font-heading`}>
-                                                {day.name.toUpperCase()} {day.isRestDay && '(REST)'}
+                                                {day.name.toUpperCase()} {day.isRestDay && day.name.toLowerCase() !== 'rest' && '(REST)'}
                                             </Heading>
                                             <Icon as={EditIcon} size="md" className="text-primary-energy/40 ml-1" />
                                         </HStack>

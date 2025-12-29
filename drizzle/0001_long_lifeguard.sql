@@ -1,0 +1,1 @@
+ALTER TABLE `program_days` ADD `previous_name` text;

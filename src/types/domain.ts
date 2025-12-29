@@ -53,6 +53,7 @@ export interface ProgramDay {
     id: string; // UUID
     programId: string;
     name: string;
+    previousName?: string | null;
     orderIndex: number;
     isRestDay: boolean;
 }
