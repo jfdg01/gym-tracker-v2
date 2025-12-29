@@ -78,6 +78,7 @@ export interface WorkoutSession {
     restTimerTargetEndTime: string | null; // ISO 8601 UTC. Persisted for app-kill/resume robustness.
     startedAt: string;
     completedAt: string | null;
+    isRestDay: boolean;
     status: WorkoutStatus;
 }
 

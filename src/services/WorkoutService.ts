@@ -83,6 +83,7 @@ export const WorkoutService = {
             programNameSnapshot: program.name,
             dayNameSnapshot: day.name,
             exercisesSnapshot,
+            isRestDay: day.isRestDay,
             restTimerTargetEndTime: null,
         });
     },

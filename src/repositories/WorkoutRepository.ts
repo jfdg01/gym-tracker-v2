@@ -13,6 +13,7 @@ const mapSession = (doc: typeof workoutSessions.$inferSelect): WorkoutSession =>
     restTimerTargetEndTime: doc.restTimerTargetEndTime,
     startedAt: doc.startedAt,
     completedAt: doc.completedAt,
+    isRestDay: !!doc.isRestDay,
     status: doc.status as WorkoutStatus,
 });
 

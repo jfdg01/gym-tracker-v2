@@ -9,7 +9,7 @@ import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
 import { Button, ButtonText } from '@/components/ui/button';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
-import { TrophyIcon, DumbbellIcon, TrendingUpIcon, CheckCircleIcon, ArrowRightIcon } from 'lucide-react-native';
+import { TrophyIcon, DumbbellIcon, TrendingUpIcon, CheckCircleIcon, ArrowRightIcon, CoffeeIcon } from 'lucide-react-native';
 import { cn } from '@/src/utils/cn';
 
 export interface WorkoutSummaryParams {
@@ -34,7 +34,7 @@ interface ProgressionEvent {
 }
 
 interface WorkoutSummaryScreenProps {
-    params: WorkoutSummaryParams;
+    params: WorkoutSummaryParams & { isRestDay?: string };
 }
 
 export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
@@ -60,17 +60,19 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
             <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
                 <Box className="items-center pt-20 pb-10 px-6 bg-primary-energy/10 mb-6">
                     <Box className="w-20 h-20 rounded-full bg-primary-energy/20 items-center justify-center mb-4 border-2 border-primary-energy">
-                        <Icon as={TrophyIcon} size="xl" className="text-primary-energy" />
+                        <Icon as={params.isRestDay === 'true' ? CoffeeIcon : TrophyIcon} size="xl" className="text-primary-energy" />
                     </Box>
                     <Heading size="xl" className="text-white text-center font-heading uppercase tracking-wider mb-2">
-                        Workout Complete!
+                        {params.isRestDay === 'true' ? 'Rest Day Done!' : 'Workout Complete!'}
                     </Heading>
                     <Text className="text-typography-400 text-center">
                         {params.programName} - {params.dayName}
                     </Text>
-                    <Text className="text-typography-500 text-center text-sm mt-1">
-                        {params.duration} • {params.completedSets} / {params.totalSets} sets
-                    </Text>
+                    {params.isRestDay !== 'true' && (
+                        <Text className="text-typography-500 text-center text-sm mt-1">
+                            {params.duration} • {params.completedSets} / {params.totalSets} sets
+                        </Text>
+                    )}
                 </Box>
 
                 <VStack space="xl" className="px-6">
@@ -159,9 +161,11 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
 
                         <Box className="bg-surface-elevated p-6 rounded-xl border border-outline-100">
                             <Text className="text-typography-400 italic text-center">
-                                {achievementCount > 0
-                                    ? "Great job pushing your limits today! Recovery is key, make sure to get some rest."
-                                    : "Good session! Consistency is the key to progress. Keep showing up!"}
+                                {params.isRestDay === 'true'
+                                    ? "Hope you had a good rest! Ready for the next one?"
+                                    : achievementCount > 0
+                                        ? "Great job pushing your limits today! Recovery is key, make sure to get some rest."
+                                        : "Good session! Consistency is the key to progress. Keep showing up!"}
                             </Text>
                         </Box>
                     </VStack>

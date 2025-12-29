@@ -1,7 +1,7 @@
 CREATE TABLE `exercise_settings` (
 	`id` text PRIMARY KEY NOT NULL,
 	`exercise_id` text NOT NULL,
-	`current_weight` integer,
+	`current_weight` integer DEFAULT 0 NOT NULL,
 	`weight_increase_factor` integer,
 	`difficulty_levels` text,
 	`current_difficulty_level` text,
@@ -41,6 +41,7 @@ CREATE TABLE `program_days` (
 	`program_id` text NOT NULL,
 	`name` text NOT NULL,
 	`order_index` integer NOT NULL,
+	`is_rest_day` integer DEFAULT false NOT NULL,
 	FOREIGN KEY (`program_id`) REFERENCES `programs`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -62,6 +63,7 @@ CREATE TABLE `workout_sessions` (
 	`rest_timer_target_end_time` text,
 	`started_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	`completed_at` text,
+	`is_rest_day` integer DEFAULT false NOT NULL,
 	`status` text DEFAULT 'IN_PROGRESS' NOT NULL,
 	FOREIGN KEY (`program_day_id`) REFERENCES `program_days`(`id`) ON UPDATE no action ON DELETE set null
 );

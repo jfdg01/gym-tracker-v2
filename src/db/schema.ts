@@ -62,6 +62,7 @@ export const workoutSessions = sqliteTable('workout_sessions', {
     restTimerTargetEndTime: text('rest_timer_target_end_time'),
     startedAt: text('started_at').notNull().default(sql`CURRENT_TIMESTAMP`),
     completedAt: text('completed_at'),
+    isRestDay: integer('is_rest_day', { mode: 'boolean' }).notNull().default(false),
     status: text('status').notNull().default('IN_PROGRESS'),
 });
 

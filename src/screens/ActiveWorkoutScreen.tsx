@@ -5,9 +5,12 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
+import { Heading } from '@/components/ui/heading';
+import { Icon } from '@/components/ui/icon';
 import {
     CheckIcon,
     Settings2Icon,
+    CoffeeIcon,
 } from 'lucide-react-native';
 import { useWorkout } from '@/src/hooks/useWorkout';
 import { useRestTimer } from '@/src/components/RestTimerContext';
@@ -160,6 +163,7 @@ export const ActiveWorkoutScreen = () => {
                     duration: formatDuration(activeSession.startedAt, new Date()),
                     totalSets: totalSets.toString(),
                     completedSets: completedSets.toString(),
+                    isRestDay: activeSession.isRestDay ? 'true' : 'false',
                 }
             });
         } catch (error) {
@@ -263,13 +267,33 @@ export const ActiveWorkoutScreen = () => {
             <AppHeader
                 title={activeSession!.dayNameSnapshot || 'Workout'}
                 subTitle={activeSession!.programNameSnapshot || ''}
-                rightElement={!isWorkoutComplete ? rightHeaderElement : null}
+                rightElement={!isWorkoutComplete && !activeSession?.isRestDay ? rightHeaderElement : null}
             />
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <VStack space="xl" className="p-4 pb-48">
 
-                    {isWorkoutComplete ? (
+                    {activeSession?.isRestDay ? (
+                        <VStack space="xl" className="items-center justify-center pt-8">
+                            <Box className="w-24 h-24 rounded-full bg-primary-energy/10 items-center justify-center mb-4">
+                                <Icon as={CoffeeIcon} size="xl" className="text-primary-energy" />
+                            </Box>
+                            <VStack space="xs" className="items-center">
+                                <Heading size="lg" className="text-white text-center">Rest Day</Heading>
+                                <Text className="text-typography-400 text-center px-6">
+                                    Take it easy! Today is for recovery. You can complete this day whenever you're ready.
+                                </Text>
+                            </VStack>
+
+                            <AppButton
+                                title="Complete Rest Day"
+                                onPress={handleConfirmFinish}
+                                action="positive"
+                                className="w-full mt-8"
+                                size="lg"
+                            />
+                        </VStack>
+                    ) : isWorkoutComplete ? (
                         <WorkoutCompleteCard onFinish={handleConfirmFinish} />
                     ) : (
                         focusedExercise && (
@@ -291,9 +315,11 @@ export const ActiveWorkoutScreen = () => {
 
 
                     <VStack space="md">
-                        <Text size="xs" className="text-typography-500 font-bold uppercase tracking-widest ml-1">
-                            Workout Details
-                        </Text>
+                        {!activeSession?.isRestDay && (
+                            <Text size="xs" className="text-typography-500 font-bold uppercase tracking-widest ml-1">
+                                Workout Details
+                            </Text>
+                        )}
                         {activeSession!.exercisesSnapshot?.map((ex) => {
                             const isExpanded = expandedExercise === ex.programDayExerciseId;
                             const exerciseSets = sessionSets.filter(s => s.exerciseId === ex.exerciseId);

@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
-import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon, ClockIcon, TrendingUpIcon, ArrowRightIcon, ChevronRightIcon } from 'lucide-react-native';
+import { ChevronLeftIcon, CalendarIcon, DumbbellIcon, PencilIcon, CheckIcon, ClockIcon, TrendingUpIcon, ArrowRightIcon, ChevronRightIcon, CoffeeIcon } from 'lucide-react-native';
 import { Button, ButtonText } from '@/components/ui/button';
 import { formatDuration } from '@/src/utils/time';
 import { cn } from '@/src/utils/cn';
@@ -121,112 +121,128 @@ export const WorkoutDetailScreen = ({ id }: WorkoutDetailScreenProps) => {
                         </HStack>
                     </AppCard>
 
-                    <Heading size="sm" className="text-typography-950 px-1 font-heading">Exercises</Heading>
-
-                    {session.exercisesSnapshot?.map((ex) => {
-                        const exerciseSets = sets.filter(s => s.exerciseId === ex.exerciseId);
-
-                        return (
-                            <VStack key={ex.programDayExerciseId} space="xs" className="mb-4">
-                                <HStack space="xs" className="items-center px-1 justify-between">
-                                    <Pressable onPress={() => router.push(`/exercises/${ex.exerciseId}`)}>
-                                        <HStack space="xs" className="items-center">
-                                            <Icon as={DumbbellIcon} size="xs" className="text-primary-energy" />
-                                            <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
-                                            <Icon as={ChevronRightIcon} size="2xs" className="text-typography-400 ml-1" />
-                                        </HStack>
-                                    </Pressable>
-
-                                    {ex.result && (
-                                        <Box className={cn(
-                                            "px-2 py-0.5 rounded",
-                                            ex.result.progressed ? "bg-success-growth/20" : "bg-white/5"
-                                        )}>
-                                            <Text className={cn(
-                                                "text-[10px] font-black uppercase tracking-tighter",
-                                                ex.result.progressed ? "text-success-growth" : "text-typography-500"
-                                            )}>
-                                                {ex.result.progressed ? "Increased" : "Maintained"}
-                                            </Text>
-                                        </Box>
-                                    )}
-                                </HStack>
-
-                                {ex.result?.progressed && (
-                                    <Box className="mx-1 mb-2 p-2 bg-success-growth/5 rounded-lg border border-success-growth/10">
-                                        <HStack space="sm" className="items-center justify-center">
-                                            <Icon as={TrendingUpIcon} size="xs" className="text-success-growth" />
-                                            <Text className="text-[10px] text-typography-500 uppercase font-bold">Progressed</Text>
-                                            <HStack space="xs" className="items-center">
-                                                <Text className="text-typography-400 font-bold text-xs">
-                                                    {ex.resistanceType === ResistanceType.WEIGHT ? `${ex.suggestedWeight || 0}kg` : ex.suggestedDifficulty || 'None'}
-                                                </Text>
-                                                <Icon as={ArrowRightIcon} size="xs" className="text-success-growth" />
-                                                <Text className="text-success-growth font-black text-sm">
-                                                    {ex.resistanceType === ResistanceType.WEIGHT ? `${ex.result.newWeight}kg` : ex.result.newDifficulty}
-                                                </Text>
-                                            </HStack>
-                                        </HStack>
-                                    </Box>
-                                )}
-
-                                <AppCard className="p-0 overflow-hidden">
-                                    <VStack>
-                                        <HStack
-                                            className="py-2 px-3"
-                                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                                        >
-                                            <Text size="xs" className="w-10 text-typography-500 font-bold uppercase tracking-wider">Set</Text>
-                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">Resistance</Text>
-                                            <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">Result</Text>
-                                        </HStack>
-
-                                        {exerciseSets.length === 0 ? (
-                                            <Box className="p-4 items-center">
-                                                <Text size="xs" className="text-typography-500 italic">No sets logged</Text>
-                                            </Box>
-                                        ) : (
-                                            exerciseSets.map((s, idx) => (
-                                                isEditing ? (
-                                                    <EditWorkoutSetRow
-                                                        key={s.id}
-                                                        setNumber={s.setNumber}
-                                                        exercise={ex}
-                                                        set={s}
-                                                        onUpdate={handleUpdateSet}
-                                                    />
-                                                ) : (
-                                                    <HStack
-                                                        key={s.id}
-                                                        className="py-3 px-3"
-                                                        style={idx < exerciseSets.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
-                                                    >
-                                                        <Text size="sm" className="w-10 text-typography-400 font-bold">{s.setNumber}</Text>
-                                                        <Box className="flex-1">
-                                                            {s.skipped ? (
-                                                                <Text size="sm" className="text-typography-600 italic">Skipped</Text>
-                                                            ) : (
-                                                                <Text size="sm" className="text-white">
-                                                                    {ex.resistanceType === ResistanceType.WEIGHT ? `${s.weight} kg` : s.difficulty || 'N/A'}
-                                                                </Text>
-                                                            )}
-                                                        </Box>
-                                                        <Box className="flex-1">
-                                                            {!s.skipped && (
-                                                                <Text size="sm" className="text-white font-medium">
-                                                                    {ex.trackingType === TrackingType.REPS ? `${s.reps} reps` : `${s.timeSeconds}s`}
-                                                                </Text>
-                                                            )}
-                                                        </Box>
-                                                    </HStack>
-                                                )
-                                            ))
-                                        )}
-                                    </VStack>
-                                </AppCard>
+                    {session.isRestDay ? (
+                        <VStack space="xl" className="items-center justify-center py-12 px-6">
+                            <Box className="w-20 h-20 rounded-full bg-primary-energy/10 items-center justify-center mb-4">
+                                <Icon as={CoffeeIcon} size="xl" className="text-primary-energy" />
+                            </Box>
+                            <VStack space="xs" className="items-center">
+                                <Heading size="md" className="text-white text-center">Rest Day Completed</Heading>
+                                <Text className="text-typography-400 text-center">
+                                    This session was a scheduled rest day for recovery.
+                                </Text>
                             </VStack>
-                        );
-                    })}
+                        </VStack>
+                    ) : (
+                        <>
+                            <Heading size="sm" className="text-typography-950 px-1 font-heading">Exercises</Heading>
+
+                            {session.exercisesSnapshot?.map((ex) => {
+                                const exerciseSets = sets.filter(s => s.exerciseId === ex.exerciseId);
+
+                                return (
+                                    <VStack key={ex.programDayExerciseId} space="xs" className="mb-4">
+                                        <HStack space="xs" className="items-center px-1 justify-between">
+                                            <Pressable onPress={() => router.push(`/exercises/${ex.exerciseId}`)}>
+                                                <HStack space="xs" className="items-center">
+                                                    <Icon as={DumbbellIcon} size="xs" className="text-primary-energy" />
+                                                    <Heading size="xs" className="text-typography-950 font-heading">{ex.exerciseName}</Heading>
+                                                    <Icon as={ChevronRightIcon} size="2xs" className="text-typography-400 ml-1" />
+                                                </HStack>
+                                            </Pressable>
+
+                                            {ex.result && (
+                                                <Box className={cn(
+                                                    "px-2 py-0.5 rounded",
+                                                    ex.result.progressed ? "bg-success-growth/20" : "bg-white/5"
+                                                )}>
+                                                    <Text className={cn(
+                                                        "text-[10px] font-black uppercase tracking-tighter",
+                                                        ex.result.progressed ? "text-success-growth" : "text-typography-500"
+                                                    )}>
+                                                        {ex.result.progressed ? "Increased" : "Maintained"}
+                                                    </Text>
+                                                </Box>
+                                            )}
+                                        </HStack>
+
+                                        {ex.result?.progressed && (
+                                            <Box className="mx-1 mb-2 p-2 bg-success-growth/5 rounded-lg border border-success-growth/10">
+                                                <HStack space="sm" className="items-center justify-center">
+                                                    <Icon as={TrendingUpIcon} size="xs" className="text-success-growth" />
+                                                    <Text className="text-[10px] text-typography-500 uppercase font-bold">Progressed</Text>
+                                                    <HStack space="xs" className="items-center">
+                                                        <Text className="text-typography-400 font-bold text-xs">
+                                                            {ex.resistanceType === ResistanceType.WEIGHT ? `${ex.suggestedWeight || 0}kg` : ex.suggestedDifficulty || 'None'}
+                                                        </Text>
+                                                        <Icon as={ArrowRightIcon} size="xs" className="text-success-growth" />
+                                                        <Text className="text-success-growth font-black text-sm">
+                                                            {ex.resistanceType === ResistanceType.WEIGHT ? `${ex.result.newWeight}kg` : ex.result.newDifficulty}
+                                                        </Text>
+                                                    </HStack>
+                                                </HStack>
+                                            </Box>
+                                        )}
+
+                                        <AppCard className="p-0 overflow-hidden">
+                                            <VStack>
+                                                <HStack
+                                                    className="py-2 px-3"
+                                                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                                                >
+                                                    <Text size="xs" className="w-10 text-typography-500 font-bold uppercase tracking-wider">Set</Text>
+                                                    <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">Resistance</Text>
+                                                    <Text size="xs" className="flex-1 text-typography-500 font-bold uppercase tracking-wider">Result</Text>
+                                                </HStack>
+
+                                                {exerciseSets.length === 0 ? (
+                                                    <Box className="p-4 items-center">
+                                                        <Text size="xs" className="text-typography-500 italic">No sets logged</Text>
+                                                    </Box>
+                                                ) : (
+                                                    exerciseSets.map((s, idx) => (
+                                                        isEditing ? (
+                                                            <EditWorkoutSetRow
+                                                                key={s.id}
+                                                                setNumber={s.setNumber}
+                                                                exercise={ex}
+                                                                set={s}
+                                                                onUpdate={handleUpdateSet}
+                                                            />
+                                                        ) : (
+                                                            <HStack
+                                                                key={s.id}
+                                                                className="py-3 px-3"
+                                                                style={idx < exerciseSets.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
+                                                            >
+                                                                <Text size="sm" className="w-10 text-typography-400 font-bold">{s.setNumber}</Text>
+                                                                <Box className="flex-1">
+                                                                    {s.skipped ? (
+                                                                        <Text size="sm" className="text-typography-600 italic">Skipped</Text>
+                                                                    ) : (
+                                                                        <Text size="sm" className="text-white">
+                                                                            {ex.resistanceType === ResistanceType.WEIGHT ? `${s.weight} kg` : s.difficulty || 'N/A'}
+                                                                        </Text>
+                                                                    )}
+                                                                </Box>
+                                                                <Box className="flex-1">
+                                                                    {!s.skipped && (
+                                                                        <Text size="sm" className="text-white font-medium">
+                                                                            {ex.trackingType === TrackingType.REPS ? `${s.reps} reps` : `${s.timeSeconds}s`}
+                                                                        </Text>
+                                                                    )}
+                                                                </Box>
+                                                            </HStack>
+                                                        )
+                                                    ))
+                                                )}
+                                            </VStack>
+                                        </AppCard>
+                                    </VStack>
+                                );
+                            })}
+                        </>
+                    )}
                 </VStack>
             </ScrollView>
         </Box>
