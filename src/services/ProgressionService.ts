@@ -56,14 +56,23 @@ export const ProgressionService = {
                     if (currentIndex < levels.length - 1) {
                         updates.currentDifficultyLevel = levels[currentIndex + 1];
                         result.newDifficulty = updates.currentDifficultyLevel;
+                        // Check if the NEW level is the max level
+                        if (currentIndex + 1 === levels.length - 1) {
+                            result.isMaxLevel = true;
+                        }
                     } else {
-                        // Max level reached. Return success without updates.
+                        // Max level already reached. Return success with current level.
+                        result.newDifficulty = usedDifficulty;
+                        result.isMaxLevel = true;
                         return result;
                     }
                 } else {
                     // If used difficulty is not in list (or custom), fallback to first level if current is null
                     updates.currentDifficultyLevel = levels[0];
                     result.newDifficulty = updates.currentDifficultyLevel;
+                    if (levels.length === 1) {
+                        result.isMaxLevel = true;
+                    }
                 }
             } else if (levels.length > 0 && !settings.currentDifficultyLevel) {
                 // Initialize default difficulty level if currently null

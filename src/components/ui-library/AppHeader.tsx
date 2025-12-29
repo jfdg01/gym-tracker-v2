@@ -68,7 +68,7 @@ export const AppHeader = ({
                         <Heading size="md" className="text-white" numberOfLines={1}>
                             {title}
                         </Heading>
-                        {subTitle && (
+                        {!!subTitle && (
                             <Text className="text-xs text-primary-energy font-bold uppercase tracking-wider">
                                 {subTitle}
                             </Text>

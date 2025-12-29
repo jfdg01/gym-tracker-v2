@@ -125,7 +125,7 @@ export const ActiveWorkoutScreen = () => {
                             progressed: result.progression!.progressed,
                             newWeight: result.progression!.newWeight,
                             newDifficulty: result.progression!.newDifficulty,
-                            currentWeight: isWeight ? exerciseSnapshot?.suggestedWeight : undefined,
+                            currentWeight: isWeight ? exerciseSnapshot?.suggestedWeight || undefined : undefined,
                             currentDifficulty: !isWeight ? (exerciseSnapshot?.suggestedDifficulty || exerciseSnapshot?.difficultyLevels?.[0]) : undefined,
                             isMaxLevel: result.progression!.isMaxLevel,
                             exerciseName

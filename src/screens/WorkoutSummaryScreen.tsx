@@ -104,13 +104,13 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
                                             </HStack>
                                             <Box className={cn(
                                                 "px-2 py-0.5 rounded",
-                                                isIncreased ? "bg-success-growth/20" : "bg-white/5"
+                                                (isIncreased && !event.isMaxLevel) ? "bg-success-growth/20" : "bg-white/5"
                                             )}>
                                                 <Text className={cn(
                                                     "text-[10px] font-black uppercase tracking-tighter",
-                                                    isIncreased ? "text-success-growth" : "text-typography-500"
+                                                    (isIncreased && !event.isMaxLevel) ? "text-success-growth" : "text-typography-500"
                                                 )}>
-                                                    {isIncreased ? "Increased" : "Maintained"}
+                                                    {event.isMaxLevel ? "Max Level" : isIncreased ? "Increased" : "Maintained"}
                                                 </Text>
                                             </Box>
                                         </HStack>
@@ -124,13 +124,18 @@ export const WorkoutSummaryScreen = ({ params }: WorkoutSummaryScreenProps) => {
                                                             {isWeight ? `${+(event.currentWeight || 0).toFixed(2)}kg` : event.currentDifficulty || 'None'}
                                                         </Text>
                                                     </VStack>
-                                                    <Icon as={ArrowRightIcon} size="xs" className="text-success-growth" />
+                                                    <Icon as={ArrowRightIcon} size="xs" className={cn(event.isMaxLevel ? "text-typography-500" : "text-success-growth")} />
                                                     <VStack>
-                                                        <Text className="text-[10px] text-success-growth uppercase font-black">To</Text>
+                                                        <Text className={cn("text-[10px] uppercase font-bold", event.isMaxLevel ? "text-typography-500" : "text-success-growth font-black")}>To</Text>
                                                         {event.isMaxLevel ? (
-                                                            <Text className="text-success-growth font-black text-lg uppercase tracking-tight">
-                                                                Max Level
-                                                            </Text>
+                                                            <VStack>
+                                                                <Text className="text-typography-400 font-bold text-lg">
+                                                                    {isWeight ? `${+(event.newWeight || 0).toFixed(2)}kg` : event.newDifficulty}
+                                                                </Text>
+                                                                <Text className="text-typography-500 italic text-[10px] mt-0.5">
+                                                                    Consider a harder variation!
+                                                                </Text>
+                                                            </VStack>
                                                         ) : (
                                                             <Text className="text-success-growth font-black text-2xl">
                                                                 {isWeight ? `${+(event.newWeight || 0).toFixed(2)}kg` : event.newDifficulty}
