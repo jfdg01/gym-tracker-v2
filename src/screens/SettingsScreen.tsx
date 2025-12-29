@@ -17,7 +17,6 @@ import {
     InfoIcon,
     ShieldCheckIcon,
     ChevronRightIcon,
-    LayoutIcon,
     Trash2Icon
 } from 'lucide-react-native';
 import { DataPortabilityService } from '@/src/services/DataPortabilityService';
@@ -204,25 +203,6 @@ export const SettingsScreen = () => {
                             </Card>
                         </VStack>
 
-                        <VStack space="sm">
-                            <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">Developer Tools</Text>
-                            <Card className="bg-surface-elevated border-0 p-0 overflow-hidden">
-                                <Pressable onPress={() => router.push('/components-gallery')} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
-                                    <HStack className="p-4 items-center justify-between">
-                                        <HStack space="md" className="items-center">
-                                            <Box className="p-2 bg-primary-energy/10 rounded-lg">
-                                                <Icon as={LayoutIcon} size="sm" className="text-primary-energy" />
-                                            </Box>
-                                            <VStack>
-                                                <Text className="text-typography-900 font-medium">Components Gallery</Text>
-                                                <Text size="xs" className="text-typography-500">Visual test library for our custom components</Text>
-                                            </VStack>
-                                        </HStack>
-                                        <Icon as={ChevronRightIcon} size="xs" className="text-typography-400" />
-                                    </HStack>
-                                </Pressable>
-                            </Card>
-                        </VStack>
 
                         <VStack space="sm">
                             <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">About</Text>

@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Pressable, RefreshControl } from 'react-native';
+import { cn } from '@/src/utils/cn';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -11,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { Icon } from '@/components/ui/icon';
-import { PlusIcon, CalendarIcon, ChevronRightIcon, Edit2Icon, TrashIcon } from 'lucide-react-native';
+import { PlusIcon, CalendarIcon, ChevronRightIcon, Edit2Icon, TrashIcon, TrophyIcon, FlameIcon, ZapIcon, ActivityIcon, DumbbellIcon } from 'lucide-react-native';
 import { ProgramService } from '@/src/services/ProgramService';
 import { ProgramDayService } from '@/src/services/ProgramDayService';
 import { Program } from '@/src/types/domain';
@@ -20,6 +21,24 @@ import { ProgramForm } from '@/src/components/ProgramForm';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
 import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
+
+const COOL_COLORS = [
+    { text: "text-violet-400", border: "border-l-violet-500", icon: TrophyIcon },
+    { text: "text-rose-400", border: "border-l-rose-500", icon: FlameIcon },
+    { text: "text-cyan-400", border: "border-l-cyan-500", icon: ActivityIcon },
+    { text: "text-emerald-400", border: "border-l-emerald-500", icon: ZapIcon },
+    { text: "text-orange-400", border: "border-l-orange-500", icon: DumbbellIcon },
+];
+
+const getProgramStyles = (id: string) => {
+    // Simple deterministic hash based on string ID
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % COOL_COLORS.length;
+    return COOL_COLORS[index];
+};
 
 export const ProgramListScreen = () => {
     const router = useRouter();
@@ -143,13 +162,30 @@ export const ProgramListScreen = () => {
                             <Text className="text-typography-500 text-center mt-4">No programs found. Create your first one!</Text>
                         ) : (
                             programs.map((p) => (
-                                <AppCard key={p.id} className="p-4 mb-3">
-                                    <HStack className="justify-between items-center">
-                                        <Pressable onPress={() => router.push(`/program/${p.id}`)} className="flex-1">
-                                            <VStack space="xs">
-                                                <Text className="text-white font-bold text-lg">{p.name}</Text>
+                                <Pressable
+                                    key={p.id}
+                                    onPress={() => router.push(`/program/${p.id}`)}
+                                    android_ripple={{ color: 'rgba(255, 255, 255, 0.05)' }}
+                                    className="active:opacity-80"
+                                >
+                                    <AppCard
+                                        className={cn(
+                                            "p-4 mb-3 border-l-4",
+                                            getProgramStyles(p.id).border
+                                        )}
+                                    >
+                                        <HStack className="justify-between items-center">
+                                            <VStack space="xs" className="flex-1 pr-4">
+                                                <HStack space="xs" className="items-center">
+                                                    <Icon
+                                                        as={getProgramStyles(p.id).icon}
+                                                        size="sm"
+                                                        className={getProgramStyles(p.id).text}
+                                                    />
+                                                    <Text className="text-white font-bold text-lg">{p.name}</Text>
+                                                </HStack>
                                                 {p.description && (
-                                                    <Text className="text-typography-500 text-sm italic" numberOfLines={1}>
+                                                    <Text className="text-typography-500 text-sm italic mt-0.5" numberOfLines={1}>
                                                         {p.description}
                                                     </Text>
                                                 )}
@@ -161,32 +197,16 @@ export const ProgramListScreen = () => {
                                                     </Text>
                                                 </HStack>
                                             </VStack>
-                                        </Pressable>
 
-                                        <HStack space="sm" className="items-center">
-                                            <VStack space="sm">
-                                                <AppButton
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onPress={() => handleEditProgram(p)}
-                                                    className="justify-center w-24 h-9"
-                                                    title="Edit"
-                                                    icon={Edit2Icon}
-                                                />
-                                                <AppButton
-                                                    size="sm"
-                                                    variant="outline"
-                                                    action="negative"
-                                                    onPress={() => handleDelete(p.id)}
-                                                    className="justify-center w-24 h-9"
-                                                    title="Delete"
-                                                    icon={TrashIcon}
-                                                />
-                                            </VStack>
-                                            <Icon as={ChevronRightIcon} className="text-typography-300 ml-2" />
+                                            <Box
+                                                className="p-2 rounded-full"
+                                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                                            >
+                                                <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
+                                            </Box>
                                         </HStack>
-                                    </HStack>
-                                </AppCard>
+                                    </AppCard>
+                                </Pressable>
                             ))
                         )}
                     </VStack>

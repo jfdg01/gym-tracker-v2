@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { cn } from '@/src/utils/cn';
 import { Pressable, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Box } from '@/components/ui/box';
@@ -9,7 +10,7 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
-import { CalendarIcon, ChevronRightIcon, TrendingUpIcon, ClockIcon } from 'lucide-react-native';
+import { CalendarIcon, ChevronRightIcon, TrendingUpIcon, ClockIcon, DumbbellIcon, CoffeeIcon } from 'lucide-react-native';
 import { WorkoutService } from '@/src/services/WorkoutService';
 import { formatDuration } from '@/src/utils/time';
 import { WorkoutSession } from '@/src/types/domain';
@@ -76,24 +77,41 @@ export const HistoryScreen = () => {
                                     key={session.id}
                                     onPress={() => router.push(`/history/${session.id}`)}
                                 >
-                                    <AppCard className="p-4 mb-3">
+                                    <AppCard
+                                        className={cn(
+                                            "p-4 mb-3 border-l-4",
+                                            session.isRestDay ? "border-l-blue-400" : "border-l-primary-energy"
+                                        )}
+                                    >
                                         <HStack className="justify-between items-center">
-                                            <VStack space="xs" className="flex-1">
+                                            <VStack space="sm" className="flex-1">
+                                                <HStack className="justify-between items-center pr-2">
+                                                    <HStack space="xs" className="items-center">
+                                                        <Icon
+                                                            as={session.isRestDay ? CoffeeIcon : DumbbellIcon}
+                                                            size="sm"
+                                                            className={session.isRestDay ? "text-blue-400" : "text-primary-energy"}
+                                                        />
+                                                        <Text className="text-white font-bold text-lg">{session.dayNameSnapshot}</Text>
+                                                    </HStack>
+                                                    {session.status !== 'COMPLETED' && (
+                                                        <StatusBadge
+                                                            label={session.status === 'ABANDONED' ? 'Abandoned' : 'Active'}
+                                                            variant={session.status === 'ABANDONED' ? 'error' : 'primary'}
+                                                        />
+                                                    )}
+                                                </HStack>
+
                                                 <HStack space="md" className="items-center">
                                                     <HStack space="xs" className="items-center">
-                                                        <Icon as={CalendarIcon} size="xs" className="text-primary-energy" />
-                                                        <Text className="text-typography-500 text-xs font-semibold">
+                                                        <Icon as={CalendarIcon} size="xs" className="text-typography-500" />
+                                                        <Text className="text-typography-500 text-xs font-medium">
                                                             {session.completedAt ? formatDate(session.completedAt) : 'In Progress'}
                                                         </Text>
                                                     </HStack>
 
-                                                    <StatusBadge
-                                                        label={session.status === 'COMPLETED' ? 'Success' : session.status === 'ABANDONED' ? 'Abandoned' : 'Active'}
-                                                        variant={session.status === 'COMPLETED' ? 'success' : session.status === 'ABANDONED' ? 'error' : 'primary'}
-                                                    />
-
                                                     {session.completedAt && (
-                                                        <HStack space="xs" className="items-center">
+                                                        <HStack space="xs" className="items-center border-l border-white/10 pl-3">
                                                             <Icon as={ClockIcon} size="xs" className="text-typography-500" />
                                                             <Text className="text-typography-500 text-xs font-medium">
                                                                 {formatDuration(session.startedAt, session.completedAt)}
@@ -101,8 +119,22 @@ export const HistoryScreen = () => {
                                                         </HStack>
                                                     )}
                                                 </HStack>
-                                                <Text className="text-white font-bold text-lg">{session.dayNameSnapshot}</Text>
-                                                <Text className="text-typography-500 text-sm font-medium">{session.programNameSnapshot}</Text>
+
+                                                <VStack space="xs" className="mt-1">
+                                                    <Text className="text-typography-400 text-xs uppercase tracking-wider font-semibold">
+                                                        {session.programNameSnapshot}
+                                                    </Text>
+                                                    {!session.isRestDay && session.exercisesSnapshot && (
+                                                        <Text className="text-typography-500 text-xs font-medium">
+                                                            {session.exercisesSnapshot.length} Exercises • {session.exercisesSnapshot.reduce((acc, ex) => acc + ex.sets, 0)} Sets
+                                                        </Text>
+                                                    )}
+                                                    {session.isRestDay && (
+                                                        <Text className="text-blue-400/80 text-xs font-medium italic">
+                                                            Recovery Session
+                                                        </Text>
+                                                    )}
+                                                </VStack>
                                             </VStack>
                                             <Box
                                                 className="p-2 rounded-full"

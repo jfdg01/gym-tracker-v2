@@ -32,7 +32,8 @@ import {
     ArrowDownIcon,
     MoonIcon,
     CoffeeIcon,
-    PlayIcon
+    PlayIcon,
+    Edit2Icon
 } from 'lucide-react-native';
 import { useWorkout } from '@/src/hooks/useWorkout';
 import { ProgramService } from '@/src/services/ProgramService';
@@ -44,6 +45,7 @@ import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/t
 import { ExerciseSelector } from '@/src/components/ExerciseSelector';
 import { ProgramDayExerciseForm } from '@/src/components/ProgramDayExerciseForm';
 import { RenameProgramDayDialog } from '@/src/components/RenameProgramDayDialog';
+import { ProgramForm } from '@/src/components/ProgramForm';
 
 interface ProgramDetailScreenProps {
     id: string;
@@ -72,6 +74,9 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const [showDeleteDayAlert, setShowDeleteDayAlert] = useState(false);
     const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
     const [renamingDayId, setRenamingDayId] = useState<string | null>(null);
+    const [isProgramFormOpen, setIsProgramFormOpen] = useState(false);
+    const [showDeleteProgramAlert, setShowDeleteProgramAlert] = useState(false);
+    const [isDeletingProgram, setIsDeletingProgram] = useState(false);
 
     const toast = useToast();
 
@@ -251,6 +256,42 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         }
     };
 
+    const handleEditProgram = () => {
+        setIsProgramFormOpen(true);
+    };
+
+    const handleProgramUpdate = async (data: Partial<Program>) => {
+        if (!program || submitting) return;
+        setSubmitting(true);
+        try {
+            await ProgramService.updateProgram(program.id, data);
+            await loadData();
+            showToast("Success", "Program updated");
+        } catch (e) {
+            console.error(e);
+            showToast("Error", "Failed to update program", "error");
+        } finally {
+            setSubmitting(false);
+            setIsProgramFormOpen(false);
+        }
+    };
+
+    const handleDeleteProgram = async () => {
+        if (!program || isDeletingProgram) return;
+        setIsDeletingProgram(true);
+        try {
+            await ProgramService.deleteProgram(program.id);
+            showToast("Success", "Program deleted");
+            router.replace('/programs');
+        } catch (e: any) {
+            console.error(e);
+            showToast("Error", e.message || "Failed to delete program", "error");
+        } finally {
+            setIsDeletingProgram(false);
+            setShowDeleteProgramAlert(false);
+        }
+    };
+
     if (!program && loading) {
         return (
             <Box className="flex-1 bg-surface-deep justify-center items-center">
@@ -305,10 +346,11 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                         <AppButton
                                             title={day.isRestDay ? 'Workout' : 'Rest'}
                                             size="sm"
-                                            variant="outline"
+                                            variant="solid"
+                                            action="primary"
                                             icon={day.isRestDay ? DumbbellIcon : MoonIcon}
                                             onPress={() => handleToggleRestDay(day.id, !!day.isRestDay)}
-                                            className="w-15 h-9 border border-neutral-600 text-neutral-600"
+                                            className="w-15 h-9"
                                         />
                                         <AppButton
                                             title="Delete"
@@ -406,14 +448,38 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                     )}
 
                     {days.length > 0 && (
-                        <AppButton
-                            title="ADD ANOTHER DAY"
-                            onPress={handleAddDay}
-                            variant="outline"
-                            icon={PlusIcon}
-                            className="mt-4 border-dashed border-2 h-20 rounded-2xl border-primary-energy/30 mb-4 bg-transparent"
-                            textClassName="text-primary-energy font-bold text-lg"
-                        />
+                        <VStack space="md">
+                            <AppButton
+                                title="ADD ANOTHER DAY"
+                                onPress={handleAddDay}
+                                variant="outline"
+                                icon={PlusIcon}
+                                className="mt-4 border-dashed border-2 h-20 rounded-2xl border-primary-energy/30 bg-transparent"
+                                textClassName="text-primary-energy font-bold text-lg"
+                            />
+
+                            <VStack space="md" className="mt-8">
+                                <Text className="text-typography-500 font-bold uppercase tracking-wider text-xs ml-1">Edit Program</Text>
+                                <HStack space="md">
+                                    <AppButton
+                                        title="Rename / Describe"
+                                        onPress={handleEditProgram}
+                                        variant="solid"
+                                        action="primary"
+                                        icon={Edit2Icon}
+                                        className="flex-1 h-12"
+                                    />
+                                    <AppButton
+                                        title="Delete"
+                                        onPress={() => setShowDeleteProgramAlert(true)}
+                                        variant="solid"
+                                        action="negative"
+                                        icon={TrashIcon}
+                                        className="flex-1 h-12"
+                                    />
+                                </HStack>
+                            </VStack>
+                        </VStack>
                     )}
                 </VStack>
             </ScrollView>
@@ -470,6 +536,28 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                     },
                     { text: "Cancel", style: "cancel" }
                 ]}
+            />
+
+            <AppAlert
+                isOpen={showDeleteProgramAlert}
+                onClose={() => setShowDeleteProgramAlert(false)}
+                title="Delete Program"
+                message={`Are you sure you want to delete "${program?.name}"? This action cannot be undone.`}
+                buttons={[
+                    {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: handleDeleteProgram
+                    },
+                    { text: "Cancel", style: "cancel" }
+                ]}
+            />
+
+            <ProgramForm
+                isOpen={isProgramFormOpen}
+                initialData={program || undefined}
+                onClose={() => setIsProgramFormOpen(false)}
+                onSubmit={handleProgramUpdate}
             />
         </Box>
     );

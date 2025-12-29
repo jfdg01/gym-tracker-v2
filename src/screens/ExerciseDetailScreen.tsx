@@ -8,7 +8,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Icon } from '@/components/ui/icon';
-import { PencilIcon, CheckIcon, XIcon, DumbbellIcon, ClockIcon, ActivityIcon, FileTextIcon, FolderIcon } from 'lucide-react-native';
+import { PencilIcon, CheckIcon, XIcon, DumbbellIcon, ClockIcon, ActivityIcon, FileTextIcon, FolderIcon, Trash2Icon } from 'lucide-react-native';
 import { AppHeader } from '@/src/components/ui-library/AppHeader';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
@@ -18,6 +18,7 @@ import { AppSelect } from '@/src/components/ui-library/AppSelect';
 import { AppTextarea } from '@/src/components/ui-library/AppTextarea';
 import { AppDiscardDialog } from '@/src/components/ui-library/AppDiscardDialog';
 import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
+import { AppAlert } from '@/src/components/ui-library/AppAlert';
 import { ExerciseService } from '@/src/services/ExerciseService';
 import { Exercise, ExerciseSettings, TrackingType, ResistanceType } from '@/src/types/domain';
 import { useExerciseForm } from '@/src/hooks/useExerciseForm';
@@ -54,6 +55,7 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [newDifficulty, setNewDifficulty] = useState('');
+    const [showDeleteAlert, setShowDeleteAlert] = useState(false);
     const toast = useToast();
 
     const loadData = useCallback(async () => {
@@ -129,6 +131,37 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                 )
             });
             throw e;
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await ExerciseService.archiveExercise(id);
+            toast.show({
+                placement: 'top',
+                render: ({ id }) => (
+                    <Toast nativeID={`toast-${id}`} action="success" variant="outline">
+                        <VStack space="xs">
+                            <ToastTitle>Deleted</ToastTitle>
+                            <ToastDescription>Exercise has been deleted</ToastDescription>
+                        </VStack>
+                    </Toast>
+                )
+            });
+            router.back();
+        } catch (e) {
+            console.error(e);
+            toast.show({
+                placement: 'top',
+                render: ({ id }) => (
+                    <Toast nativeID={`toast-${id}`} action="error" variant="outline">
+                        <VStack space="xs">
+                            <ToastTitle>Error</ToastTitle>
+                            <ToastDescription>Failed to delete exercise</ToastDescription>
+                        </VStack>
+                    </Toast>
+                )
+            });
         }
     };
 
@@ -335,6 +368,14 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                             </AppCard>
                         </VStack>
 
+                        <AppButton
+                            title="Delete Exercise"
+                            variant="outline"
+                            action="negative"
+                            icon={Trash2Icon}
+                            onPress={() => setShowDeleteAlert(true)}
+                            className="mt-8 mb-4 border-error-500/30"
+                        />
                     </VStack>
                 ) : (
                     <VStack space="md" className="pb-20">
@@ -485,6 +526,17 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                 isOpen={showDiscardAlert}
                 onClose={() => setShowDiscardAlert(false)}
                 onConfirm={confirmDiscard}
+            />
+
+            <AppAlert
+                isOpen={showDeleteAlert}
+                onClose={() => setShowDeleteAlert(false)}
+                title="Delete Exercise"
+                message={`Are you sure you want to delete "${exercise.name}"? This action cannot be undone.`}
+                buttons={[
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Delete', style: 'destructive', onPress: handleDelete }
+                ]}
             />
         </Box>
     );

@@ -15,6 +15,13 @@
       "when": 1767020270479,
       "tag": "0001_long_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1767023025274,
+      "tag": "0002_salty_strong_guy",
+      "breakpoints": true
     }
   ]
 }

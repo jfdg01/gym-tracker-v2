@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { Pressable, RefreshControl } from 'react-native';
+import { cn } from '@/src/utils/cn';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Box } from '@/components/ui/box';
@@ -12,9 +13,9 @@ import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { Icon } from '@/components/ui/icon';
-import { PlusIcon, Trash2Icon } from 'lucide-react-native';
+import { PlusIcon, Trash2Icon, DumbbellIcon, ChevronRightIcon, TimerIcon, ZapIcon, ClockIcon, ActivityIcon } from 'lucide-react-native';
 import { ExerciseService } from '@/src/services/ExerciseService';
-import { Exercise, ExerciseSettings } from '@/src/types/domain';
+import { Exercise, ExerciseSettings, ResistanceType, TrackingType } from '@/src/types/domain';
 import { ExerciseForm } from '@/src/components/ExerciseForm';
 import { SearchBar } from '@/src/components/SearchBar';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
@@ -22,6 +23,69 @@ import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
 import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
 import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
+
+const getExerciseStyles = (exercise: Exercise) => {
+    const resistance = exercise.defaultResistanceType;
+    const tracking = exercise.defaultTrackingType;
+
+    let icon = ActivityIcon;
+    let colorClass = "text-slate-500";
+    let bgClass = "bg-slate-500/10 border-slate-500/20";
+    let borderColor = "border-l-slate-500";
+
+    if (resistance === ResistanceType.WEIGHT && tracking === TrackingType.REPS) {
+        icon = DumbbellIcon;
+        colorClass = "text-indigo-400";
+        bgClass = "bg-indigo-400/10 border-indigo-400/20";
+        borderColor = "border-l-indigo-500";
+    } else if (resistance === ResistanceType.WEIGHT && tracking === TrackingType.TIME) {
+        icon = TimerIcon;
+        colorClass = "text-amber-400";
+        bgClass = "bg-amber-400/10 border-amber-400/20";
+        borderColor = "border-l-amber-500";
+    } else if (resistance === ResistanceType.DIFFICULTY && tracking === TrackingType.REPS) {
+        icon = ZapIcon;
+        colorClass = "text-purple-400";
+        bgClass = "bg-purple-400/10 border-purple-400/20";
+        borderColor = "border-l-purple-500";
+    } else if (resistance === ResistanceType.DIFFICULTY && tracking === TrackingType.TIME) {
+        icon = ClockIcon;
+        colorClass = "text-teal-400";
+        bgClass = "bg-teal-400/10 border-teal-400/20";
+        borderColor = "border-l-teal-500";
+    }
+
+    return { icon, colorClass, bgClass, borderColor };
+};
+
+const ExerciseBadge = ({ exercise }: { exercise: Exercise }) => {
+    const { colorClass, bgClass } = getExerciseStyles(exercise);
+
+    return (
+        <HStack space="xs">
+            <Box
+                className={cn(
+                    "px-2 py-0.5 rounded-full border items-center justify-center self-start",
+                    bgClass
+                )}
+            >
+                <Text className={cn("text-[10px] font-bold uppercase tracking-wider", colorClass)}>
+                    {exercise.defaultResistanceType}
+                </Text>
+            </Box>
+            <Box
+                className={cn(
+                    "px-2 py-0.5 rounded-full border items-center justify-center self-start",
+                    bgClass
+                )}
+            >
+                <Text className={cn("text-[10px] font-bold uppercase tracking-wider", colorClass)}>
+                    {exercise.defaultTrackingType}
+                </Text>
+            </Box>
+        </HStack>
+    );
+};
 
 export const ExerciseListScreen = () => {
     const router = useRouter();
@@ -195,33 +259,34 @@ export const ExerciseListScreen = () => {
                                     android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}
                                     className="active:opacity-80"
                                 >
-                                    <AppCard className="p-4 mb-1">
+                                    <AppCard
+                                        className={cn(
+                                            "p-4 mb-3 border-l-4",
+                                            getExerciseStyles(ex).borderColor
+                                        )}
+                                    >
                                         <HStack className="justify-between items-center">
-                                            <VStack space="xs" className="flex-1">
-                                                <Text className="text-white font-bold text-lg">{ex.name}</Text>
+                                            <VStack space="sm" className="flex-1">
+                                                <HStack space="xs" className="items-center">
+                                                    <Icon
+                                                        as={getExerciseStyles(ex).icon}
+                                                        size="sm"
+                                                        className={getExerciseStyles(ex).colorClass}
+                                                    />
+                                                    <Text className="text-white font-bold text-lg">{ex.name}</Text>
+                                                </HStack>
+
                                                 <HStack space="sm" className="mt-1">
-                                                    <StatusBadge
-                                                        label={ex.category || 'Uncategorized'}
-                                                        variant="neutral"
-                                                    />
-                                                    <StatusBadge
-                                                        label={ex.defaultTrackingType}
-                                                        variant="primary"
-                                                    />
+                                                    <ExerciseBadge exercise={ex} />
                                                 </HStack>
                                             </VStack>
 
-                                            <VStack space="sm">
-                                                <AppButton
-                                                    title="Archive"
-                                                    size="sm"
-                                                    variant="outline"
-                                                    action="negative"
-                                                    icon={Trash2Icon}
-                                                    onPress={() => handleArchive(ex.id)}
-                                                    className="h-9 px-3"
-                                                />
-                                            </VStack>
+                                            <Box
+                                                className="p-2 rounded-full"
+                                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                                            >
+                                                <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
+                                            </Box>
                                         </HStack>
                                     </AppCard>
                                 </Pressable>
