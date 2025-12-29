@@ -8,10 +8,21 @@ import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { CheckIcon, SkipForwardIcon, DumbbellIcon, PlusIcon, XIcon } from 'lucide-react-native';
+import { Svg, Circle } from 'react-native-svg';
+import Animated, {
+    useSharedValue,
+    useFrameCallback,
+    useAnimatedProps,
+    useAnimatedStyle
+} from 'react-native-reanimated';
 import { Motion } from '@legendapp/motion';
 import { AppNumericInput } from './AppNumericInput';
 import { AppSelect } from './AppSelect';
 import { AppCard } from './AppCard';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const SVG_RADIUS = 45;
+const SVG_CIRCUMFERENCE = 2 * Math.PI * SVG_RADIUS;
 import { ExerciseSnapshotItem, WorkoutSet, TrackingType, ResistanceType } from '@/src/types/domain';
 import { cn } from '@/src/utils/cn';
 
@@ -25,6 +36,8 @@ interface ActiveSetFocusProps {
     isLogging?: boolean;
     timerActive?: boolean;
     timeLeft?: number;
+    initialTime?: number;
+    endTime?: number | null;
     onSkipTimer?: () => void;
     onAddMoreTimer?: () => void;
 }
@@ -39,9 +52,30 @@ export const ActiveSetFocus = memo(({
     isLogging = false,
     timerActive = false,
     timeLeft = 0,
+    initialTime = 0,
+    endTime = null,
     onSkipTimer,
     onAddMoreTimer
 }: ActiveSetFocusProps) => {
+    // Smooth progress logic
+    const progress = useSharedValue(1);
+
+    useFrameCallback(() => {
+        if (timerActive && endTime && initialTime > 0) {
+            const now = Date.now();
+            const rawProgress = Math.max(0, (endTime - now) / (initialTime * 1000));
+            progress.value = rawProgress;
+        } else if (!timerActive) {
+            progress.value = 0;
+        }
+    });
+
+    const animatedProps = useAnimatedProps(() => {
+        return {
+            strokeDashoffset: SVG_CIRCUMFERENCE * progress.value,
+        };
+    });
+
     // Local state for interactive logging
     const [weight, setWeight] = useState(
         (existingSet?.weight ? (+existingSet.weight.toFixed(2)).toString() : undefined) ||
@@ -130,22 +164,50 @@ export const ActiveSetFocus = memo(({
                             <Text className="text-typography-500 font-bold uppercase tracking-[0.2em] size-xs">
                                 Resting
                             </Text>
-                            <Box className="w-1 h-1 rounded-full bg-accent-warning" />
                         </VStack>
 
-                        <Box className="w-32 h-32 rounded-full border-8 border-accent-warning/20 items-center justify-center relative">
+                        <Box className="w-64 h-64 items-center justify-center relative">
+                            {/* SVG Background Circle */}
+                            <Box className="absolute inset-0 items-center justify-center">
+                                <Svg width="220" height="220" viewBox="0 0 100 100">
+                                    {/* Track */}
+                                    <Circle
+                                        cx="50"
+                                        cy="50"
+                                        r="45"
+                                        stroke="rgba(255, 170, 0, 0.1)"
+                                        strokeWidth="8"
+                                        fill="transparent"
+                                    />
+                                    {/* Progress */}
+                                    <AnimatedCircle
+                                        cx="50"
+                                        cy="50"
+                                        r="45"
+                                        stroke="#FFAA00"
+                                        strokeWidth="8"
+                                        fill="transparent"
+                                        strokeDasharray={`${SVG_CIRCUMFERENCE}`}
+                                        animatedProps={animatedProps}
+                                        strokeLinecap="round"
+                                        transform="rotate(-90 50 50)"
+                                    />
+                                </Svg>
+                            </Box>
+
                             <Motion.View
                                 initial={{ scale: 0.9, opacity: 0.1 }}
-                                animate={{ scale: 1.1, opacity: 0.3 }}
+                                animate={{ scale: 1.1, opacity: 0.2 }}
                                 transition={{
                                     type: 'timing',
                                     duration: 1500,
                                     loop: true,
                                 }}
-                                className="absolute inset-0 rounded-full border-2 border-accent-warning"
+                                className="absolute w-48 h-48 rounded-full border-2 border-accent-warning"
                             />
-                            <VStack className="items-center">
-                                <Text className="text-accent-warning font-bold text-4xl font-space-mono tracking-tighter">
+
+                            <VStack className="items-center z-10">
+                                <Text className="text-accent-warning font-black text-6xl font-space-mono tracking-tighter">
                                     {timeLeft}s
                                 </Text>
                             </VStack>

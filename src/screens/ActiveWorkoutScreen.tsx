@@ -38,7 +38,7 @@ import { formatDuration } from '../utils/time';
 export const ActiveWorkoutScreen = () => {
     const router = useRouter();
     const { activeSession, sessionSets, logSet, completeWorkout, abandonWorkout, loading } = useWorkout();
-    const { timeLeft, isActive, startTimer, stopTimer } = useRestTimer();
+    const { timeLeft, initialTime, endTime, isActive, startTimer, stopTimer } = useRestTimer();
 
 
     const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
@@ -307,6 +307,8 @@ export const ActiveWorkoutScreen = () => {
                                 isLogging={isLoggingSet}
                                 timerActive={isActive}
                                 timeLeft={timeLeft}
+                                initialTime={initialTime}
+                                endTime={endTime}
                                 onSkipTimer={stopTimer}
                                 onAddMoreTimer={() => startTimer(timeLeft + 30)}
                             />

@@ -1,7 +1,9 @@
-import { Stack } from 'expo-router';
+import 'react-native-reanimated';
+import { Stack, useRouter, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import * as Notifications from 'expo-notifications';
 import { View, Text, TouchableOpacity, Alert, DevSettings } from 'react-native';
 import { expoDb } from '@/src/db/client';
 import { deleteDatabaseSync } from 'expo-sqlite';
@@ -18,7 +20,48 @@ import { RestTimerProvider } from '@/src/components/RestTimerContext';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+    const router = useRouter();
+    const navigationState = useRootNavigationState();
+    const [pendingUrl, setPendingUrl] = useState<string | null>(null);
     const { success: dbSuccess, error: dbError } = useMigrations(db, migrations);
+
+    // Initial check for a notification that might have opened the app
+    useEffect(() => {
+        Notifications.getLastNotificationResponseAsync().then(response => {
+            const url = response?.notification.request.content.data?.url;
+            if (url) {
+                console.log('[Notification] App opened by notification with URL:', url);
+                setPendingUrl(url);
+            }
+        });
+    }, []);
+
+    // Listener for notifications while the app is in any state
+    useEffect(() => {
+        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+            const url = response.notification.request.content.data?.url;
+            console.log('[Notification] Response received while app is running, URL:', url);
+            if (url) {
+                setPendingUrl(url);
+            }
+        });
+
+        return () => subscription.remove();
+    }, []);
+
+    // Perform navigation when router is ready and we have a pending URL
+    useEffect(() => {
+        const isReady = navigationState?.key && dbSuccess;
+        if (pendingUrl && isReady) {
+            console.log('[Notification] Router ready, navigating to:', pendingUrl);
+            // Use setTimeout to ensure the navigation doesn't conflict with initial layout mount
+            const timeout = setTimeout(() => {
+                router.push(pendingUrl as any);
+                setPendingUrl(null);
+            }, 100);
+            return () => clearTimeout(timeout);
+        }
+    }, [pendingUrl, navigationState?.key, dbSuccess, router]);
 
     useEffect(() => {
         if (dbSuccess || dbError) {
