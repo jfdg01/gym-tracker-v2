@@ -1,4 +1,4 @@
-import { WorkoutRepository } from '../repositories/WorkoutRepository';
+import { WorkoutRepository } from '../repositories/ProgramRepository';
 import { ProgramRepository } from '../repositories/ProgramRepository';
 import { ProgramDayRepository } from '../repositories/ProgramDayRepository';
 import { ProgramDayExerciseRepository } from '../repositories/ProgramDayExerciseRepository';
@@ -7,6 +7,7 @@ import { WorkoutSession, WorkoutSet, ExerciseSnapshotItem } from '../types/domai
 import { ProgressionService } from './ProgressionService';
 import { ProgramService } from './ProgramService';
 import { CacheService, CACHE_KEYS } from './CacheService';
+import { Logger } from '../utils/Logger';
 
 export const WorkoutService = {
     /**
@@ -189,11 +190,16 @@ export const WorkoutService = {
      * Gets completed workout history.
      */
     getHistory: async (): Promise<WorkoutSession[]> => {
+        const stopTimer = Logger.getTimer('Service: WorkoutService.getHistory');
         const cached = CacheService.get<WorkoutSession[]>(CACHE_KEYS.HISTORY);
-        if (cached) return cached;
+        if (cached) {
+            stopTimer();
+            return cached;
+        }
 
         const data = await WorkoutRepository.getCompletedSessions();
         CacheService.set(CACHE_KEYS.HISTORY, data);
+        stopTimer();
         return data;
     },
 

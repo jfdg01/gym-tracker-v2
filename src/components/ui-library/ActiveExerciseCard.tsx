@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Pressable } from 'react-native';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -22,7 +22,7 @@ interface ActiveExerciseCardProps {
     children: React.ReactNode;
 }
 
-export const ActiveExerciseCard = ({
+export const ActiveExerciseCard = memo(({
     exercise,
     completedSets,
     isExpanded,
@@ -69,4 +69,10 @@ export const ActiveExerciseCard = ({
             )}
         </AppCard>
     );
-};
+}, (prev, next) => {
+    return prev.isExpanded === next.isExpanded &&
+           prev.completedSets === next.completedSets &&
+           prev.exercise.exerciseId === next.exercise.exerciseId &&
+           prev.exercise.suggestedWeight === next.exercise.suggestedWeight &&
+           prev.exercise.suggestedDifficulty === next.exercise.suggestedDifficulty;
+});

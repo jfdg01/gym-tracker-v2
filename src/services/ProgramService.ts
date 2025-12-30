@@ -1,9 +1,10 @@
 import { ProgramRepository } from '../repositories/ProgramRepository';
-import { WorkoutRepository } from '../repositories/WorkoutRepository';
+import { WorkoutRepository } from '../repositories/ProgramRepository';
 import { ProgramDayRepository } from '../repositories/ProgramDayRepository';
 import { ProgramDayService } from './ProgramDayService';
 import { Program, ProgramDay } from '../types/domain';
 import { CacheService, CACHE_KEYS } from './CacheService';
+import { Logger } from '../utils/Logger';
 
 /**
  * Service layer for Program-related business logic.
@@ -14,11 +15,16 @@ export const ProgramService = {
      * Gets all programs.
      */
     getAllPrograms: async (): Promise<Program[]> => {
+        const stopTimer = Logger.getTimer('Service: ProgramService.getAllPrograms');
         const cached = CacheService.get<Program[]>(CACHE_KEYS.PROGRAMS);
-        if (cached) return cached;
+        if (cached) {
+            stopTimer();
+            return cached;
+        }
 
         const data = await ProgramRepository.getAll();
         CacheService.set(CACHE_KEYS.PROGRAMS, data);
+        stopTimer();
         return data;
     },
 
@@ -27,8 +33,12 @@ export const ProgramService = {
      * Prevents N+1 query problem on the Program List screen.
      */
     getProgramStats: async (): Promise<Record<string, { total: number, workout: number }>> => {
+        const stopTimer = Logger.getTimer('Service: ProgramService.getProgramStats');
         const cached = CacheService.get<Record<string, { total: number, workout: number }>>(CACHE_KEYS.PROGRAM_STATS);
-        if (cached) return cached;
+        if (cached) {
+            stopTimer();
+            return cached;
+        }
 
         const programs = await ProgramRepository.getAll();
         const stats: Record<string, { total: number, workout: number }> = {};
@@ -42,6 +52,7 @@ export const ProgramService = {
         }
 
         CacheService.set(CACHE_KEYS.PROGRAM_STATS, stats);
+        stopTimer();
         return stats;
     },
 

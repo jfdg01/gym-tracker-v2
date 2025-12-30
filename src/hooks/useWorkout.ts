@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { WorkoutService } from '../services/WorkoutService';
 import { WorkoutSession, WorkoutSet, ExerciseSnapshotItem, WorkoutStatus } from '../types/domain';
+import { Logger } from '../utils/Logger';
 
 export const useWorkout = () => {
     const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
@@ -8,6 +9,7 @@ export const useWorkout = () => {
     const [loading, setLoading] = useState(true);
 
     const loadActiveSession = useCallback(async () => {
+        const stopTimer = Logger.getTimer('Hook: useWorkout.loadActiveSession');
         setLoading(true);
         try {
             const session = await WorkoutService.getActiveSession();
@@ -23,6 +25,7 @@ export const useWorkout = () => {
             console.error('Failed to load active session', e);
         } finally {
             setLoading(false);
+            stopTimer();
         }
     }, []);
 
@@ -31,9 +34,11 @@ export const useWorkout = () => {
     }, [loadActiveSession]);
 
     const startWorkout = async (programDayId: string) => {
+        const stopTimer = Logger.getTimer('Hook: useWorkout.startWorkout');
         const session = await WorkoutService.startWorkout(programDayId);
         setActiveSession(session);
         setSessionSets([]);
+        stopTimer();
         return session;
     };
 

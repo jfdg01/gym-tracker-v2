@@ -3,6 +3,8 @@ import { eq, asc } from 'drizzle-orm';
 import { db } from '../db/client';
 import { exercises, exerciseSettings, programDayExercises, workoutSets } from '../db/schema';
 import { Exercise, ExerciseSettings, TrackingType, ResistanceType } from '../types/domain';
+import { Logger } from '../utils/Logger';
+
 
 const mapExercise = (doc: typeof exercises.$inferSelect): Exercise => ({
     id: doc.id,
@@ -29,13 +31,13 @@ const mapSettings = (doc: typeof exerciseSettings.$inferSelect): ExerciseSetting
 
 export const ExerciseRepository = {
     getAll: async (): Promise<Exercise[]> => {
-        console.time('DB: ExerciseRepository.getAll');
+        const stopTimer = Logger.getTimer('DB: ExerciseRepository.getAll');
         const results = await db.select()
             .from(exercises)
             .where(eq(exercises.isArchived, false))
             .orderBy(asc(exercises.name));
         const mapped = results.map(mapExercise);
-        console.timeEnd('DB: ExerciseRepository.getAll');
+        stopTimer();
         return mapped;
     },
 

@@ -1,8 +1,9 @@
 import * as Crypto from 'expo-crypto';
-import { eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { db } from '../db/client';
-import { programs } from '../db/schema';
-import { Program } from '../types/domain';
+import { programs, workoutSessions, workoutSets } from '../db/schema';
+import { Program, WorkoutSession, WorkoutSet, WorkoutStatus } from '../types/domain';
+import { Logger } from '../utils/Logger';
 
 const mapProgram = (doc: typeof programs.$inferSelect): Program => ({
     id: doc.id,
@@ -13,30 +14,46 @@ const mapProgram = (doc: typeof programs.$inferSelect): Program => ({
     updatedAt: doc.updatedAt || new Date().toISOString(),
 });
 
+const mapSession = (doc: typeof workoutSessions.$inferSelect): WorkoutSession => ({
+    id: doc.id,
+    programDayId: doc.programDayId,
+    programNameSnapshot: doc.programNameSnapshot,
+    dayNameSnapshot: doc.dayNameSnapshot,
+    exercisesSnapshot: doc.exercisesSnapshot ? JSON.parse(doc.exercisesSnapshot) : null,
+    restTimerTargetEndTime: doc.restTimerTargetEndTime,
+    startedAt: doc.startedAt,
+    completedAt: doc.completedAt,
+    isRestDay: !!doc.isRestDay,
+    status: doc.status as WorkoutStatus,
+});
+
+const mapSet = (doc: typeof workoutSets.$inferSelect): WorkoutSet => ({
+    id: doc.id,
+    workoutSessionId: doc.workoutSessionId,
+    exerciseId: doc.exerciseId,
+    setNumber: doc.setNumber,
+    weight: doc.weight,
+    difficulty: doc.difficulty,
+    reps: doc.reps,
+    timeSeconds: doc.timeSeconds,
+    skipped: doc.skipped,
+    createdAt: doc.createdAt || new Date().toISOString(),
+});
+
 export const ProgramRepository = {
-    /**
-     * Retrieves all programs from the database.
-     */
     getAll: async (): Promise<Program[]> => {
-        console.time('DB: ProgramRepository.getAll');
+        const stopTimer = Logger.getTimer('DB: ProgramRepository.getAll');
         const results = await db.select().from(programs);
         const mapped = results.map(mapProgram);
-        console.timeEnd('DB: ProgramRepository.getAll');
+        stopTimer();
         return mapped;
     },
 
-    /**
-     * Retrieves a single program by its UUID.
-     */
     getById: async (id: string): Promise<Program | null> => {
         const results = await db.select().from(programs).where(eq(programs.id, id));
         return results.length > 0 ? mapProgram(results[0]) : null;
     },
 
-    /**
-     * Creates a new program. IDs are generated using expo-crypto.
-     * Timestamps are stored as UTC ISO 8601 strings.
-     */
     create: async (program: Omit<Program, 'id' | 'createdAt' | 'updatedAt' | 'lastCompletedDayId'>): Promise<Program> => {
         const id = Crypto.randomUUID();
         const now = new Date().toISOString();
@@ -53,9 +70,6 @@ export const ProgramRepository = {
         return newProgram;
     },
 
-    /**
-     * Updates an existing program's fields.
-     */
     update: async (id: string, updates: Partial<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>): Promise<void> => {
         await db.update(programs)
             .set({
@@ -65,17 +79,10 @@ export const ProgramRepository = {
             .where(eq(programs.id, id));
     },
 
-    /**
-     * Permanently deletes a program. 
-     * Note: Cascading deletes for programDays are handled at the DB level (onDelete: 'cascade').
-     */
     delete: async (id: string): Promise<void> => {
         await db.delete(programs).where(eq(programs.id, id));
     },
 
-    /**
-     * Updates the last completed day for a program.
-     */
     updateLastCompletedDay: async (id: string, lastCompletedDayId: string | null): Promise<void> => {
         await db.update(programs)
             .set({
@@ -83,5 +90,125 @@ export const ProgramRepository = {
                 updatedAt: new Date().toISOString()
             })
             .where(eq(programs.id, id));
+    }
+};
+
+export const WorkoutRepository = {
+    getActiveSession: async (): Promise<WorkoutSession | null> => {
+        const stopTimer = Logger.getTimer('DB: WorkoutRepository.getActiveSession');
+        const results = await db.select()
+            .from(workoutSessions)
+            .where(eq(workoutSessions.status, WorkoutStatus.IN_PROGRESS))
+            .limit(1);
+        const mapped = results.length > 0 ? mapSession(results[0]) : null;
+        stopTimer();
+        return mapped;
+    },
+
+    createSession: async (data: Omit<WorkoutSession, 'id' | 'startedAt' | 'completedAt' | 'status'>): Promise<WorkoutSession> => {
+        const id = Crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const newSession = {
+            id,
+            ...data,
+            exercisesSnapshot: data.exercisesSnapshot ? JSON.stringify(data.exercisesSnapshot) : null,
+            startedAt: now,
+            status: WorkoutStatus.IN_PROGRESS,
+        };
+
+        await db.insert(workoutSessions).values(newSession as any);
+
+        return {
+            ...newSession,
+            exercisesSnapshot: data.exercisesSnapshot,
+            completedAt: null,
+            status: WorkoutStatus.IN_PROGRESS,
+            startedAt: now,
+        };
+    },
+
+    updateSession: async (id: string, updates: Partial<WorkoutSession>): Promise<void> => {
+        const dbUpdates: any = { ...updates };
+        if (updates.exercisesSnapshot) {
+            dbUpdates.exercisesSnapshot = JSON.stringify(updates.exercisesSnapshot);
+        }
+        await db.update(workoutSessions)
+            .set(dbUpdates)
+            .where(eq(workoutSessions.id, id));
+    },
+
+    saveSet: async (setData: Omit<WorkoutSet, 'id' | 'createdAt'>): Promise<WorkoutSet> => {
+        const existing = await db.select()
+            .from(workoutSets)
+            .where(and(
+                eq(workoutSets.workoutSessionId, setData.workoutSessionId),
+                eq(workoutSets.exerciseId, setData.exerciseId),
+                eq(workoutSets.setNumber, setData.setNumber)
+            ))
+            .limit(1);
+
+        if (existing.length > 0) {
+            const id = existing[0].id;
+            await db.update(workoutSets)
+                .set({ ...setData })
+                .where(eq(workoutSets.id, id));
+            return mapSet({ ...existing[0], ...setData });
+        } else {
+            const id = Crypto.randomUUID();
+            const now = new Date().toISOString();
+            const newSet = {
+                id,
+                ...setData,
+                createdAt: now,
+            };
+            await db.insert(workoutSets).values(newSet as any);
+            return mapSet(newSet as any);
+        }
+    },
+
+    getSetsBySessionId: async (sessionId: string): Promise<WorkoutSet[]> => {
+        const results = await db.select()
+            .from(workoutSets)
+            .where(eq(workoutSets.workoutSessionId, sessionId))
+            .orderBy(workoutSets.setNumber);
+        return results.map(mapSet);
+    },
+
+    completeSession: async (sessionId: string): Promise<void> => {
+        const now = new Date().toISOString();
+        await db.update(workoutSessions)
+            .set({
+                status: WorkoutStatus.COMPLETED,
+                completedAt: now,
+            })
+            .where(eq(workoutSessions.id, sessionId));
+    },
+
+    abandonSession: async (sessionId: string): Promise<void> => {
+        await db.update(workoutSessions)
+            .set({
+                status: WorkoutStatus.ABANDONED,
+                completedAt: new Date().toISOString(),
+            })
+            .where(eq(workoutSessions.id, sessionId));
+    },
+
+    getCompletedSessions: async (): Promise<WorkoutSession[]> => {
+        const stopTimer = Logger.getTimer('DB: WorkoutRepository.getCompletedSessions');
+        const results = await db.select()
+            .from(workoutSessions)
+            .where(eq(workoutSessions.status, WorkoutStatus.COMPLETED))
+            .orderBy(desc(workoutSessions.completedAt));
+        const mapped = results.map(mapSession);
+        stopTimer();
+        return mapped;
+    },
+
+    getSessionById: async (id: string): Promise<WorkoutSession | null> => {
+        const results = await db.select()
+            .from(workoutSessions)
+            .where(eq(workoutSessions.id, id));
+        return results.length > 0 ? mapSession(results[0]) : null;
     }
 };

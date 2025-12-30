@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -29,7 +29,7 @@ import { AppButton } from '@/src/components/ui-library/AppButton';
 import { ActiveExerciseCard } from '@/src/components/ui-library/ActiveExerciseCard';
 import { WorkoutSetRow } from '@/src/components/ui-library/WorkoutSetRow';
 import { AppAlert } from '@/src/components/ui-library/AppAlert';
-
+import { Logger } from '@/src/utils/Logger';
 
 import { ActiveSetFocus } from '@/src/components/ui-library/ActiveSetFocus';
 import { WorkoutCompleteCard } from '@/src/components/ui-library/WorkoutCompleteCard';
@@ -39,7 +39,6 @@ export const ActiveWorkoutScreen = () => {
     const router = useRouter();
     const { activeSession, sessionSets, logSet, completeWorkout, abandonWorkout, loading } = useWorkout();
     const { timeLeft, initialTime, endTime, isActive, startTimer, stopTimer } = useRestTimer();
-
 
     const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
     const [focusedSetNumber, setFocusedSetNumber] = useState<number>(1);
@@ -56,10 +55,25 @@ export const ActiveWorkoutScreen = () => {
     const [isLoggingSet, setIsLoggingSet] = useState(false);
     const [progressionEvents, setProgressionEvents] = useState<Record<string, { newWeight?: number, newDifficulty?: string, exerciseName: string, isMaxLevel?: boolean }>>({});
 
+    // Group sets by exerciseId to avoid filtering in the render loop
+    const setsByExercise = useMemo(() => {
+        const stopTimer = Logger.getTimer('Screen: ActiveWorkoutScreen.computeSetsByExercise');
+        const grouped: Record<string, WorkoutSet[]> = {};
+        sessionSets.forEach(set => {
+            if (!grouped[set.exerciseId]) {
+                grouped[set.exerciseId] = [];
+            }
+            grouped[set.exerciseId].push(set);
+        });
+        stopTimer();
+        return grouped;
+    }, [sessionSets]);
+
     /** Auto-advances focus to the next unlogged set. */
     const findNextSet = useCallback((setsOverride?: WorkoutSet[]) => {
         if (!activeSession) return;
 
+        const stopTimer = Logger.getTimer('Screen: ActiveWorkoutScreen.findNextSet');
         const currentSets = setsOverride || sessionSets;
 
         for (const ex of activeSession.exercisesSnapshot || []) {
@@ -68,10 +82,12 @@ export const ActiveWorkoutScreen = () => {
                 if (!isLogged) {
                     setFocusedExerciseId(ex.exerciseId);
                     setFocusedSetNumber(i);
+                    stopTimer();
                     return;
                 }
             }
         }
+        stopTimer();
     }, [activeSession, sessionSets]);
 
     /** Initializes focus on mount or session load. */
@@ -133,7 +149,6 @@ export const ActiveWorkoutScreen = () => {
                     }));
                 }
             }
-
 
             findNextSet(nextSets);
         } catch (error) {
@@ -256,7 +271,7 @@ export const ActiveWorkoutScreen = () => {
     const focusedExistingSet = sessionSets.find(s => s.exerciseId === focusedExerciseId && s.setNumber === focusedSetNumber);
 
     // Find the last completed set for this specific exercise to use as default values
-    const exerciseSets = sessionSets.filter(s => s.exerciseId === focusedExerciseId).sort((a, b) => a.setNumber - b.setNumber);
+    const exerciseSets = focusedExerciseId ? (setsByExercise[focusedExerciseId] || []) : [];
     const previousCompletedSet = [...exerciseSets].reverse().find(s => !s.skipped);
 
     const totalSetsRequired = activeSession?.exercisesSnapshot?.reduce((acc, ex) => acc + ex.sets, 0) || 0;
@@ -315,7 +330,6 @@ export const ActiveWorkoutScreen = () => {
                         )
                     )}
 
-
                     <VStack space="md">
                         {!activeSession?.isRestDay && (
                             <Text size="xs" className="text-typography-500 font-bold uppercase tracking-widest ml-1">
@@ -324,7 +338,7 @@ export const ActiveWorkoutScreen = () => {
                         )}
                         {activeSession!.exercisesSnapshot?.map((ex) => {
                             const isExpanded = expandedExercise === ex.programDayExerciseId;
-                            const exerciseSets = sessionSets.filter(s => s.exerciseId === ex.exerciseId);
+                            const exerciseSets = setsByExercise[ex.exerciseId] || [];
                             const completedCount = exerciseSets.filter(s => !s.skipped).length;
 
                             return (
@@ -354,7 +368,6 @@ export const ActiveWorkoutScreen = () => {
                     </VStack>
                 </VStack>
             </ScrollView>
-
 
             <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)}>
                 <ActionsheetBackdrop />
@@ -405,4 +418,3 @@ export const ActiveWorkoutScreen = () => {
         </Box>
     );
 };
-

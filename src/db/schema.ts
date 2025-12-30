@@ -11,7 +11,10 @@ export const exercises = sqliteTable('exercises', {
     isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => ({
+    isArchivedIdx: index('exercises_is_archived_idx').on(table.isArchived),
+    nameIdx: index('exercises_name_idx').on(table.name),
+}));
 
 export const exerciseSettings = sqliteTable('exercise_settings', {
     id: text('id').primaryKey(),
@@ -65,7 +68,9 @@ export const workoutSessions = sqliteTable('workout_sessions', {
     completedAt: text('completed_at'),
     isRestDay: integer('is_rest_day', { mode: 'boolean' }).notNull().default(false),
     status: text('status').notNull().default('IN_PROGRESS'),
-});
+}, (table) => ({
+    statusIdx: index('workout_sessions_status_idx').on(table.status),
+}));
 
 export const workoutSets = sqliteTable('workout_sets', {
     id: text('id').primaryKey(),

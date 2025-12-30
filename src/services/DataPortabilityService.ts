@@ -1,7 +1,7 @@
 import { db } from '../db/client';
 import * as schema from '../db/schema';
 import { sql } from 'drizzle-orm';
-import { WorkoutRepository } from '../repositories/WorkoutRepository';
+import { WorkoutRepository } from '../repositories/ProgramRepository';
 import { SQLiteText, SQLiteInteger, getTableConfig } from 'drizzle-orm/sqlite-core';
 
 export const DataPortabilityService = {
