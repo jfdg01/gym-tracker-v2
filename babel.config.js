@@ -12,6 +12,7 @@ module.exports = function (api) {
           alias: {
             '@': './',
             'tailwind.config': './tailwind.config.js',
+            'react-native-worklets/plugin': 'react-native-worklets-core/plugin',
           },
         },
       ],

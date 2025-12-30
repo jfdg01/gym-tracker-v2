@@ -27,6 +27,7 @@
     "expo-av": "~15.0.2",
     "expo-constants": "~17.0.8",
     "expo-crypto": "~14.0.2",
+    "expo-dev-client": "~5.0.11",
     "expo-document-picker": "~13.0.3",
     "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.4",
@@ -50,7 +51,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
-    "react-native-worklets": "^0.5.2",
+    "react-native-worklets-core": "1.6.2",
     "react-stately": "^3.43.0",
     "tailwind-variants": "^0.1.20"
   },
@@ -64,6 +65,9 @@
     "react-native-svg-transformer": "^1.5.2",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.3.3"
+  },
+  "overrides": {
+    "react-native-worklets-core": "1.6.2"
   },
   "private": true
 }
