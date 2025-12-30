@@ -153,11 +153,14 @@ export const WorkoutRepository = {
      * Gets all completed workout sessions, ordered by completion date (descending).
      */
     getCompletedSessions: async (): Promise<WorkoutSession[]> => {
+        console.time('DB: WorkoutRepository.getCompletedSessions');
         const results = await db.select()
             .from(workoutSessions)
             .where(eq(workoutSessions.status, WorkoutStatus.COMPLETED))
             .orderBy(desc(workoutSessions.completedAt));
-        return results.map(mapSession);
+        const mapped = results.map(mapSession);
+        console.timeEnd('DB: WorkoutRepository.getCompletedSessions');
+        return mapped;
     },
 
     /**

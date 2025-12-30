@@ -21,6 +21,7 @@ import { ProgramForm } from '@/src/components/ProgramForm';
 import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
 import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
+import { StaggeredItem } from '@/src/components/ui-library/StaggeredItem';
 
 const COOL_COLORS = [
     { text: "text-violet-400", border: "border-l-violet-500", icon: TrophyIcon },
@@ -45,6 +46,7 @@ export const ProgramListScreen = () => {
     const [programs, setPrograms] = useState<Program[]>([]);
     const [programDayCounts, setProgramDayCounts] = useState<Record<string, { total: number, workout: number }>>({});
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
     const [editingProgram, setEditingProgram] = useState<Program | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -75,15 +77,7 @@ export const ProgramListScreen = () => {
             const data = await ProgramService.getAllPrograms();
             setPrograms(data);
 
-            /** Loads day counts for each program. */
-            const counts: Record<string, { total: number, workout: number }> = {};
-            for (const program of data) {
-                const days = await ProgramDayService.getDaysByProgramId(program.id);
-                counts[program.id] = {
-                    total: days.length,
-                    workout: days.filter(d => !d.isRestDay).length,
-                };
-            }
+            const counts = await ProgramService.getProgramStats();
             setProgramDayCounts(counts);
         } catch (e) {
             console.error(e);
@@ -98,6 +92,12 @@ export const ProgramListScreen = () => {
             loadPrograms();
         }, [])
     );
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadPrograms();
+        setRefreshing(false);
+    };
 
     const handleCreateProgram = () => {
         setEditingProgram(null);
@@ -154,59 +154,63 @@ export const ProgramListScreen = () => {
                 <ScrollView
                     className="flex-1"
                     refreshControl={
-                        <RefreshControl refreshing={loading} onRefresh={loadPrograms} tintColor="#fff" />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
                     }
                 >
                     <VStack space="sm" className="pb-24 pt-4">
                         {programs.length === 0 ? (
                             <Text className="text-typography-500 text-center mt-4">No programs found. Create your first one!</Text>
                         ) : (
-                            programs.map((p) => (
-                                <Pressable
+                            programs.map((p, index) => (
+                                <StaggeredItem
                                     key={p.id}
-                                    onPress={() => router.push(`/program/${p.id}`)}
-                                    android_ripple={{ color: 'rgba(255, 255, 255, 0.05)' }}
-                                    className="active:opacity-80"
+                                    index={index}
                                 >
-                                    <AppCard
-                                        className={cn(
-                                            "p-4 mb-3 border-l-4",
-                                            getProgramStyles(p.id).border
-                                        )}
+                                    <Pressable
+                                        onPress={() => router.push(`/program/${p.id}`)}
+                                        android_ripple={{ color: 'rgba(255, 255, 255, 0.05)' }}
+                                        className="active:opacity-80"
                                     >
-                                        <HStack className="justify-between items-center">
-                                            <VStack space="xs" className="flex-1 pr-4">
-                                                <HStack space="xs" className="items-center">
-                                                    <Icon
-                                                        as={getProgramStyles(p.id).icon}
-                                                        size="sm"
-                                                        className={getProgramStyles(p.id).text}
-                                                    />
-                                                    <Text className="text-white font-bold text-lg">{p.name}</Text>
-                                                </HStack>
-                                                {p.description && (
-                                                    <Text className="text-typography-500 text-sm italic mt-0.5" numberOfLines={1}>
-                                                        {p.description}
-                                                    </Text>
-                                                )}
-                                                <HStack space="xs" className="mt-2 items-center">
-                                                    <Icon as={CalendarIcon} size="xs" className="text-primary-energy" />
-                                                    <Text className="text-typography-500 text-xs font-semibold">
-                                                        {programDayCounts[p.id]?.total || 0} {programDayCounts[p.id]?.total === 1 ? 'Day' : 'Days'}
-                                                        {(programDayCounts[p.id]?.workout || 0) > 0 && ` • ${programDayCounts[p.id].workout} Workouts`}
-                                                    </Text>
-                                                </HStack>
-                                            </VStack>
+                                        <AppCard
+                                            className={cn(
+                                                "p-4 mb-3 border-l-4",
+                                                getProgramStyles(p.id).border
+                                            )}
+                                        >
+                                            <HStack className="justify-between items-center">
+                                                <VStack space="xs" className="flex-1 pr-4">
+                                                    <HStack space="xs" className="items-center">
+                                                        <Icon
+                                                            as={getProgramStyles(p.id).icon}
+                                                            size="sm"
+                                                            className={getProgramStyles(p.id).text}
+                                                        />
+                                                        <Text className="text-white font-bold text-lg">{p.name}</Text>
+                                                    </HStack>
+                                                    {p.description && (
+                                                        <Text className="text-typography-500 text-sm italic mt-0.5" numberOfLines={1}>
+                                                            {p.description}
+                                                        </Text>
+                                                    )}
+                                                    <HStack space="xs" className="mt-2 items-center">
+                                                        <Icon as={CalendarIcon} size="xs" className="text-primary-energy" />
+                                                        <Text className="text-typography-500 text-xs font-semibold">
+                                                            {programDayCounts[p.id]?.total || 0} {programDayCounts[p.id]?.total === 1 ? 'Day' : 'Days'}
+                                                            {(programDayCounts[p.id]?.workout || 0) > 0 && ` • ${programDayCounts[p.id].workout} Workouts`}
+                                                        </Text>
+                                                    </HStack>
+                                                </VStack>
 
-                                            <Box
-                                                className="p-2 rounded-full"
-                                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                                            >
-                                                <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
-                                            </Box>
-                                        </HStack>
-                                    </AppCard>
-                                </Pressable>
+                                                <Box
+                                                    className="p-2 rounded-full"
+                                                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                                                >
+                                                    <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
+                                                </Box>
+                                            </HStack>
+                                        </AppCard>
+                                    </Pressable>
+                                </StaggeredItem>
                             ))
                         )}
                     </VStack>

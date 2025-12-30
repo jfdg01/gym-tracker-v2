@@ -23,6 +23,7 @@ import { AppCard } from '@/src/components/ui-library/AppCard';
 import { AppButton } from '@/src/components/ui-library/AppButton';
 import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
 import { StatusBadge } from '@/src/components/ui-library/StatusBadge';
+import { StaggeredItem } from '@/src/components/ui-library/StaggeredItem';
 
 const getExerciseStyles = (exercise: Exercise) => {
     const resistance = exercise.defaultResistanceType;
@@ -93,6 +94,7 @@ export const ExerciseListScreen = () => {
     const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
     const [editingSettings, setEditingSettings] = useState<ExerciseSettings | null>(null);
@@ -136,6 +138,12 @@ export const ExerciseListScreen = () => {
             loadExercises();
         }, [])
     );
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadExercises();
+        setRefreshing(false);
+    };
 
     const [isPending, startTransition] = React.useTransition();
 
@@ -245,51 +253,55 @@ export const ExerciseListScreen = () => {
                 <ScrollView
                     className="flex-1"
                     refreshControl={
-                        <RefreshControl refreshing={loading} onRefresh={loadExercises} tintColor="#fff" />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
                     }
                 >
                     <VStack space="sm" className="pb-24 pt-2">
                         {filteredExercises.length === 0 ? (
                             <Text className="text-typography-500 text-center mt-4">No exercises found.</Text>
                         ) : (
-                            filteredExercises.map((ex) => (
-                                <Pressable
+                            filteredExercises.map((ex, index) => (
+                                <StaggeredItem
                                     key={ex.id}
-                                    onPress={() => router.push(`/exercises/${ex.id}`)}
-                                    android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}
-                                    className="active:opacity-80"
+                                    index={index}
                                 >
-                                    <AppCard
-                                        className={cn(
-                                            "p-4 mb-3 border-l-4",
-                                            getExerciseStyles(ex).borderColor
-                                        )}
+                                    <Pressable
+                                        onPress={() => router.push(`/exercises/${ex.id}`)}
+                                        android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}
+                                        className="active:opacity-80"
                                     >
-                                        <HStack className="justify-between items-center">
-                                            <VStack space="sm" className="flex-1">
-                                                <HStack space="xs" className="items-center">
-                                                    <Icon
-                                                        as={getExerciseStyles(ex).icon}
-                                                        size="sm"
-                                                        className={getExerciseStyles(ex).colorClass}
-                                                    />
-                                                    <Text className="text-white font-bold text-lg">{ex.name}</Text>
-                                                </HStack>
+                                        <AppCard
+                                            className={cn(
+                                                "p-4 mb-3 border-l-4",
+                                                getExerciseStyles(ex).borderColor
+                                            )}
+                                        >
+                                            <HStack className="justify-between items-center">
+                                                <VStack space="sm" className="flex-1">
+                                                    <HStack space="xs" className="items-center">
+                                                        <Icon
+                                                            as={getExerciseStyles(ex).icon}
+                                                            size="sm"
+                                                            className={getExerciseStyles(ex).colorClass}
+                                                        />
+                                                        <Text className="text-white font-bold text-lg">{ex.name}</Text>
+                                                    </HStack>
 
-                                                <HStack space="sm" className="mt-1">
-                                                    <ExerciseBadge exercise={ex} />
-                                                </HStack>
-                                            </VStack>
+                                                    <HStack space="sm" className="mt-1">
+                                                        <ExerciseBadge exercise={ex} />
+                                                    </HStack>
+                                                </VStack>
 
-                                            <Box
-                                                className="p-2 rounded-full"
-                                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                                            >
-                                                <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
-                                            </Box>
-                                        </HStack>
-                                    </AppCard>
-                                </Pressable>
+                                                <Box
+                                                    className="p-2 rounded-full"
+                                                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                                                >
+                                                    <Icon as={ChevronRightIcon} size="sm" className="text-typography-400" />
+                                                </Box>
+                                            </HStack>
+                                        </AppCard>
+                                    </Pressable>
+                                </StaggeredItem>
                             ))
                         )}
                     </VStack>

@@ -1,7 +1,9 @@
 import { ProgramRepository } from '../repositories/ProgramRepository';
 import { WorkoutRepository } from '../repositories/WorkoutRepository';
 import { ProgramDayRepository } from '../repositories/ProgramDayRepository';
+import { ProgramDayService } from './ProgramDayService';
 import { Program, ProgramDay } from '../types/domain';
+import { CacheService, CACHE_KEYS } from './CacheService';
 
 /**
  * Service layer for Program-related business logic.
@@ -12,7 +14,35 @@ export const ProgramService = {
      * Gets all programs.
      */
     getAllPrograms: async (): Promise<Program[]> => {
-        return await ProgramRepository.getAll();
+        const cached = CacheService.get<Program[]>(CACHE_KEYS.PROGRAMS);
+        if (cached) return cached;
+
+        const data = await ProgramRepository.getAll();
+        CacheService.set(CACHE_KEYS.PROGRAMS, data);
+        return data;
+    },
+
+    /**
+     * Gets total and workout day counts for all programs in a single batch.
+     * Prevents N+1 query problem on the Program List screen.
+     */
+    getProgramStats: async (): Promise<Record<string, { total: number, workout: number }>> => {
+        const cached = CacheService.get<Record<string, { total: number, workout: number }>>(CACHE_KEYS.PROGRAM_STATS);
+        if (cached) return cached;
+
+        const programs = await ProgramRepository.getAll();
+        const stats: Record<string, { total: number, workout: number }> = {};
+
+        for (const program of programs) {
+            const days = await ProgramDayService.getDaysByProgramId(program.id);
+            stats[program.id] = {
+                total: days.length,
+                workout: days.filter((d: ProgramDay) => !d.isRestDay).length,
+            };
+        }
+
+        CacheService.set(CACHE_KEYS.PROGRAM_STATS, stats);
+        return stats;
     },
 
     /**
@@ -37,6 +67,8 @@ export const ProgramService = {
             isRestDay: false,
         });
 
+        CacheService.invalidate(CACHE_KEYS.PROGRAMS);
+        CacheService.invalidate(CACHE_KEYS.PROGRAM_STATS);
         return newProgram;
     },
 
@@ -47,7 +79,9 @@ export const ProgramService = {
         id: string,
         updates: Partial<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>
     ): Promise<void> => {
-        return await ProgramRepository.update(id, updates);
+        await ProgramRepository.update(id, updates);
+        CacheService.invalidate(CACHE_KEYS.PROGRAMS);
+        CacheService.invalidate(CACHE_KEYS.PROGRAM_STATS);
     },
 
     /**
@@ -63,7 +97,9 @@ export const ProgramService = {
             }
         }
 
-        return await ProgramRepository.delete(id);
+        await ProgramRepository.delete(id);
+        CacheService.invalidate(CACHE_KEYS.PROGRAMS);
+        CacheService.invalidate(CACHE_KEYS.PROGRAM_STATS);
     },
 
     /**

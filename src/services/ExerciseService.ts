@@ -1,10 +1,16 @@
 import * as Crypto from 'expo-crypto';
 import { ExerciseRepository } from '../repositories/ExerciseRepository';
 import { Exercise, ExerciseSettings } from '../types/domain';
+import { CacheService, CACHE_KEYS } from './CacheService';
 
 export const ExerciseService = {
     getAllExercises: async (): Promise<Exercise[]> => {
-        return await ExerciseRepository.getAll();
+        const cached = CacheService.get<Exercise[]>(CACHE_KEYS.EXERCISES);
+        if (cached) return cached;
+
+        const data = await ExerciseRepository.getAll();
+        CacheService.set(CACHE_KEYS.EXERCISES, data);
+        return data;
     },
 
     getExerciseById: async (id: string): Promise<Exercise | null> => {
@@ -15,21 +21,25 @@ export const ExerciseService = {
         exercise: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt' | 'isArchived'>
     ): Promise<Exercise> => {
         const id = Crypto.randomUUID();
-        return await ExerciseRepository.create({
+        const result = await ExerciseRepository.create({
             ...exercise,
             id,
         });
+        CacheService.invalidate(CACHE_KEYS.EXERCISES);
+        return result;
     },
 
     updateExercise: async (
         id: string,
         updates: Partial<Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>>
     ): Promise<void> => {
-        return await ExerciseRepository.update(id, updates);
+        await ExerciseRepository.update(id, updates);
+        CacheService.invalidate(CACHE_KEYS.EXERCISES);
     },
 
     archiveExercise: async (id: string): Promise<void> => {
-        return await ExerciseRepository.delete(id);
+        await ExerciseRepository.delete(id);
+        CacheService.invalidate(CACHE_KEYS.EXERCISES);
     },
 
     getExerciseSettings: async (exerciseId: string): Promise<ExerciseSettings | null> => {

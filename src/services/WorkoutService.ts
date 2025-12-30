@@ -6,6 +6,7 @@ import { ExerciseRepository } from '../repositories/ExerciseRepository';
 import { WorkoutSession, WorkoutSet, ExerciseSnapshotItem } from '../types/domain';
 import { ProgressionService } from './ProgressionService';
 import { ProgramService } from './ProgramService';
+import { CacheService, CACHE_KEYS } from './CacheService';
 
 export const WorkoutService = {
     /**
@@ -161,6 +162,7 @@ export const WorkoutService = {
         if (!session) throw new Error('Session not found');
 
         await WorkoutRepository.completeSession(sessionId);
+        CacheService.invalidate(CACHE_KEYS.HISTORY);
 
         // Update program progression
         if (session.programDayId) {
@@ -180,13 +182,19 @@ export const WorkoutService = {
      */
     abandonWorkout: async (sessionId: string): Promise<void> => {
         await WorkoutRepository.abandonSession(sessionId);
+        // We don't necessarily need to invalidate history on abandon as it filtered by completed
     },
 
     /**
      * Gets completed workout history.
      */
     getHistory: async (): Promise<WorkoutSession[]> => {
-        return await WorkoutRepository.getCompletedSessions();
+        const cached = CacheService.get<WorkoutSession[]>(CACHE_KEYS.HISTORY);
+        if (cached) return cached;
+
+        const data = await WorkoutRepository.getCompletedSessions();
+        CacheService.set(CACHE_KEYS.HISTORY, data);
+        return data;
     },
 
     /**

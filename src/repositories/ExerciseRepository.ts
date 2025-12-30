@@ -29,11 +29,14 @@ const mapSettings = (doc: typeof exerciseSettings.$inferSelect): ExerciseSetting
 
 export const ExerciseRepository = {
     getAll: async (): Promise<Exercise[]> => {
+        console.time('DB: ExerciseRepository.getAll');
         const results = await db.select()
             .from(exercises)
             .where(eq(exercises.isArchived, false))
             .orderBy(asc(exercises.name));
-        return results.map(mapExercise);
+        const mapped = results.map(mapExercise);
+        console.timeEnd('DB: ExerciseRepository.getAll');
+        return mapped;
     },
 
     getById: async (id: string): Promise<Exercise | null> => {

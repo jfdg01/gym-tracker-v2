@@ -18,8 +18,11 @@ export const ProgramRepository = {
      * Retrieves all programs from the database.
      */
     getAll: async (): Promise<Program[]> => {
+        console.time('DB: ProgramRepository.getAll');
         const results = await db.select().from(programs);
-        return results.map(mapProgram);
+        const mapped = results.map(mapProgram);
+        console.timeEnd('DB: ProgramRepository.getAll');
+        return mapped;
     },
 
     /**

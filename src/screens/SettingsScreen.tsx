@@ -23,6 +23,7 @@ import { DataPortabilityService } from '@/src/services/DataPortabilityService';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { AppAlert } from '@/src/components/ui-library/AppAlert';
 import { AppScreenTitle } from '@/src/components/ui-library/AppScreenTitle';
+import { StaggeredItem } from '@/src/components/ui-library/StaggeredItem';
 
 export const SettingsScreen = () => {
     const [loading, setLoading] = useState(false);
@@ -166,84 +167,90 @@ export const SettingsScreen = () => {
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <VStack space="lg" className="pb-24">
-                        <VStack space="sm">
-                            <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">Data Portability</Text>
-                            <Card className="bg-surface-elevated border-0 p-0 overflow-hidden">
-                                <VStack>
-                                    <Pressable onPress={handleExport} disabled={loading} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
-                                        <HStack className="p-4 items-center justify-between border-b border-outline-dark/5">
-                                            <HStack space="md" className="items-center">
-                                                <Box className="p-2 bg-primary-energy/10 rounded-lg">
-                                                    <Icon as={DownloadIcon} size="sm" className="text-primary-energy" />
-                                                </Box>
-                                                <VStack>
-                                                    <Text className="text-typography-900 font-medium">Export Data</Text>
-                                                    <Text size="xs" className="text-typography-500">Save all data to a JSON file</Text>
-                                                </VStack>
+                        <StaggeredItem index={0}>
+                            <VStack space="sm">
+                                <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">Data Portability</Text>
+                                <Card className="bg-surface-elevated border-0 p-0 overflow-hidden">
+                                    <VStack>
+                                        <Pressable onPress={handleExport} disabled={loading} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
+                                            <HStack className="p-4 items-center justify-between border-b border-outline-dark/5">
+                                                <HStack space="md" className="items-center">
+                                                    <Box className="p-2 bg-primary-energy/10 rounded-lg">
+                                                        <Icon as={DownloadIcon} size="sm" className="text-primary-energy" />
+                                                    </Box>
+                                                    <VStack>
+                                                        <Text className="text-typography-900 font-medium">Export Data</Text>
+                                                        <Text size="xs" className="text-typography-500">Save all data to a JSON file</Text>
+                                                    </VStack>
+                                                </HStack>
+                                                <Icon as={ChevronRightIcon} size="xs" className="text-typography-400" />
                                             </HStack>
-                                            <Icon as={ChevronRightIcon} size="xs" className="text-typography-400" />
-                                        </HStack>
-                                    </Pressable>
+                                        </Pressable>
 
-                                    <Pressable onPress={handleImport} disabled={loading} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
-                                        <HStack className="p-4 items-center justify-between">
-                                            <HStack space="md" className="items-center">
-                                                <Box className="p-2 bg-background-100 rounded-lg">
-                                                    <Icon as={UploadIcon} size="sm" className="text-typography-500" />
-                                                </Box>
-                                                <VStack>
-                                                    <Text className="text-typography-900 font-medium">Import Data</Text>
-                                                    <Text size="xs" className="text-typography-500">Restore or merge from JSON backup</Text>
-                                                </VStack>
+                                        <Pressable onPress={handleImport} disabled={loading} android_ripple={{ color: 'rgba(79, 70, 229, 0.1)' }}>
+                                            <HStack className="p-4 items-center justify-between">
+                                                <HStack space="md" className="items-center">
+                                                    <Box className="p-2 bg-background-100 rounded-lg">
+                                                        <Icon as={UploadIcon} size="sm" className="text-typography-500" />
+                                                    </Box>
+                                                    <VStack>
+                                                        <Text className="text-typography-900 font-medium">Import Data</Text>
+                                                        <Text size="xs" className="text-typography-500">Restore or merge from JSON backup</Text>
+                                                    </VStack>
+                                                </HStack>
+                                                <Icon as={ChevronRightIcon} size="xs" className="text-typography-400" />
                                             </HStack>
-                                            <Icon as={ChevronRightIcon} size="xs" className="text-typography-400" />
-                                        </HStack>
-                                    </Pressable>
-                                </VStack>
-                            </Card>
-                        </VStack>
+                                        </Pressable>
+                                    </VStack>
+                                </Card>
+                            </VStack>
+                        </StaggeredItem>
 
 
-                        <VStack space="sm">
-                            <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">About</Text>
-                            <Card className="bg-surface-elevated border-0 p-4">
-                                <VStack space="md">
-                                    <HStack space="md" className="items-center">
-                                        <Box className="p-2 bg-background-100 rounded-lg">
-                                            <Icon as={InfoIcon} size="sm" className="text-typography-500" />
-                                        </Box>
-                                        <VStack>
-                                            <Text className="text-typography-950 font-bold">Gym Tracker v2.0</Text>
-                                            <Text size="xs" className="text-typography-500 font-medium">Offline-first training companion</Text>
-                                        </VStack>
-                                    </HStack>
-                                    <HStack space="md" className="items-center">
-                                        <Icon as={ShieldCheckIcon} size="sm" className="text-success-500" />
-                                        <Text size="sm" className="text-typography-400">Your data is stored locally on this device.</Text>
-                                    </HStack>
-                                </VStack>
-                            </Card>
-                        </VStack>
-
-                        <VStack space="sm">
-                            <Text size="xs" className="text-error-500 uppercase tracking-wider font-bold px-1">Danger Zone</Text>
-                            <Card className="bg-surface-elevated border border-error-500/20 p-0 overflow-hidden">
-                                <Pressable onPress={() => setShowDeleteConfirmAlert(true)} disabled={loading} android_ripple={{ color: 'rgba(239, 68, 68, 0.1)' }}>
-                                    <HStack className="p-4 items-center justify-between">
+                        <StaggeredItem index={1}>
+                            <VStack space="sm">
+                                <Text size="xs" className="text-typography-500 uppercase tracking-wider font-bold px-1">About</Text>
+                                <Card className="bg-surface-elevated border-0 p-4">
+                                    <VStack space="md">
                                         <HStack space="md" className="items-center">
-                                            <Box className="p-2 bg-error-500/10 rounded-lg">
-                                                <Icon as={Trash2Icon} size="sm" className="text-error-500" />
+                                            <Box className="p-2 bg-background-100 rounded-lg">
+                                                <Icon as={InfoIcon} size="sm" className="text-typography-500" />
                                             </Box>
                                             <VStack>
-                                                <Text className="text-error-500 font-medium">Delete Database</Text>
-                                                <Text size="xs" className="text-typography-500">Permanently wipe all records</Text>
+                                                <Text className="text-typography-950 font-bold">Gym Tracker v2.0</Text>
+                                                <Text size="xs" className="text-typography-500 font-medium">Offline-first training companion</Text>
                                             </VStack>
                                         </HStack>
-                                        <Icon as={ChevronRightIcon} size="xs" className="text-error-500/50" />
-                                    </HStack>
-                                </Pressable>
-                            </Card>
-                        </VStack>
+                                        <HStack space="md" className="items-center">
+                                            <Icon as={ShieldCheckIcon} size="sm" className="text-success-500" />
+                                            <Text size="sm" className="text-typography-400">Your data is stored locally on this device.</Text>
+                                        </HStack>
+                                    </VStack>
+                                </Card>
+                            </VStack>
+                        </StaggeredItem>
+
+                        <StaggeredItem index={2}>
+                            <VStack space="sm">
+                                <Text size="xs" className="text-error-500 uppercase tracking-wider font-bold px-1">Danger Zone</Text>
+                                <Card className="bg-surface-elevated border border-error-500/20 p-0 overflow-hidden">
+                                    <Pressable onPress={() => setShowDeleteConfirmAlert(true)} disabled={loading} android_ripple={{ color: 'rgba(239, 68, 68, 0.1)' }}>
+                                        <HStack className="p-4 items-center justify-between">
+                                            <HStack space="md" className="items-center">
+                                                <Box className="p-2 bg-error-500/10 rounded-lg">
+                                                    <Icon as={Trash2Icon} size="sm" className="text-error-500" />
+                                                </Box>
+                                                <VStack>
+                                                    <Text className="text-error-500 font-medium">Delete Database</Text>
+                                                    <Text size="xs" className="text-typography-500">Permanently wipe all records</Text>
+                                                </VStack>
+                                            </HStack>
+                                            <Icon as={ChevronRightIcon} size="xs" className="text-error-500/50" />
+                                        </HStack>
+                                    </Pressable>
+                                </Card>
+                            </VStack>
+                        </StaggeredItem>
                     </VStack>
                 </ScrollView>
             </VStack>
