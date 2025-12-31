@@ -36,10 +36,10 @@ export const AppSelect = ({
             onValueChange={onValueChange}
             isDisabled={disabled}
         >
-            <SelectTrigger className={cn("bg-background-dark/30 border-outline-dark/20 h-12", className)}>
+            <SelectTrigger className={cn("bg-surface-elevated border-outline-dark/50 h-12", className)}>
                 <SelectInput
                     placeholder={placeholder}
-                    className="text-typography-900"
+                    className="text-white font-medium"
                 />
                 <SelectIcon as={ChevronDown} className="mr-3 text-typography-400" />
             </SelectTrigger>

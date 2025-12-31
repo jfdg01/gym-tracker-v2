@@ -175,7 +175,6 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
             resistanceType,
             formKey,
             showDiscardAlert,
-            difficultyLevels,
         },
         actions: {
             setCategory,
@@ -186,15 +185,10 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
             handleDiscardPress,
             confirmDiscard,
             setErrors,
-            addDifficulty,
-            removeDifficulty,
         },
         refs: {
             nameRef,
             descriptionRef,
-            restTimeRef,
-            currentWeightRef,
-            weightFactorRef,
         }
     } = useExerciseForm({
         isOpen: isEditing,
@@ -210,20 +204,6 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
         if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
     }, [errors.name, setErrors]);
 
-    const onRestChange = useCallback((t: string) => {
-        restTimeRef.current = t;
-        if (errors.restTime) setErrors(prev => ({ ...prev, restTime: '' }));
-    }, [errors.restTime, setErrors]);
-
-    const onWeightChange = useCallback((t: string) => {
-        currentWeightRef.current = t;
-        if (errors.currentWeight) setErrors(prev => ({ ...prev, currentWeight: '' }));
-    }, [errors.currentWeight, setErrors]);
-
-    const onFactorChange = useCallback((t: string) => {
-        weightFactorRef.current = t;
-        if (errors.weightFactor) setErrors(prev => ({ ...prev, weightFactor: '' }));
-    }, [errors.weightFactor, setErrors]);
 
     const onDescriptionChange = useCallback((t: string) => {
         descriptionRef.current = t;
@@ -324,48 +304,8 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                                     </VStack>
                                 </AppCard>
                             </HStack>
-
-                            <AppCard className="p-0 overflow-hidden">
-                                <VStack className="divide-y divide-white/5">
-                                    <HStack className="p-4 justify-between items-center">
-                                        <HStack space="sm" className="items-center">
-                                            <Icon as={ClockIcon} size="sm" className="text-typography-500" />
-                                            <Text className="text-typography-700">Rest Time</Text>
-                                        </HStack>
-                                        <Text className="text-typography-950 font-bold">{settings?.restTimeSeconds || 90}s</Text>
-                                    </HStack>
-
-                                    {exercise.defaultResistanceType === ResistanceType.WEIGHT && (
-                                        <>
-                                            <HStack className="p-4 justify-between items-center bg-surface-deep/30">
-                                                <Text className="text-typography-700 ml-7">Current Weight</Text>
-                                                <Text className="text-typography-950 font-bold">{settings?.currentWeight || 0} kg</Text>
-                                            </HStack>
-                                            <HStack className="p-4 justify-between items-center bg-surface-deep/30">
-                                                <Text className="text-typography-700 ml-7">Increase Factor</Text>
-                                                <Text className="text-typography-950 font-bold">{settings?.weightIncreaseFactor || 2.5} kg</Text>
-                                            </HStack>
-                                        </>
-                                    )}
-
-                                    {exercise.defaultResistanceType === ResistanceType.DIFFICULTY && (
-                                        <VStack className="p-4 bg-surface-deep/30" space="md">
-                                            <Text className="text-typography-700 ml-7">Difficulty Levels</Text>
-                                            <VStack space="sm" className="ml-7">
-                                                {settings?.difficultyLevels?.map((level, i) => (
-                                                    <HStack key={i} space="sm" className="items-center">
-                                                        <Box className="w-1.5 h-1.5 rounded-full bg-typography-400" />
-                                                        <Text className="text-typography-900 font-medium">{level}</Text>
-                                                    </HStack>
-                                                ))}
-                                                {(!settings?.difficultyLevels || settings.difficultyLevels.length === 0) && (
-                                                    <Text className="text-typography-500 italic">None defined</Text>
-                                                )}
-                                            </VStack>
-                                        </VStack>
-                                    )}
-                                </VStack>
-                            </AppCard>
+                            
+                            {/* Variable parameters (Rest, Weight, Difficulty) are now managed per-program */}
                         </VStack>
 
                         <AppButton
@@ -416,91 +356,6 @@ export const ExerciseDetailScreen = ({ id }: ExerciseDetailScreenProps) => {
                             </AppFormField>
                         </HStack>
 
-                        <AppFormField label="Rest Time (Seconds)" required error={errors.restTime}>
-                            <AppInput
-                                value={restTimeRef.current}
-                                onChangeText={onRestChange}
-                                placeholder="e.g. 90"
-                                keyboardType="numeric"
-                                isInvalid={!!errors.restTime}
-                                key={`${formKey}-rest`}
-                            />
-                        </AppFormField>
-
-                        {resistanceType === ResistanceType.WEIGHT && (
-                            <HStack space="md" className="w-full">
-                                <AppFormField label="Start Weight (kg)" error={errors.currentWeight} className="flex-1">
-                                    <AppInput
-                                        value={currentWeightRef.current}
-                                        onChangeText={onWeightChange}
-                                        placeholder="e.g. 20"
-                                        keyboardType="numeric"
-                                        isInvalid={!!errors.currentWeight}
-                                        key={`${formKey}-weight`}
-                                    />
-                                </AppFormField>
-                                <AppFormField label="Increase (kg)" error={errors.weightFactor} className="flex-1">
-                                    <AppInput
-                                        value={weightFactorRef.current}
-                                        onChangeText={onFactorChange}
-                                        placeholder="e.g. 2.5"
-                                        keyboardType="numeric"
-                                        isInvalid={!!errors.weightFactor}
-                                        key={`${formKey}-factor`}
-                                    />
-                                </AppFormField>
-                            </HStack>
-                        )}
-
-                        {resistanceType === ResistanceType.DIFFICULTY && (
-                            <VStack space="sm" className="mt-2">
-                                <Text className="text-typography-500 font-bold uppercase tracking-wider text-xs ml-1">Difficulty Levels</Text>
-                                <AppCard className="p-4">
-                                    <VStack space="md">
-                                        <VStack space="xs" className="divide-y divide-white/5">
-                                            {difficultyLevels.map((level, index) => (
-                                                <HStack key={index} className="justify-between items-center py-2">
-                                                    <Text className="text-typography-900 font-medium">{level}</Text>
-                                                    <Pressable
-                                                        onPress={() => removeDifficulty(index)}
-                                                        className="p-2 opacity-70 active:opacity-100"
-                                                    >
-                                                        <Icon as={XIcon} size="xs" className="text-error-500" />
-                                                    </Pressable>
-                                                </HStack>
-                                            ))}
-                                            {difficultyLevels.length === 0 && (
-                                                <Text className="text-typography-500 italic py-2">No levels defined</Text>
-                                            )}
-                                        </VStack>
-
-                                        <HStack space="sm" className="items-center mt-2">
-                                            <AppInput
-                                                value={newDifficulty}
-                                                onChangeText={setNewDifficulty}
-                                                placeholder="Add difficulty (e.g. Red)"
-                                                className="flex-1 h-10"
-                                                inputClassName="text-sm"
-                                            />
-                                            <AppButton
-                                                title="Add"
-                                                onPress={() => {
-                                                    if (newDifficulty.trim()) {
-                                                        addDifficulty(newDifficulty);
-                                                        setNewDifficulty('');
-                                                    }
-                                                }}
-                                                size="sm"
-                                                variant="outline"
-                                                action="primary"
-                                                className="h-10"
-                                                disabled={!newDifficulty.trim()}
-                                            />
-                                        </HStack>
-                                    </VStack>
-                                </AppCard>
-                            </VStack>
-                        )}
 
                         <AppFormField label="Description">
                             <AppTextarea

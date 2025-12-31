@@ -54,6 +54,7 @@ export const programDayExercises = sqliteTable('program_day_exercises', {
     sets: integer('sets').notNull(),
     targetReps: integer('target_reps'),
     targetTimeSeconds: integer('target_time_seconds'),
+    restTimeSeconds: integer('rest_time_seconds'),
     orderIndex: integer('order_index').notNull(),
 });
 

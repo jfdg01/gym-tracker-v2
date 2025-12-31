@@ -29,11 +29,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
     const descriptionRef = useRef('');
     const [category, setCategory] = useState('');
 
-    const restTimeRef = useRef('90');
-    const currentWeightRef = useRef('0');
-    const weightFactorRef = useRef('2.5');
-
-    const [difficultyLevels, setDifficultyLevels] = useState<string[]>([]);
 
     useEffect(() => {
         if (isOpen) {
@@ -51,17 +46,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 setResistanceType(ResistanceType.WEIGHT);
             }
 
-            if (initialSettings) {
-                restTimeRef.current = initialSettings.restTimeSeconds?.toString() || '90';
-                currentWeightRef.current = initialSettings.currentWeight?.toString() || '';
-                weightFactorRef.current = initialSettings.weightIncreaseFactor?.toString() || '2.5';
-                setDifficultyLevels(initialSettings.difficultyLevels || []);
-            } else {
-                restTimeRef.current = '90';
-                currentWeightRef.current = '0';
-                weightFactorRef.current = '2.5';
-                setDifficultyLevels([]);
-            }
 
             ignoreSaveRef.current = false;
             setErrors({});
@@ -80,23 +64,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
             isValid = false;
         }
 
-        const restTime = parseInt(restTimeRef.current);
-        if (isNaN(restTime) || restTime < 0) {
-            newErrors.restTime = 'Valid rest time (seconds) required';
-            isValid = false;
-        }
-
-        if (resistanceType === ResistanceType.WEIGHT) {
-            if (currentWeightRef.current && isNaN(parseFloat(currentWeightRef.current))) {
-                newErrors.currentWeight = 'Must be a valid number';
-                isValid = false;
-            }
-            if (weightFactorRef.current && isNaN(parseFloat(weightFactorRef.current))) {
-                newErrors.weightFactor = 'Must be a valid number';
-                isValid = false;
-            }
-        }
-
         setErrors(newErrors);
         return isValid;
     };
@@ -111,7 +78,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
 
         if (!silent) setLoading(true);
         try {
-            const restTimeVal = parseInt(restTimeRef.current);
             await onSubmit({
                 name: nameRef.current.trim(),
                 description: descriptionRef.current,
@@ -119,10 +85,11 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
                 defaultTrackingType: trackingType,
                 defaultResistanceType: resistanceType,
             }, {
-                restTimeSeconds: isNaN(restTimeVal) ? 90 : restTimeVal,
-                currentWeight: parseFloat(currentWeightRef.current) || 0,
-                weightIncreaseFactor: parseFloat(weightFactorRef.current) || null,
-                difficultyLevels: difficultyLevels.filter(Boolean),
+                // Keep these for now but they won't be edited here
+                restTimeSeconds: initialSettings?.restTimeSeconds ?? 90,
+                currentWeight: initialSettings?.currentWeight ?? 0,
+                weightIncreaseFactor: initialSettings?.weightIncreaseFactor ?? 2.5,
+                difficultyLevels: initialSettings?.difficultyLevels ?? [],
             });
             return true;
         } catch (e) {
@@ -140,35 +107,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
         const initTrack = initialData?.defaultTrackingType || TrackingType.REPS;
         const initResist = initialData?.defaultResistanceType || ResistanceType.WEIGHT;
 
-        const initRest = initialSettings?.restTimeSeconds?.toString() || '90';
-        const initWeight = initialSettings?.currentWeight?.toString() || '0';
-        const initFactor = initialSettings?.weightIncreaseFactor?.toString() || '2.5';
-        const initDiff = initialSettings?.difficultyLevels?.join(',') || '';
-
-        const currName = nameRef.current;
-        const currDesc = descriptionRef.current;
-        const currCat = category;
-        const currTrack = trackingType;
-        const currResist = resistanceType;
-        const currRest = restTimeRef.current;
-        const currWeight = currentWeightRef.current;
-        const currFactor = weightFactorRef.current;
-        const currDiff = difficultyLevels.join(',');
-
-        if (currName !== initName) return true;
-        if (currDesc !== initDesc) return true;
-        if (currCat !== initCat) return true;
-        if (currTrack !== initTrack) return true;
-        if (currResist !== initResist) return true;
-        if (currRest !== initRest) return true;
-
-        if (resistanceType === ResistanceType.WEIGHT) {
-            if (currWeight !== initWeight) return true;
-            if (currFactor !== initFactor) return true;
-        }
-        if (resistanceType === ResistanceType.DIFFICULTY) {
-            if (currDiff !== initDiff) return true;
-        }
 
         return false;
     };
@@ -200,15 +138,6 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
         onClose();
     };
 
-    const addDifficulty = (level: string) => {
-        if (level.trim()) {
-            setDifficultyLevels(prev => [...prev, level.trim()]);
-        }
-    };
-
-    const removeDifficulty = (index: number) => {
-        setDifficultyLevels(prev => prev.filter((_, i) => i !== index));
-    };
 
     return {
         formState: {
@@ -219,7 +148,7 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
             resistanceType,
             formKey,
             showDiscardAlert,
-            difficultyLevels,
+            difficultyLevels: [],
         },
         actions: {
             setCategory,
@@ -231,15 +160,10 @@ export const useExerciseForm = ({ isOpen, onClose, onSubmit, initialData, initia
             handleDiscardPress,
             confirmDiscard,
             setErrors,
-            addDifficulty,
-            removeDifficulty,
         },
         refs: {
             nameRef,
             descriptionRef,
-            restTimeRef,
-            currentWeightRef,
-            weightFactorRef,
         }
     };
 };

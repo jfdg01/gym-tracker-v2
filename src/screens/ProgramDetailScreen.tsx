@@ -33,14 +33,19 @@ import {
     MoonIcon,
     CoffeeIcon,
     PlayIcon,
-    Edit2Icon
+    Edit2Icon,
+    TimerIcon,
+    RepeatIcon,
+    LayersIcon,
+    WeightIcon,
+    SignalIcon
 } from 'lucide-react-native';
 import { useWorkout } from '@/src/hooks/useWorkout';
 import { ProgramService } from '@/src/services/ProgramService';
 import { ProgramDayService } from '@/src/services/ProgramDayService';
 import { ProgramDayExerciseService } from '@/src/services/ProgramDayExerciseService';
 import { ExerciseService } from '@/src/services/ExerciseService';
-import { Program, ProgramDay, ProgramDayExercise, Exercise, ResistanceType, TrackingType } from '@/src/types/domain';
+import { Program, ProgramDay, ProgramDayExercise, Exercise, ResistanceType, TrackingType, ExerciseSettings } from '@/src/types/domain';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { ExerciseSelector } from '@/src/components/ExerciseSelector';
 import { ProgramDayExerciseForm } from '@/src/components/ProgramDayExerciseForm';
@@ -52,8 +57,18 @@ interface ProgramDetailScreenProps {
 }
 
 interface DayWithExercises extends ProgramDay {
-    exercises: (ProgramDayExercise & { exercise?: Exercise })[];
+    exercises: (ProgramDayExercise & { exercise?: Exercise; settings?: ExerciseSettings })[];
 }
+
+const ParameterBadge = ({ icon, label, subLabel }: { icon?: any, label: string, subLabel?: string }) => (
+    <HStack className="bg-white/10 rounded-full px-3 py-1.5 items-center mr-2 mb-2">
+        {icon && <Icon as={icon} size="xs" className="text-primary-energy mr-2 opacity-100" />}
+        <VStack>
+            <Text size="xs" className="text-white font-bold">{label}</Text>
+            {subLabel && <Text size="2xs" className="text-gray-300 font-medium">{subLabel}</Text>}
+        </VStack>
+    </HStack>
+);
 
 export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const router = useRouter();
@@ -68,6 +83,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
     const [editingDayEx, setEditingDayEx] = useState<ProgramDayExercise | null>(null);
     const [dayToDeleteId, setDayToDeleteId] = useState<string | null>(null);
+    const [exerciseToDeleteId, setExerciseToDeleteId] = useState<string | null>(null);
+    const [showDeleteExerciseAlert, setShowDeleteExerciseAlert] = useState(false);
 
     const { activeSession, startWorkout } = useWorkout();
     const [showActiveSessionAlert, setShowActiveSessionAlert] = useState(false);
@@ -114,7 +131,8 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                 const enrichedExercises = await Promise.all(
                     dayExercises.map(async (de) => {
                         const ex = await ExerciseService.getExerciseById(de.exerciseId);
-                        return { ...de, exercise: ex || undefined };
+                        const settings = await ExerciseService.getExerciseSettings(de.exerciseId);
+                        return { ...de, exercise: ex || undefined, settings: settings || undefined };
                     })
                 );
                 daysWithEx.push({ ...day, exercises: enrichedExercises });
@@ -205,6 +223,7 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                     sets: data.sets!,
                     targetReps: data.targetReps || null,
                     targetTimeSeconds: data.targetTimeSeconds || null,
+                    restTimeSeconds: data.restTimeSeconds ?? 90,
                 });
                 showToast("Added", "Exercise added to day");
             }
@@ -217,14 +236,23 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
         }
     };
 
-    const handleDeleteExercise = async (id: string) => {
+    const handleDeleteExercise = (id: string) => {
+        setExerciseToDeleteId(id);
+        setShowDeleteExerciseAlert(true);
+    };
+
+    const confirmDeleteExercise = async () => {
+        if (!exerciseToDeleteId) return;
         try {
-            await ProgramDayExerciseService.removeExerciseFromDay(id);
+            await ProgramDayExerciseService.removeExerciseFromDay(exerciseToDeleteId);
             await loadData();
             showToast("Deleted", "Exercise removed");
         } catch (e) {
             console.error(e);
             showToast("Error", "Failed to remove exercise", "error");
+        } finally {
+            setShowDeleteExerciseAlert(false);
+            setExerciseToDeleteId(null);
         }
     };
 
@@ -327,7 +355,7 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                     ) : (
                         days.sort((a, b) => a.orderIndex - b.orderIndex).map((day) => (
                             <VStack key={day.id} space="md" className="mb-4">
-                                <HStack className="justify-between items-center mb-4 px-1">
+                                <HStack className="justify-between items-center mb-1 px-1">
                                     <Pressable
                                         onPress={() => {
                                             setRenamingDayId(day.id);
@@ -364,85 +392,105 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                                     </HStack>
                                 </HStack>
 
-                                <AppCard
-                                    className="p-0 overflow-hidden rounded-2xl border-0"
-                                    style={{
-                                        elevation: 2,
-                                        shadowColor: '#000',
-                                        shadowOffset: { width: 0, height: 2 },
-                                        shadowOpacity: 0.1,
-                                        shadowRadius: 4,
-                                        borderColor: 'rgba(255, 255, 255, 0.05)'
-                                    }}
-                                >
-                                    {day.isRestDay ? (
+                                {day.isRestDay ? (
+                                    <AppCard
+                                        className="p-0 overflow-hidden rounded-2xl border-0"
+                                        style={{
+                                            elevation: 2,
+                                            shadowColor: '#000',
+                                            shadowOffset: { width: 0, height: 2 },
+                                            shadowOpacity: 0.1,
+                                            shadowRadius: 4,
+                                            borderColor: 'rgba(255, 255, 255, 0.05)'
+                                        }}
+                                    >
                                         <VStack className="p-10 items-center justify-center" style={{ backgroundColor: 'rgba(24, 23, 25, 0.1)' }}>
                                             <Icon as={CoffeeIcon} size="xl" className="text-typography-300 mb-2" />
                                             <Text className="text-typography-400 font-bold uppercase tracking-widest text-xs">Rest & Recovery</Text>
                                             <Text size="xs" className="text-typography-500 text-center mt-2 font-medium">Take it easy today to let your muscles grow.</Text>
                                         </VStack>
-                                    ) : (
-                                        <VStack>
-                                            {day.exercises.length === 0 ? (
+                                    </AppCard>
+                                ) : (
+                                    <VStack space="md">
+                                        {day.exercises.length === 0 ? (
+                                            <AppCard className="p-0 overflow-hidden rounded-2xl border-0 border-dashed border-outline-dark bg-transparent">
                                                 <Pressable
-                                                    className="p-8 items-center justify-center border-b border-outline-dark border-dashed"
+                                                    className="p-8 items-center justify-center"
                                                     onPress={() => handleOpenSelector(day.id)}
                                                 >
                                                     <Icon as={PlusIcon} size="md" className="text-typography-400 mb-2" />
                                                     <Text size="sm" className="text-typography-400">Add Exercise</Text>
                                                 </Pressable>
-                                            ) : (
-                                                day.exercises.sort((a, b) => a.orderIndex - b.orderIndex).map((de, idx) => (
-                                                    <Box
-                                                        key={de.id}
-                                                        className="p-6"
-                                                        style={idx !== day.exercises.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.05)' } : {}}
+                                            </AppCard>
+                                        ) : (
+                                            day.exercises.sort((a, b) => a.orderIndex - b.orderIndex).map((de, idx) => (
+                                                <AppCard
+                                                    key={de.id}
+                                                    className="p-0 overflow-hidden rounded-2xl border-0 mb-1"
+                                                    style={{
+                                                        elevation: 2,
+                                                        shadowColor: '#000',
+                                                        shadowOffset: { width: 0, height: 2 },
+                                                        shadowOpacity: 0.1,
+                                                        shadowRadius: 4,
+                                                    }}
+                                                >
+                                                    <Pressable
+                                                        onPress={() => handleEditExercise(de, de.exercise)}
+                                                        className="active:opacity-95"
                                                     >
-                                                        <HStack className="justify-between items-center space-x-4">
-                                                            <Pressable
-                                                                className="flex-1 active:opacity-60"
-                                                                onPress={() => handleEditExercise(de, de.exercise)}
-                                                            >
-                                                                <VStack space="sm">
-                                                                    <HStack space="xs" className="items-center">
-                                                                        <Icon as={DumbbellIcon} size="sm" className="text-primary-energy" />
-                                                                        <Text size="lg" className="font-bold text-typography-950">
-                                                                            {de.exercise?.name || 'Unknown Exercise'}
-                                                                        </Text>
-                                                                    </HStack>
-                                                                    <Text size="sm" className="text-typography-500 font-medium">
-                                                                        {de.sets} sets • {de.trackingType === TrackingType.REPS ? `${de.targetReps || 0} reps` : `${de.targetTimeSeconds || 0}s`} • {de.resistanceType}
-                                                                    </Text>
-                                                                </VStack>
-                                                            </Pressable>
-                                                            <VStack space="sm">
-                                                                <AppButton
-                                                                    title="Delete"
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    action="negative"
-                                                                    icon={TrashIcon}
-                                                                    onPress={() => handleDeleteExercise(de.id)}
-                                                                    className="w-24 h-9"
+                                                        {/* Header: Name */}
+                                                        <Box className="bg-white/5 px-5 py-4 border-b border-white/5">
+                                                            <Text size="lg" className="font-bold text-white text-wrap leading-tight" style={{ color: 'white' }}>
+                                                                {de.exercise?.name || 'Unknown Exercise'}
+                                                            </Text>
+                                                        </Box>
+
+                                                        {/* Body: Stats */}
+                                                        <Box className="bg-surface-elevated px-5 py-4">
+                                                            <HStack className="flex-wrap items-center">
+                                                                <ParameterBadge 
+                                                                    icon={LayersIcon} 
+                                                                    label={`${de.sets} Sets`} 
                                                                 />
-                                                            </VStack>
-                                                        </HStack>
-                                                    </Box>
-                                                ))
-                                            )}
-                                            <AppButton
-                                                title="ADD EXERCISE"
-                                                variant="solid"
-                                                size="lg"
-                                                icon={PlusIcon}
-                                                className="py-4 h-16 rounded-none border-t bg-transparent"
-                                                style={{ borderTopColor: 'rgba(255, 255, 255, 0.05)', backgroundColor: 'rgba(24, 23, 25, 0.2)' }}
-                                                textClassName="ml-2 text-primary-energy font-bold text-md tracking-wider"
-                                                onPress={() => handleOpenSelector(day.id)}
-                                            />
-                                        </VStack>
-                                    )}
-                                </AppCard>
+                                                                <ParameterBadge 
+                                                                    icon={de.trackingType === TrackingType.REPS ? RepeatIcon : TimerIcon} 
+                                                                    label={de.trackingType === TrackingType.REPS ? `${de.targetReps || 0} Reps` : `${de.targetTimeSeconds || 0}s`} 
+                                                                />
+                                                                <ParameterBadge 
+                                                                    icon={CoffeeIcon} 
+                                                                    label={`${de.restTimeSeconds}s`} 
+                                                                />
+                                                                {de.resistanceType === ResistanceType.WEIGHT && (
+                                                                     <ParameterBadge 
+                                                                        icon={WeightIcon} 
+                                                                        label={`${de.settings?.currentWeight || 0}kg`}
+                                                                        subLabel={`+${de.settings?.weightIncreaseFactor || 2.5}`}
+                                                                     />
+                                                                )}
+                                                                {de.resistanceType === ResistanceType.DIFFICULTY && (
+                                                                     <ParameterBadge 
+                                                                        icon={SignalIcon} 
+                                                                        label={de.settings?.currentDifficultyLevel || 'N/A'}
+                                                                     />
+                                                                )}
+                                                            </HStack>
+                                                        </Box>
+                                                    </Pressable>
+                                                </AppCard>
+                                            ))
+                                        )}
+                                        <AppButton
+                                            title="ADD EXERCISE"
+                                            variant="outline"
+                                            size="lg"
+                                            icon={PlusIcon}
+                                            className="py-4 h-14 rounded-2xl border-dashed border-2 border-primary-energy/30 bg-transparent"
+                                            textClassName="ml-2 text-primary-energy font-bold text-md tracking-wider"
+                                            onPress={() => handleOpenSelector(day.id)}
+                                        />
+                                    </VStack>
+                                )}
                             </VStack>
                         ))
                     )}
@@ -496,6 +544,13 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                 onSubmit={handleExerciseFormSubmit}
                 initialData={editingDayEx}
                 selectedExercise={selectedExercise}
+                onDelete={editingDayEx ? () => {
+                    setExerciseFormOpen(false);
+                    // Use a timeout to allow the sheet to close before showing alert to avoid conflict
+                    setTimeout(() => {
+                         handleDeleteExercise(editingDayEx.id);
+                    }, 200);
+                } : undefined}
             />
 
             <AppAlert
@@ -548,6 +603,21 @@ export const ProgramDetailScreen = ({ id }: ProgramDetailScreenProps) => {
                         text: "Delete",
                         style: "destructive",
                         onPress: handleDeleteProgram
+                    },
+                    { text: "Cancel", style: "cancel" }
+                ]}
+            />
+
+            <AppAlert
+                isOpen={showDeleteExerciseAlert}
+                onClose={() => setShowDeleteExerciseAlert(false)}
+                title="Delete Exercise"
+                message="Are you sure you want to delete this exercise? This action cannot be undone."
+                buttons={[
+                    {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: confirmDeleteExercise
                     },
                     { text: "Cancel", style: "cancel" }
                 ]}

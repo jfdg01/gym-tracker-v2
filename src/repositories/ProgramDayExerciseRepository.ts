@@ -13,6 +13,7 @@ const mapProgramDayExercise = (doc: typeof programDayExercises.$inferSelect): Pr
     sets: doc.sets,
     targetReps: doc.targetReps,
     targetTimeSeconds: doc.targetTimeSeconds,
+    restTimeSeconds: doc.restTimeSeconds,
     orderIndex: doc.orderIndex,
 });
 

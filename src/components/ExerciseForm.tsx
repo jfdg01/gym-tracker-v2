@@ -58,15 +58,10 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
             handleDiscardPress,
             confirmDiscard,
             setErrors,
-            addDifficulty,
-            removeDifficulty,
         },
         refs: {
             nameRef,
             descriptionRef,
-            restTimeRef,
-            currentWeightRef,
-            weightFactorRef,
         }
     } = useExerciseForm(props);
 
@@ -75,23 +70,6 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
         nameRef.current = t;
         if (errors.name) setErrors({ ...errors, name: '' });
     }, [errors.name, setErrors]);
-
-    const onRestChange = useCallback((t: string) => {
-        restTimeRef.current = t;
-        if (errors.restTime) setErrors({ ...errors, restTime: '' });
-    }, [errors.restTime, setErrors]);
-
-    const onWeightChange = useCallback((t: string) => {
-        currentWeightRef.current = t;
-        if (errors.currentWeight) setErrors({ ...errors, currentWeight: '' });
-    }, [errors.currentWeight, setErrors]);
-
-    const onFactorChange = useCallback((t: string) => {
-        weightFactorRef.current = t;
-        if (errors.weightFactor) setErrors({ ...errors, weightFactor: '' });
-    }, [errors.weightFactor, setErrors]);
-
-
 
     const onDescriptionChange = useCallback((t: string) => {
         descriptionRef.current = t;
@@ -151,90 +129,8 @@ export const ExerciseForm = (props: ExerciseFormProps) => {
                     </AppFormField>
                 </HStack>
 
-                <AppFormField label="Rest Time (Seconds)" required error={errors.restTime}>
-                    <AppInput
-                        value={restTimeRef.current}
-                        onChangeText={onRestChange}
-                        placeholder="e.g. 90"
-                        keyboardType="numeric"
-                        isInvalid={!!errors.restTime}
-                        key={`${formKey}-rest`}
-                    />
-                </AppFormField>
+                {/* Rest Time and Start Weight/Difficulty moved to ProgramDayExerciseForm */}
 
-                {resistanceType === ResistanceType.WEIGHT && (
-                    <HStack space="md" className="w-full">
-                        <AppFormField label="Start Weight (kg)" error={errors.currentWeight} className="flex-1">
-                            <AppInput
-                                value={currentWeightRef.current}
-                                onChangeText={onWeightChange}
-                                placeholder="e.g. 20"
-                                keyboardType="numeric"
-                                isInvalid={!!errors.currentWeight}
-                                key={`${formKey}-weight`}
-                            />
-                        </AppFormField>
-                        <AppFormField label="Increase (kg)" error={errors.weightFactor} className="flex-1">
-                            <AppInput
-                                value={weightFactorRef.current}
-                                onChangeText={onFactorChange}
-                                placeholder="e.g. 2.5"
-                                keyboardType="numeric"
-                                isInvalid={!!errors.weightFactor}
-                                key={`${formKey}-factor`}
-                            />
-                        </AppFormField>
-                    </HStack>
-                )}
-
-                {resistanceType === ResistanceType.DIFFICULTY && (
-                    <AppFormField label="Difficulty Levels">
-                        <AppCard className="p-4">
-                            <VStack space="md">
-                                <VStack space="xs" className="divide-y divide-white/5">
-                                    {difficultyLevels.map((level, index) => (
-                                        <HStack key={index} className="justify-between items-center py-2">
-                                            <Text className="text-typography-900 font-medium">{level}</Text>
-                                            <Pressable
-                                                onPress={() => removeDifficulty(index)}
-                                                className="p-2 opacity-70 active:opacity-100"
-                                            >
-                                                <Icon as={XIcon} size="xs" className="text-error-500" />
-                                            </Pressable>
-                                        </HStack>
-                                    ))}
-                                    {difficultyLevels.length === 0 && (
-                                        <Text className="text-typography-500 italic py-2">No levels defined</Text>
-                                    )}
-                                </VStack>
-
-                                <HStack space="sm" className="items-center mt-2">
-                                    <AppInput
-                                        value={newDifficulty}
-                                        onChangeText={setNewDifficulty}
-                                        placeholder="Add difficulty (e.g. Red)"
-                                        className="flex-1 h-10"
-                                        inputClassName="text-sm"
-                                    />
-                                    <AppButton
-                                        title="Add"
-                                        onPress={() => {
-                                            if (newDifficulty.trim()) {
-                                                addDifficulty(newDifficulty);
-                                                setNewDifficulty('');
-                                            }
-                                        }}
-                                        size="sm"
-                                        variant="outline"
-                                        action="primary"
-                                        className="h-10"
-                                        disabled={!newDifficulty.trim()}
-                                    />
-                                </HStack>
-                            </VStack>
-                        </AppCard>
-                    </AppFormField>
-                )}
 
                 <AppFormField label="Description">
                     <AppTextarea

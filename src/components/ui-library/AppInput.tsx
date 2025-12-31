@@ -52,7 +52,7 @@ export const AppInput = memo(({
         <Input
             isDisabled={disabled}
             isInvalid={isInvalid}
-            className={cn("h-12 bg-background-dark/30 border-outline-dark/20", className)}
+            className={cn("h-12 bg-surface-elevated border-outline-dark/50", className)}
         >
             {icon && (
                 <InputSlot className="pl-3">
@@ -63,7 +63,7 @@ export const AppInput = memo(({
                 value={localValue}
                 onChangeText={handleChangeText}
                 placeholder={placeholder}
-                className={cn("text-typography-900", inputClassName)}
+                className={cn("text-white font-medium", inputClassName)}
                 autoCorrect={autoCorrect}
                 keyboardType={keyboardType}
                 secureTextEntry={secureTextEntry}

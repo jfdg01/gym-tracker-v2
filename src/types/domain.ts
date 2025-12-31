@@ -67,6 +67,7 @@ export interface ProgramDayExercise {
     sets: number;
     targetReps: number | null;        // null if TIME
     targetTimeSeconds: number | null; // null if REPS
+    restTimeSeconds: number | null;
     orderIndex: number;
 }
 

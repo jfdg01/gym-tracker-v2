@@ -19,10 +19,11 @@ interface AppFormSheetProps {
     onClose: () => void;
     title: string;
     subTitle?: string;
+    headerRight?: React.ReactNode;
     children: React.ReactNode;
 }
 
-export const AppFormSheet = ({ isOpen, onClose, title, subTitle, children }: AppFormSheetProps) => {
+export const AppFormSheet = ({ isOpen, onClose, title, subTitle, headerRight, children }: AppFormSheetProps) => {
     return (
         <Actionsheet isOpen={isOpen} onClose={onClose}>
             <ActionsheetBackdrop />
@@ -44,9 +45,12 @@ export const AppFormSheet = ({ isOpen, onClose, title, subTitle, children }: App
                                     </Text>
                                 )}
                             </VStack>
-                            <Button size="sm" variant="link" onPress={onClose} className="p-0 ml-2">
-                                <Icon as={X} size="xl" className="text-typography-500" />
-                            </Button>
+                            <HStack space="md" className="items-center">
+                                {headerRight}
+                                <Button size="sm" variant="link" onPress={onClose} className="p-0 ml-2">
+                                    <Icon as={X} size="xl" className="text-typography-500" />
+                                </Button>
+                            </HStack>
                         </HStack>
 
                         {children}

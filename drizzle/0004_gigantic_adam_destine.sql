@@ -1,0 +1,1 @@
+ALTER TABLE `program_day_exercises` ADD `rest_time_seconds` integer;
