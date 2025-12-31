@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "expo-g",
+    "name": "Gym Tracker",
     "slug": "expo-g",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "scheme": "gymtracker",
+    "scheme": "gym-tracker",
     "icon": "./assets/icon.png",
     "newArchEnabled": true,
     "splash": {
@@ -23,7 +23,7 @@
         "backgroundColor": "#121212"
       },
       "backgroundColor": "#121212",
-      "package": "com.anonymous.expog"
+      "package": "com.anonymous.gymtracker"
     },
     "web": {
       "favicon": "./assets/favicon.png"
