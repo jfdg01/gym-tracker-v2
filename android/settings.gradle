@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'expo-g'
+rootProject.name = 'Gym Tracker'
 
 dependencyResolutionManagement {
   versionCatalogs {

@@ -1,4 +1,4 @@
-package com.anonymous.expog
+package com.anonymous.gymtracker
 
 import android.app.Application
 import android.content.res.Configuration

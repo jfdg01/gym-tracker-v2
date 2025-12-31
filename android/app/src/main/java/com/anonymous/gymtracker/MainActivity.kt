@@ -1,4 +1,4 @@
-package com.anonymous.expog
+package com.anonymous.gymtracker
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
